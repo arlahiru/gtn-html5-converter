@@ -221,7 +221,7 @@ public class MainUI extends JFrame {
 		btnOpenWithDreamweaver.setBounds(1020, 423, 164, 23);
 		getContentPane().add(btnOpenWithDreamweaver);
 
-		btnErrorsRecorded.setEnabled(false);
+		btnErrorsRecorded.setEnabled(true);
 		btnErrorsRecorded.setHorizontalAlignment(SwingConstants.LEFT);
 		btnErrorsRecorded.setBounds(1016, 17, 154, 23);
 		getContentPane().add(btnErrorsRecorded);
