@@ -12,14 +12,16 @@ import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Source;
 
+import com.gtnexus.html5.exception.HTML5ParserException;
+import com.gtnexus.html5.facade.Facade;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.util.HTML5Util;
 
-public class UlFacade {
+public class UlFacade extends Facade {
 
 	public static void fixUlElements(Source source,
-			OutputDocument outputDocument) {
+			OutputDocument outputDocument) throws HTML5ParserException{
 
 		logger.debug("Fixing <ul> elements started...");
 
@@ -53,7 +55,7 @@ public class UlFacade {
 					if (rule != null) {
 
 						StringBuilder returnValue = rule.execute(
-								outputDocument, ulAttribute, null);
+								outputDocument, ulAttribute, ul);
 
 						if (returnValue != null) {
 							newUlStyleValue.append(returnValue);
@@ -80,7 +82,12 @@ public class UlFacade {
 				// close ul start tag
 				modifiedUlTag.append(STYLE + "=\"" + newUlStyleValue + "\">");
 
-				outputDocument.replace(ul.getStartTag(), modifiedUlTag);
+				//outputDocument.replace(ul.getStartTag(), modifiedUlTag);
+				try{
+					replace(ul.getStartTag(),modifiedUlTag,outputDocument);
+					}catch(HTML5ParserException e){
+					throw e;
+				}
 				// outputDocument.replace(tr.getEndTag(), "</" +
 				// HTMLElementName.UL + ">");
 

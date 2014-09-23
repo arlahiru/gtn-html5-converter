@@ -30,11 +30,13 @@ import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Source;
 
+import com.gtnexus.html5.exception.HTML5ParserException;
+import com.gtnexus.html5.facade.Facade;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.util.HTML5Util;
 
-public class TableElementFacade {
+public class TableElementFacade extends Facade{
 
 	private static String cellPadding;
 	private static Element thead;
@@ -43,7 +45,7 @@ public class TableElementFacade {
 	private static List<Element> trElements;
 
 	public static void fixLegacyTables(Source source,
-			OutputDocument outputDocument) {
+			OutputDocument outputDocument) throws HTML5ParserException{
 
 		logger.debug("Fixing legacy tables started...");
 
@@ -63,7 +65,7 @@ public class TableElementFacade {
 	}
 
 	private static void removeAndReplaceTableElementObsoleteFeatures(
-			Element table, OutputDocument outputDocument) {
+			Element table, OutputDocument outputDocument) throws HTML5ParserException{
 
 		// apply rules to replace obsolete table,tr,td,thead,tbody,tfoot
 		// elements with
@@ -127,25 +129,27 @@ public class TableElementFacade {
 
 			// close table start tag
 			modifiedTableTag.append(STYLE + "=\"" + newTableStyleValue + "\">");
-
-			outputDocument.replace(table.getStartTag(), modifiedTableTag);
-			outputDocument.replace(table.getEndTag(), "</" + TABLE + ">");
-
-			logger.debug(table.getDebugInfo() + " replace with "
-					+ modifiedTableTag);
-
-			fixTableHead(table, outputDocument);
-
-			fixTableBody(table, outputDocument);
-
-			fixTableRow(table, outputDocument);
-
-			fixTableFooter(table, outputDocument);
-
+			try{
+				replace(table.getStartTag(), modifiedTableTag,outputDocument);
+				replace(table.getEndTag(), new StringBuilder("</" + TABLE + ">"),outputDocument);
+	
+				logger.debug(table.getDebugInfo() + " replace with "
+						+ modifiedTableTag);
+				
+				fixTableHead(table, outputDocument);
+	
+				fixTableBody(table, outputDocument);
+	
+				fixTableRow(table, outputDocument);
+	
+				fixTableFooter(table, outputDocument);
+			}catch(HTML5ParserException ex){
+				throw ex;
+			}
 		}
 	}
 
-	private static void fixTableRow(Element table, OutputDocument outputDocument) {
+	private static void fixTableRow(Element table, OutputDocument outputDocument) throws HTML5ParserException {
 
 		for (Element tr : trElements) {
 
@@ -175,7 +179,7 @@ public class TableElementFacade {
 					if (rule != null) {
 
 						StringBuilder returnValue = rule.execute(
-								outputDocument, trAttribute, null);
+								outputDocument, trAttribute, tr);
 
 						if (returnValue != null) {
 							newTrStyleValue.append(returnValue);
@@ -204,6 +208,7 @@ public class TableElementFacade {
 							
 
 				outputDocument.replace(tr.getStartTag(), modifiedTRTag);
+				
 				// outputDocument.replace(tr.getEndTag(), "</" + TR + ">");
 
 				logger.debug("\t" + tr.getDebugInfo() + " replace with "
@@ -216,7 +221,7 @@ public class TableElementFacade {
 
 	}
 
-	private static void fixTableData(Element tr, OutputDocument outputDocument) {
+	private static void fixTableData(Element tr, OutputDocument outputDocument) throws HTML5ParserException {
 
 		// get all the td elements of this tr
 		List<Element> tdElementList =getTdElementList(tr);
@@ -294,8 +299,12 @@ public class TableElementFacade {
 				// close tr start tag
 				modifiedTDTag.append(STYLE + "=\"" + newTdStyleValue + "\">");
 
-				outputDocument.replace(td.getStartTag(), modifiedTDTag);
-				// outputDocument.replace(td.getEndTag(), "</" + TD + ">");
+				try{
+					replace(td.getStartTag(), modifiedTDTag,outputDocument);
+				}catch(HTML5ParserException e){
+					throw e;
+					// outputDocument.replace(td.getEndTag(), "</" + TD + ">");
+				}
 
 				logger.debug("\t\t" + td.getDebugInfo() + " replace with "
 						+ modifiedTDTag);
@@ -306,7 +315,7 @@ public class TableElementFacade {
 	}
 
 	private static void fixTableHead(Element table,
-			OutputDocument outputDocument) {
+			OutputDocument outputDocument) throws HTML5ParserException{
 
 		if (thead != null) {
 
@@ -359,9 +368,12 @@ public class TableElementFacade {
 				// close tr start tag
 				modifiedTheadTag.append(STYLE + "=\"" + newTheadStyleValue
 						+ "\">");
-
-				outputDocument.replace(thead.getStartTag(), modifiedTheadTag);
-				// outputDocument.replace(tr.getEndTag(), "</" + TR + ">");
+				try{
+					replace(thead.getStartTag(), modifiedTheadTag,outputDocument);
+				}catch(HTML5ParserException e){
+					throw e;
+				}
+					// outputDocument.replace(tr.getEndTag(), "</" + TR + ">");
 
 				logger.debug("\t" + thead.getDebugInfo() + " replace with "
 						+ modifiedTheadTag);
@@ -372,7 +384,7 @@ public class TableElementFacade {
 	}
 
 	private static void fixTableBody(Element table,
-			OutputDocument outputDocument) {
+			OutputDocument outputDocument) throws HTML5ParserException{
 
 		if (tbody != null) {
 
@@ -425,8 +437,12 @@ public class TableElementFacade {
 				// close tr start tag
 				modifiedTbodyTag.append(STYLE + "=\"" + newTbodyStyleValue
 						+ "\">");
-
-				outputDocument.replace(tbody.getStartTag(), modifiedTbodyTag);
+				try{
+					
+					replace(tbody.getStartTag(), modifiedTbodyTag,outputDocument);
+				}catch(HTML5ParserException ex){
+					throw ex;
+				}
 				// outputDocument.replace(tr.getEndTag(), "</" + TR + ">");
 
 				logger.debug("\t" + tbody.getDebugInfo() + " replace with "
@@ -436,7 +452,7 @@ public class TableElementFacade {
 	}
 
 	private static void fixTableFooter(Element table,
-			OutputDocument outputDocument) {
+			OutputDocument outputDocument) throws HTML5ParserException{
 
 		if (tfoot != null) {
 
@@ -489,9 +505,12 @@ public class TableElementFacade {
 				// close tr start tag
 				modifiedTfootTag.append(STYLE + "=\"" + newTfootStyleValue
 						+ "\">");
+				try{
+					replace(tfoot.getStartTag(),modifiedTfootTag,outputDocument);
+				}catch(HTML5ParserException ex){
+					throw ex;
+				}
 
-				outputDocument.replace(tfoot.getStartTag(), modifiedTfootTag);
-				// outputDocument.replace(tr.getEndTag(), "</" + TR + ">");
 
 				logger.debug("\t" + tfoot.getDebugInfo() + " replace with "
 						+ modifiedTfootTag);

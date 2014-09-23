@@ -42,7 +42,7 @@ public class ImageElementFacade {
 				Rule apixelImgRule = new ImageApixelRule();
 
 				StringBuilder replaceTag = apixelImgRule.execute(
-						outputDocument, img, null);
+						outputDocument, img, img);
 
 				outputDocument.replace(img.getStartTag(), replaceTag);
 				// outputDocument.replace(img.getEndTag(), "</" + DIV + ">");
@@ -76,7 +76,7 @@ public class ImageElementFacade {
 						if (rule != null) {
 
 							StringBuilder returnValue = rule.execute(
-									outputDocument, trAttribute, null);
+									outputDocument, trAttribute, img);
 
 							if (returnValue != null) {
 								newImageStyleValue.append(returnValue);
@@ -98,15 +98,17 @@ public class ImageElementFacade {
 						}
 
 					}
-					
+
 					// append inner server tags if any
-					modifiedImageTag.append(" " + HTML5Util.getInnerServerTagContent(img) + " ");
+					modifiedImageTag.append(" "
+							+ HTML5Util.getInnerServerTagContent(img) + " ");
 
 					// close img start tag
 					modifiedImageTag.append(STYLE + "=\"" + newImageStyleValue
 							+ "\">");
 
 					outputDocument.replace(img.getStartTag(), modifiedImageTag);
+					
 					// outputDocument.replace(tr.getEndTag(), "</" + IMG + ">");
 
 					logger.debug("\t" + img.getDebugInfo() + " replace with "
