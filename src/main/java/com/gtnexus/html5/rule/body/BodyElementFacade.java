@@ -43,7 +43,7 @@ public class BodyElementFacade extends Facade {
 	// body tag
 	public static void fixAllBodyElementObsoleteFeatures(Source source,
 			OutputDocument outputDocument) throws HTML5ParserException{
-		try{
+
 			fixBodyElementObsoleteFeatures(source, outputDocument);
 	
 			TableElementFacade.fixLegacyTables(source, outputDocument);
@@ -85,9 +85,7 @@ public class BodyElementFacade extends Facade {
 			SpacerElementFacade.fixSpacerTags(source, outputDocument);
 	
 			UlFacade.fixUlElements(source, outputDocument);
-		}catch(HTML5ParserException e){
-			throw e;
-		}
+		
 	}
 
 	public static void fixBodyElementObsoleteFeatures(Source source,
@@ -155,11 +153,9 @@ public class BodyElementFacade extends Facade {
 						+ "\">");
 				
 				//outputDocument.replace(body.getStartTag(), modifiedBodyTag);
-				try{
-					replace(body.getStartTag(),modifiedBodyTag,outputDocument);
-				}catch(HTML5ParserException e){
-					throw e;
-				}
+				
+				replace(body.getStartTag(),modifiedBodyTag,outputDocument);
+				
 				// outputDocument.replace(tr.getEndTag(), "</" +
 				// HTMLElementName.BODY + ">");
 

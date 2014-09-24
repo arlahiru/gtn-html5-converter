@@ -126,7 +126,6 @@ public class JerichoJspParserUtil {
 	// Initialize rule map
 	public static void initialize() {
 
-		dbLogger.enable(false);
 
 		// configure log4j to output logs to the UI
 		consoleWriter = new StringWriter();
@@ -343,7 +342,7 @@ public class JerichoJspParserUtil {
 		logger.debug("Rules map initialized successfully.");
 
 		// disable dblogger
-		dbLogger.enable(false);
+		dbLogger.enable(true);
 
 		if (dbLogger.isEnabled()) {
 			dbLogger.initialize();
@@ -355,11 +354,11 @@ public class JerichoJspParserUtil {
 	 * public method that convert given JSP file to HTML5 ready JSP file
 	 */
 	public static void convertToHTML5(String filePath, boolean isIncludeFile)
-			throws FileNotFoundException, IOException, HTML5ParserException {
+			throws FileNotFoundException, IOException, HTML5ParserException{
 
 		// Parse JSP file and remove obsolete html5 tags and apply relevant
 		// workaround.
-
+		dbLogger.insertPage(filePath, isIncludeFile);
 		if (!isIncludeFile) {
 			logger.info("Input File: " + filePath);
 		} else {
@@ -401,14 +400,10 @@ public class JerichoJspParserUtil {
 				// include files.
 				// It will allows to save other include files without breaking
 				// the program.
-				try {
-					convertToHTML5(includeFilePath, true);
-					numOfConvertedIncludeFiles = numOfConvertedIncludeFiles + 1;
-				} catch (HTML5ParserException e) {
-					//throw e;
-					e.printStackTrace();
-
-				}
+			
+				convertToHTML5(includeFilePath, true);
+				numOfConvertedIncludeFiles = numOfConvertedIncludeFiles + 1;
+			
 
 			}
 
@@ -427,7 +422,7 @@ public class JerichoJspParserUtil {
 					logger.error(filePath
 							+ " has not been saved. Source and output elements not matched!");
 
-					throw new HTML5ParserException("File Format Error","Tags Missing",null);
+					throw new HTML5ParserException("Content Exception","File Formatting Error: Tags Missing",null);
 
 				}
 
@@ -436,7 +431,7 @@ public class JerichoJspParserUtil {
 				logger.error(filePath
 						+ " has not been saved. Errors in include file(s).");
 
-				throw new HTML5ParserException("File Format Exception","Tags Missing",null);
+				throw new HTML5ParserException("Content Exception","Include file conversion failed.",null);
 
 			}
 

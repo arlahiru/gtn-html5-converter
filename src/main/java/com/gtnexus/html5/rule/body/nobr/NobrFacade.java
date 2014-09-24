@@ -9,9 +9,10 @@ import net.htmlparser.jericho.Element;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Source;
 
+import com.gtnexus.html5.facade.Facade;
 import com.gtnexus.html5.rule.Rule;
 
-public class NobrFacade {
+public class NobrFacade extends Facade {
 	
 	public static void fixNobrElements(Source source,
 			OutputDocument outputDocument) {

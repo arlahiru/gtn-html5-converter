@@ -14,11 +14,12 @@ import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Source;
 
+import com.gtnexus.html5.facade.Facade;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.util.HTML5Util;
 
-public class FontElementFacade {
+public class FontElementFacade extends Facade{
 
 	public static void fixFontTags(Source source, OutputDocument outputDocument) {
 
@@ -80,7 +81,7 @@ public class FontElementFacade {
 				// close span start tag
 				spanTag.append(STYLE + "=\"" + spanStyleValue + "\">");
 
-				outputDocument.replace(font.getStartTag(), spanTag);
+				replace(font.getStartTag(), spanTag,outputDocument);
 
 				if (font.getEndTag() != null)
 					outputDocument.replace(font.getEndTag(), "</" + SPAN + ">");

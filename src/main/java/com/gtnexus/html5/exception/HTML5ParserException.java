@@ -1,6 +1,6 @@
 package com.gtnexus.html5.exception;
 
-public class HTML5ParserException extends Exception {
+public class HTML5ParserException extends RuntimeException {
 
 	/**
 	 * Exception class to generate parser specific exception

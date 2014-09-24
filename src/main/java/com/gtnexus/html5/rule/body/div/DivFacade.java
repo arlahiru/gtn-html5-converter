@@ -21,7 +21,7 @@ import com.gtnexus.html5.util.HTML5Util;
 public class DivFacade extends Facade{
 
 	public static void fixDivElements(Source source,
-			OutputDocument outputDocument) throws HTML5ParserException{
+			OutputDocument outputDocument) {
 
 		logger.debug("Fixing <div> elements started...");
 
@@ -84,13 +84,10 @@ public class DivFacade extends Facade{
 				modifiedDivTag.append(STYLE + "=\"" + newDivStyleValue + "\">");
 
 				//outputDocument.replace(div.getStartTag(), modifiedDivTag);
-				try{
-					replace(div.getStartTag(), modifiedDivTag,outputDocument);
+
+				replace(div.getStartTag(), modifiedDivTag,outputDocument);
 					
-				}
-				catch(HTML5ParserException e){
-					throw e;
-				}
+				
 				// outputDocument.replace(tr.getEndTag(), "</" +
 				// HTMLElementName.UL
 				// + ">");

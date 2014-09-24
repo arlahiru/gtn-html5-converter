@@ -12,11 +12,12 @@ import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Source;
 
+import com.gtnexus.html5.facade.Facade;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.util.HTML5Util;
 
-public class IframeFacade {
+public class IframeFacade extends Facade{
 	
 	public static boolean hspaceOrVspaceFound = false;
 
@@ -84,7 +85,7 @@ public class IframeFacade {
 				modifiedIframeTag.append(STYLE + "=\"" + newIframeStyleValue
 						+ "\">");
 
-				outputDocument.replace(iframe.getStartTag(), modifiedIframeTag);
+				replace(iframe.getStartTag(), modifiedIframeTag,outputDocument);
 				// outputDocument.replace(tr.getEndTag(), "</" + TR + ">");
 
 				logger.debug("\t" + iframe.getDebugInfo() + " replace with "

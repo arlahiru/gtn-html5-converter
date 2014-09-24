@@ -83,11 +83,9 @@ public class UlFacade extends Facade {
 				modifiedUlTag.append(STYLE + "=\"" + newUlStyleValue + "\">");
 
 				//outputDocument.replace(ul.getStartTag(), modifiedUlTag);
-				try{
-					replace(ul.getStartTag(),modifiedUlTag,outputDocument);
-					}catch(HTML5ParserException e){
-					throw e;
-				}
+				
+				replace(ul.getStartTag(),modifiedUlTag,outputDocument);
+					
 				// outputDocument.replace(tr.getEndTag(), "</" +
 				// HTMLElementName.UL + ">");
 

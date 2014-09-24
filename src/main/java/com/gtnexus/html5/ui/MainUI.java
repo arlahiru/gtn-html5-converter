@@ -94,9 +94,9 @@ public class MainUI extends JFrame {
 		addActionListners();
 		JerichoJspParserUtil.initialize();
 		backupPath = DEFAULT_BACKUP_PATH;
-		// dbLogger.initialize();
+		dbLogger.initialize();
 		setBackupPath(backupPath);
-		// checkForPreviousErrors();
+		checkForPreviousErrors();
 		printOnConsole(JerichoJspParserUtil.getDebuggerOutput());
 	}
 
@@ -615,7 +615,8 @@ public class MainUI extends JFrame {
 			printOnConsole(ex.getTagInfo());
 			dbLogger.logError(formatFilePath(sourceFile), ex.getType(), ex.getMessage(), ex.getTagInfo());
 			
-		} catch(Exception e){
+		}
+		catch(Exception e){
 			e.printStackTrace();
 		}
 	}
@@ -900,6 +901,7 @@ public class MainUI extends JFrame {
 	public void createErrorsFrame() {
 		ErrorsFrame.getInstance(this);
 		disableErrorsRecordedButton();
+	
 	}
 
 	public String openWithBrowser(String browser, String browserPath,

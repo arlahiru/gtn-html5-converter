@@ -13,11 +13,12 @@ import net.htmlparser.jericho.Element;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Source;
 
+import com.gtnexus.html5.facade.Facade;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.util.HTML5Util;
 
-public class ImageElementFacade {
+public class ImageElementFacade extends Facade {
 
 	public static boolean hspaceOrVspaceFound = false;
 
@@ -107,7 +108,7 @@ public class ImageElementFacade {
 					modifiedImageTag.append(STYLE + "=\"" + newImageStyleValue
 							+ "\">");
 
-					outputDocument.replace(img.getStartTag(), modifiedImageTag);
+					replace(img.getStartTag(), modifiedImageTag,outputDocument);
 					
 					// outputDocument.replace(tr.getEndTag(), "</" + IMG + ">");
 

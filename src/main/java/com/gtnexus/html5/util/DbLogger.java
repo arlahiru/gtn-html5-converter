@@ -10,6 +10,9 @@ import java.util.*;
 
 import javax.swing.JTextArea;
 
+import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
+
+
 public class DbLogger {
 
 	private static DbLogger instance = null;
@@ -43,7 +46,7 @@ public class DbLogger {
 	private static final String ERROR_MESSAGE="Error";
 	private static final String ERROR_TYPE = "ErrorType";
 	private static final String LAST_CONVERTED_LINE ="lastConvertedLine";
-
+	private PreparedStatement statement;
 	public int getId() {
 		return id;
 	}
@@ -61,10 +64,12 @@ public class DbLogger {
 	}
 
 	private DbLogger() {
-
+		//initialize();
+		enabled=true;
 	}
 
 	public static synchronized DbLogger getInstance() {
+		
 		if (instance == null) {
 			instance = new DbLogger();
 		}
@@ -76,6 +81,7 @@ public class DbLogger {
 
 		readCredentials();
 		setCon();
+
 
 	}
 
@@ -132,7 +138,7 @@ public class DbLogger {
 
 			String query = "INSERT INTO " + PAGE_TABLE + "(" + PATH + ","
 					+ IS_INCLUDE + "," + CONVERTED_DATE + ","+CONVERTED_STATUS+") VALUES(?,?,?,?);";
-			PreparedStatement statement = null;
+			//PreparedStatement statement = null;
 			try {
 
 				statement = con.prepareStatement(query,
@@ -179,13 +185,14 @@ public class DbLogger {
 	}
 
 	private void insertIncludeFile() {
-		PreparedStatement statement = null;
+		//PreparedStatement statement = null;
 		try {
 			String query = "INSERT INTO " + INCLUDE_FILE_TABLE + " (" + ID
 					+ "," + PARENT_ID + ") VALUES " + "(?,?) ;";
 			statement = con.prepareStatement(query);
 			statement.setInt(1, id);
 			statement.setInt(2, idMain);
+			writeQuery(statement.toString());
 			statement.execute();
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
@@ -205,7 +212,7 @@ public class DbLogger {
 		int id = -1;
 		String query = "SELECT " + ID + " FROM " + PAGE_TABLE + " WHERE "
 				+ PATH + "=? ;";
-		PreparedStatement statement = null;
+	//	PreparedStatement statement = null;
 		try {
 
 			statement = con.prepareStatement(query);
@@ -233,10 +240,10 @@ public class DbLogger {
 
 	private void updateConvertedDate(int id) {
 
-		PreparedStatement statement = null;
+		//PreparedStatement statement = null;
 		try {
 			String query = "UPDATE " + PAGE_TABLE + " SET " + CONVERTED_DATE
-					+ "= ? "+CONVERTED_STATUS+"=? WHERE " + ID + "= ?  ;";
+					+ "= ? ,"+CONVERTED_STATUS+"=? WHERE " + ID + "= ?  ;";
 			statement = con.prepareStatement(query);
 
 			statement.setString(1, getDate());
@@ -441,12 +448,14 @@ public class DbLogger {
 			return null;
 		}
 	}
+	
 	public void changeConvertedStatus(boolean status){
+		
 		if(isEnabled()){
 			PreparedStatement statement = null;
 			try {
 				String query = "UPDATE " + PAGE_TABLE + " SET " + CONVERTED_DATE
-						+ "= ? "+CONVERTED_STATUS+"=? WHERE " + ID + "= ?  ;";
+						+ "= ?, "+CONVERTED_STATUS+"=? WHERE " + ID + "= ?  ;";
 				statement = con.prepareStatement(query);
 	
 				statement.setString(1, getDate());
@@ -454,7 +463,8 @@ public class DbLogger {
 				statement.setInt(3, id);
 				statement.executeUpdate();
 	
-			} catch (Exception e) {
+			} 
+			catch (Exception e) {
 				e.printStackTrace();
 			} finally {
 				if (statement != null) {
@@ -469,9 +479,11 @@ public class DbLogger {
 	}
 	
 	public void logError(String path,String errorType,String errorMessage,String debugInfo){
+		//enabled=true;
+		//if(isEnabled()) System.out.println("enabled");
 		if(isEnabled()){
 			//delete any previous errors recoded.
-			deleteFromErrorLog(path);
+			
 			
 			
 			PreparedStatement statement = null;
@@ -485,10 +497,13 @@ public class DbLogger {
 				statement.setString(3, errorType);
 				if(debugInfo==null) statement.setInt(4, 0);
 				else statement.setInt(4, extractLineNumber(debugInfo));
-				statement.executeUpdate();
+				statement.execute();
 				changeConvertedStatus(false);
 	
-			} catch (Exception e) {
+			} catch(MySQLIntegrityConstraintViolationException ex){
+				deleteFromErrorLog(path);
+				logError(path,errorType,errorMessage,debugInfo);
+			}catch (Exception e) {
 				e.printStackTrace();
 			} finally {
 				if (statement != null) {
@@ -500,6 +515,7 @@ public class DbLogger {
 				}
 			}
 		}
+
 	}
 	
 	public void deleteFromErrorLog(String path){
@@ -514,7 +530,7 @@ public class DbLogger {
 
 				statement.setInt(1, id);
 				statement.executeUpdate();
-	
+				changeConvertedStatus(true);
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
@@ -526,6 +542,43 @@ public class DbLogger {
 					}
 				}
 			}
+		}
+	}
+	public String getLastConvertedLine(){
+		PreparedStatement statement = null;
+		try {
+			String query = "SELECT "+LINE+" FROM "+CHANGE_LOG_TABLE
+					+" WHERE ID =? ORDER BY "+LINE+" DESC LIMIT 1;";
+			statement = con.prepareStatement(query);
+			statement.setInt(1,id);
+			ResultSet set = statement.executeQuery();
+			while(set.next()){
+				int lastLine = set.getInt(LINE);
+				System.out.println(lastLine);
+				return "((r"+lastLine+",c";
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (statement != null) {
+				try {
+					statement.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return null;
+	}
+	
+	public void writeQuery(String query){
+		try{
+		java.io.PrintWriter writer = new java.io.PrintWriter("queries.txt", "UTF-8");
+		writer.append(query +"\n");
+		writer.close();
+	
+		}catch(IOException  e){
+			
 		}
 	}
 }

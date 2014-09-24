@@ -12,11 +12,12 @@ import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Source;
 
+import com.gtnexus.html5.facade.Facade;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.util.HTML5Util;
 
-public class PreFacade {
+public class PreFacade extends Facade{
 
 	public static void fixPreElements(Source source,
 			OutputDocument outputDocument) {
@@ -81,7 +82,7 @@ public class PreFacade {
 				// close ul start tag
 				modifiedPreTag.append(STYLE + "=\"" + newPreStyleValue + "\">");
 
-				outputDocument.replace(pre.getStartTag(), modifiedPreTag);
+				replace(pre.getStartTag(), modifiedPreTag,outputDocument);
 				// outputDocument.replace(tr.getEndTag(), "</" +
 				// HTMLElementName.PRE
 				// + ">");

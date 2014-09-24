@@ -12,11 +12,12 @@ import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Source;
 
+import com.gtnexus.html5.facade.Facade;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.util.HTML5Util;
 
-public class LiFacade {
+public class LiFacade extends Facade {
 
 	public static void fixLiElements(Source source,
 			OutputDocument outputDocument) {
@@ -80,7 +81,7 @@ public class LiFacade {
 				// close tr start tag
 				modifiedLiTag.append(STYLE + "=\"" + newLiStyleValue + "\">");
 
-				outputDocument.replace(li.getStartTag(), modifiedLiTag);
+				replace(li.getStartTag(), modifiedLiTag,outputDocument);
 				// outputDocument.replace(tr.getEndTag(), "</" + TR + ">");
 
 				logger.debug("\t" + li.getDebugInfo() + " replace with "

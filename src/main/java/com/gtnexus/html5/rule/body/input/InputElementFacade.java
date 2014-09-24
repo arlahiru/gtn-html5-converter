@@ -15,11 +15,12 @@ import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Source;
 
+import com.gtnexus.html5.facade.Facade;
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.rule.body.font.FontFaceRule;
 import com.gtnexus.html5.util.HTML5Util;
 
-public class InputElementFacade {
+public class InputElementFacade extends Facade{
 	
 	public static boolean hspaceOrVspaceFound = false;
 
@@ -57,7 +58,7 @@ public class InputElementFacade {
 
 			newInputTag.append(">");
 
-			outputDocument.replace(input.getStartTag(), newInputTag);
+			replace(input.getStartTag(), newInputTag,outputDocument);
 
 			hspaceOrVspaceFound = false;
 
