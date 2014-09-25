@@ -20,11 +20,10 @@ public class TableDataAlignRule implements Rule {
 
 		String attributeValue = ((Attribute) originalAttribute).getValue();
 
-		// check if td contains a another element(e.g. table) or text and apply fix accordingly
+		// check if td contains a another element(e.g. table,include file) or text then apply fix accordingly
 		if (originalElement != null && ((Element)originalElement).getName().toLowerCase().equals((HTML5Util.TD))) {
 			
-			if(originalElement.getAllElements(HTML5Util.TABLE).size() == 0 && 
-					originalElement.getAllElements(StartTagType.SERVER_COMMON).size() == 0)
+			if(!HTML5Util.isContainAlignableComponent(originalElement))
 				replaceString.append(TEXT_ALIGN + ":" + attributeValue + ";");
 			
 		} else {

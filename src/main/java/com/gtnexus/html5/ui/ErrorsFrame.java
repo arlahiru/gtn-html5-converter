@@ -115,7 +115,7 @@ public class ErrorsFrame extends JFrame {
 		try{
 			return dbLogger.getPath(errorList.get(table.getSelectedRow()).getPageId());
 		}catch(ArrayIndexOutOfBoundsException e){
-			parent.printWarning("No file has been selected!");
+			parent.printOnConsole("No file has been selected!","error");
 			return null;
 		}
 	}

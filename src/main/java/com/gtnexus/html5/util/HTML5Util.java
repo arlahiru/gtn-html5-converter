@@ -16,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 import net.htmlparser.jericho.Element;
 import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.OutputDocument;
+import net.htmlparser.jericho.Segment;
 import net.htmlparser.jericho.Source;
 import net.htmlparser.jericho.StartTagType;
 
@@ -406,7 +407,7 @@ public class HTML5Util {
 
 	// verify new document is not missing anything by comparing with source file
 	public static boolean isCommonTagsCountMatch(Source source,
-			OutputDocument outputDocument, boolean isIncludeFile) {
+			OutputDocument outputDocument) {
 
 		// check if source file basic starting tag count and output starting
 		// basic tag count are equals.
@@ -481,6 +482,38 @@ public class HTML5Util {
 
 		return true;
 
+	}
+
+	public static boolean isContainAlignableComponent(Segment e) {
+
+		boolean hasTable = e.getAllElements(HTML5Util.TABLE).size() == 0;
+		boolean hasServerElement = false;
+
+		List<Element> allServerElements = e
+				.getAllElements(StartTagType.SERVER_COMMON);
+
+		for (Element serverElement : allServerElements) {
+
+			if (serverElement.toString().contains("include")) {
+
+				// check whether file include a table
+				Pattern pattern = Pattern.compile("\"(.*?)\"");
+				Matcher matcher = pattern.matcher(serverElement.toString());
+				if (matcher.find()) {
+
+					String includeFileName = matcher.group(1);
+
+					if (includeFileName.toLowerCase().contains("table")) {
+						hasServerElement = true;
+						break;
+					}
+				}
+
+			}
+
+		}
+
+		return hasTable && hasServerElement;
 	}
 
 }
