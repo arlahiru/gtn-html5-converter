@@ -14,7 +14,7 @@ import com.gtnexus.html5.rule.Rule;
 
 public class CenterRule implements Rule {
 
-	//@Override
+	@Override
 	public StringBuilder execute(OutputDocument outputDoc,
 			Segment originalAttribute, Segment originalElement) {
 

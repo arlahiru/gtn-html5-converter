@@ -12,12 +12,11 @@ import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Source;
 
-import com.gtnexus.html5.facade.Facade;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.util.HTML5Util;
 
-public class PFacade extends Facade{
+public class PFacade {
 
 	public static void fixPElements(Source source, OutputDocument outputDocument) {
 
@@ -80,7 +79,7 @@ public class PFacade extends Facade{
 				// close ul start tag
 				modifiedPTag.append(STYLE + "=\"" + newPStyleValue + "\">");
 
-				replace(p.getStartTag(), modifiedPTag,outputDocument);
+				outputDocument.replace(p.getStartTag(), modifiedPTag);
 				// outputDocument.replace(tr.getEndTag(), "</" +
 				// HTMLElementName.UL
 				// + ">");

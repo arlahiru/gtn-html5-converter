@@ -55,8 +55,6 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.WriterAppender;
 
-import com.gtnexus.html5.exception.HTML5ConversionException;
-import com.gtnexus.html5.exception.HTML5ParserException;
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.rule.body.BodyBGcolorRule;
 import com.gtnexus.html5.rule.body.BodyBackgroundRule;
@@ -106,7 +104,7 @@ public class JerichoJspParserUtil {
 	public static final DbLogger dbLogger = DbLogger.getInstance();
 	private static StringWriter consoleWriter;
 	private static WriterAppender appender;
-
+	private static boolean isExceptionOccured = false;
 	static {
 
 		// Configure logger
@@ -126,6 +124,7 @@ public class JerichoJspParserUtil {
 	// Initialize rule map
 	public static void initialize() {
 
+		dbLogger.enable(false);
 
 		// configure log4j to output logs to the UI
 		consoleWriter = new StringWriter();
@@ -342,7 +341,7 @@ public class JerichoJspParserUtil {
 		logger.debug("Rules map initialized successfully.");
 
 		// disable dblogger
-		dbLogger.enable(true);
+		dbLogger.enable(false);
 
 		if (dbLogger.isEnabled()) {
 			dbLogger.initialize();
@@ -353,12 +352,12 @@ public class JerichoJspParserUtil {
 	/*
 	 * public method that convert given JSP file to HTML5 ready JSP file
 	 */
-	public static void convertToHTML5(String filePath, boolean isIncludeFile)
-			throws FileNotFoundException, IOException, HTML5ParserException{
+	public static int convertToHTML5(String filePath, boolean isIncludeFile)
+			throws FileNotFoundException, IOException {
 
 		// Parse JSP file and remove obsolete html5 tags and apply relevant
 		// workaround.
-		dbLogger.insertPage(filePath, isIncludeFile);
+
 		if (!isIncludeFile) {
 			logger.info("Input File: " + filePath);
 		} else {
@@ -377,62 +376,69 @@ public class JerichoJspParserUtil {
 
 			int numOfConvertedIncludeFiles = 0;
 
-			// get include file paths
-			List<String> includeFilePathList = HTML5Util
-					.getIncludeFilePaths(filePath);
+			try {
 
-			printIncludeFiles(includeFilePathList);
+				// get include file paths
+				List<String> includeFilePathList = HTML5Util
+						.getIncludeFilePaths(filePath);
 
-			logger.debug("Conversion started...");
+				printIncludeFiles(includeFilePathList);
 
-			OutputDocument outputDocument = new OutputDocument(source);
+				logger.debug("Conversion started...");
 
-			HeaderElementFacade.fixHeaderElementObsoleteFeatures(source,
-					outputDocument, isIncludeFile);
+				OutputDocument outputDocument = new OutputDocument(source);
 
-			BodyElementFacade.fixAllBodyElementObsoleteFeatures(source,
-					outputDocument);
+				HeaderElementFacade.fixHeaderElementObsoleteFeatures(source,
+						outputDocument, isIncludeFile);
 
-			// recursively convert include files
-			for (String includeFilePath : includeFilePathList) {
+				BodyElementFacade.fixAllBodyElementObsoleteFeatures(source,
+						outputDocument);
 
-				// Catch if any exception occurred and proceed with the other
-				// include files.
-				// It will allows to save other include files without breaking
-				// the program.
-			
-				convertToHTML5(includeFilePath, true);
-				numOfConvertedIncludeFiles = numOfConvertedIncludeFiles + 1;
-			
+				// recursively convert include files
+				for (String includeFilePath : includeFilePathList) {
 
-			}
+					// return 1 if success else 0
+					int result = convertToHTML5(includeFilePath, true);
 
-			// check if all the include files have converted successfully
-			// before save
-			if (includeFilePathList.size() == numOfConvertedIncludeFiles) {
+					numOfConvertedIncludeFiles = numOfConvertedIncludeFiles
+							+ result;
 
-				if (HTML5Util.isCommonTagsCountMatch(source, outputDocument)) {
-					// overwrite source file with new output doc
-					saveOutputDoc(sourceFile, outputDocument);
+				}
 
-					logger.info(filePath + " converted successfully!");
+				// check if all the include files have converted successfully
+				// before save
+				if (includeFilePathList.size() == numOfConvertedIncludeFiles) {
+
+				
+					if (HTML5Util.isCommonTagsCountMatch(source, outputDocument, isIncludeFile)) {
+						// overwrite source file with new output doc
+						saveOutputDoc(sourceFile, outputDocument);
+
+						logger.info(filePath + " converted successfully!");
+
+					} else {
+
+						logger.error(filePath
+								+ " has not been saved. Source and output elements not matched!");
+
+						return 0;
+
+					}
 
 				} else {
 
 					logger.error(filePath
-							+ " has not been saved. Source and output elements not matched!");
+							+ " has not been saved. Errors in include file(s).");
 
-					throw new HTML5ParserException("Content Exception","File Formatting Error: Tags Missing",null);
+					return 0;
 
 				}
 
-			} else {
+			} catch (Exception e) {
 
-				logger.error(filePath
-						+ " has not been saved. Errors in include file(s).");
-
-				throw new HTML5ParserException("Content Exception","Include file conversion failed.",null);
-
+				e.printStackTrace();
+				logger.error(filePath + " conversion failed!!!");
+				return 0;
 			}
 
 		} else {
@@ -440,6 +446,8 @@ public class JerichoJspParserUtil {
 			logger.info("This page is already a HTML 5 page!");
 
 		}
+
+		return 1;
 
 	}
 

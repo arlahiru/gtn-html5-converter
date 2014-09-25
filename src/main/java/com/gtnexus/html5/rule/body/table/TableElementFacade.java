@@ -30,13 +30,11 @@ import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Source;
 
-import com.gtnexus.html5.exception.HTML5ParserException;
-import com.gtnexus.html5.facade.Facade;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.util.HTML5Util;
 
-public class TableElementFacade extends Facade{
+public class TableElementFacade {
 
 	private static String cellPadding;
 	private static Element thead;
@@ -45,7 +43,7 @@ public class TableElementFacade extends Facade{
 	private static List<Element> trElements;
 
 	public static void fixLegacyTables(Source source,
-			OutputDocument outputDocument) throws HTML5ParserException{
+			OutputDocument outputDocument) {
 
 		logger.debug("Fixing legacy tables started...");
 
@@ -129,13 +127,13 @@ public class TableElementFacade extends Facade{
 
 			// close table start tag
 			modifiedTableTag.append(STYLE + "=\"" + newTableStyleValue + "\">");
-	
-			replace(table.getStartTag(), modifiedTableTag,outputDocument);
-			replace(table.getEndTag(), new StringBuilder("</" + TABLE + ">"),outputDocument);
+
+			outputDocument.replace(table.getStartTag(), modifiedTableTag);
+			outputDocument.replace(table.getEndTag(), "</" + TABLE + ">");
 
 			logger.debug(table.getDebugInfo() + " replace with "
 					+ modifiedTableTag);
-			
+
 			fixTableHead(table, outputDocument);
 
 			fixTableBody(table, outputDocument);
@@ -143,11 +141,11 @@ public class TableElementFacade extends Facade{
 			fixTableRow(table, outputDocument);
 
 			fixTableFooter(table, outputDocument);
-			
+
 		}
 	}
 
-	private static void fixTableRow(Element table, OutputDocument outputDocument) throws HTML5ParserException {
+	private static void fixTableRow(Element table, OutputDocument outputDocument) {
 
 		for (Element tr : trElements) {
 
@@ -177,7 +175,7 @@ public class TableElementFacade extends Facade{
 					if (rule != null) {
 
 						StringBuilder returnValue = rule.execute(
-								outputDocument, trAttribute, tr);
+								outputDocument, trAttribute, null);
 
 						if (returnValue != null) {
 							newTrStyleValue.append(returnValue);
@@ -206,7 +204,6 @@ public class TableElementFacade extends Facade{
 							
 
 				outputDocument.replace(tr.getStartTag(), modifiedTRTag);
-				
 				// outputDocument.replace(tr.getEndTag(), "</" + TR + ">");
 
 				logger.debug("\t" + tr.getDebugInfo() + " replace with "
@@ -297,11 +294,8 @@ public class TableElementFacade extends Facade{
 				// close tr start tag
 				modifiedTDTag.append(STYLE + "=\"" + newTdStyleValue + "\">");
 
-			
-					replace(td.getStartTag(), modifiedTDTag,outputDocument);
-				
-					// outputDocument.replace(td.getEndTag(), "</" + TD + ">");
-				
+				outputDocument.replace(td.getStartTag(), modifiedTDTag);
+				// outputDocument.replace(td.getEndTag(), "</" + TD + ">");
 
 				logger.debug("\t\t" + td.getDebugInfo() + " replace with "
 						+ modifiedTDTag);
@@ -312,7 +306,7 @@ public class TableElementFacade extends Facade{
 	}
 
 	private static void fixTableHead(Element table,
-			OutputDocument outputDocument){
+			OutputDocument outputDocument) {
 
 		if (thead != null) {
 
@@ -365,10 +359,9 @@ public class TableElementFacade extends Facade{
 				// close tr start tag
 				modifiedTheadTag.append(STYLE + "=\"" + newTheadStyleValue
 						+ "\">");
-				
-					replace(thead.getStartTag(), modifiedTheadTag,outputDocument);
-				
-					// outputDocument.replace(tr.getEndTag(), "</" + TR + ">");
+
+				outputDocument.replace(thead.getStartTag(), modifiedTheadTag);
+				// outputDocument.replace(tr.getEndTag(), "</" + TR + ">");
 
 				logger.debug("\t" + thead.getDebugInfo() + " replace with "
 						+ modifiedTheadTag);
@@ -379,7 +372,7 @@ public class TableElementFacade extends Facade{
 	}
 
 	private static void fixTableBody(Element table,
-			OutputDocument outputDocument){
+			OutputDocument outputDocument) {
 
 		if (tbody != null) {
 
@@ -432,10 +425,8 @@ public class TableElementFacade extends Facade{
 				// close tr start tag
 				modifiedTbodyTag.append(STYLE + "=\"" + newTbodyStyleValue
 						+ "\">");
-			
-					
-					replace(tbody.getStartTag(), modifiedTbodyTag,outputDocument);
-				
+
+				outputDocument.replace(tbody.getStartTag(), modifiedTbodyTag);
 				// outputDocument.replace(tr.getEndTag(), "</" + TR + ">");
 
 				logger.debug("\t" + tbody.getDebugInfo() + " replace with "
@@ -445,7 +436,7 @@ public class TableElementFacade extends Facade{
 	}
 
 	private static void fixTableFooter(Element table,
-			OutputDocument outputDocument){
+			OutputDocument outputDocument) {
 
 		if (tfoot != null) {
 
@@ -499,9 +490,8 @@ public class TableElementFacade extends Facade{
 				modifiedTfootTag.append(STYLE + "=\"" + newTfootStyleValue
 						+ "\">");
 
-					replace(tfoot.getStartTag(),modifiedTfootTag,outputDocument);
-				
-
+				outputDocument.replace(tfoot.getStartTag(), modifiedTfootTag);
+				// outputDocument.replace(tr.getEndTag(), "</" + TR + ">");
 
 				logger.debug("\t" + tfoot.getDebugInfo() + " replace with "
 						+ modifiedTfootTag);

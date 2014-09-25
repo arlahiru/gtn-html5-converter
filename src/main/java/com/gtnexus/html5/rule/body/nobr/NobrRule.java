@@ -8,10 +8,9 @@ import net.htmlparser.jericho.Element;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Segment;
 
-import com.gtnexus.html5.facade.Facade;
 import com.gtnexus.html5.rule.Rule;
 
-public class NobrRule extends Facade implements Rule  {
+public class NobrRule implements Rule {
 
 	@Override
 	public StringBuilder execute(OutputDocument outputDoc,
@@ -23,9 +22,9 @@ public class NobrRule extends Facade implements Rule  {
 		StringBuilder spanTag = new StringBuilder("<" + SPAN + " " + STYLE
 				+ "=\"" + WHITE_SPACE + ":" + NO_WRAP + ";" + "\">");
 
-		replace(nobr.getStartTag(), spanTag,outputDoc);
+		outputDoc.replace(nobr.getStartTag(), spanTag);
 
-		replace(nobr.getEndTag(), new StringBuilder("</" + SPAN + ">"),outputDoc);
+		outputDoc.replace(nobr.getEndTag(), "</" + SPAN + ">");
 
 		return spanTag;
 

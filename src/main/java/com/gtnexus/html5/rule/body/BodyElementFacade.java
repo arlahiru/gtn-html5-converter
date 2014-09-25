@@ -12,8 +12,6 @@ import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Source;
 
-import com.gtnexus.html5.exception.HTML5ParserException;
-import com.gtnexus.html5.facade.Facade;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.rule.body.br.BrFacade;
@@ -37,59 +35,58 @@ import com.gtnexus.html5.rule.body.table.TableElementFacade;
 import com.gtnexus.html5.rule.body.ul.UlFacade;
 import com.gtnexus.html5.util.HTML5Util;
 
-public class BodyElementFacade extends Facade {
+public class BodyElementFacade {
 
 	// fix obsolete features in all the elements inside html body including the
 	// body tag
 	public static void fixAllBodyElementObsoleteFeatures(Source source,
-			OutputDocument outputDocument) throws HTML5ParserException{
+			OutputDocument outputDocument) {
 
-			fixBodyElementObsoleteFeatures(source, outputDocument);
-	
-			TableElementFacade.fixLegacyTables(source, outputDocument);
-	
-			FontElementFacade.fixFontTags(source, outputDocument);
-	
-			ImageElementFacade.fixImgTags(source, outputDocument);
-	
-			FormElementFacade.fixFormObsoleteFeatures(source, outputDocument);
-	
-			BrFacade.fixBRElements(source, outputDocument);
-	
-			CaptionFacade.fixCaptionElements(source, outputDocument);
-	
-			CenterFacade.fixCenterTags(source, outputDocument);
-	
-			DivFacade.fixDivElements(source, outputDocument);
-	
-			HrFacade.fixHRElements(source, outputDocument);
-	
-			HxElementFacade.fixH1to6Elements(source, outputDocument);
-	
-			ImageElementFacade.fixImgTags(source, outputDocument);
-	
-			InputElementFacade.fixInputTags(source, outputDocument);
-	
-			LegendFacade.fixLegendElements(source, outputDocument);
-	
-			LiFacade.fixLiElements(source, outputDocument);
-	
-			NobrFacade.fixNobrElements(source, outputDocument);
-	
-			OlFacade.fixOlElements(source, outputDocument);
-	
-			PFacade.fixPElements(source, outputDocument);
-	
-			PreFacade.fixPreElements(source, outputDocument);
-	
-			SpacerElementFacade.fixSpacerTags(source, outputDocument);
-	
-			UlFacade.fixUlElements(source, outputDocument);
-		
+		fixBodyElementObsoleteFeatures(source, outputDocument);
+
+		TableElementFacade.fixLegacyTables(source, outputDocument);
+
+		FontElementFacade.fixFontTags(source, outputDocument);
+
+		ImageElementFacade.fixImgTags(source, outputDocument);
+
+		FormElementFacade.fixFormObsoleteFeatures(source, outputDocument);
+
+		BrFacade.fixBRElements(source, outputDocument);
+
+		CaptionFacade.fixCaptionElements(source, outputDocument);
+
+		CenterFacade.fixCenterTags(source, outputDocument);
+
+		DivFacade.fixDivElements(source, outputDocument);
+
+		HrFacade.fixHRElements(source, outputDocument);
+
+		HxElementFacade.fixH1to6Elements(source, outputDocument);
+
+		ImageElementFacade.fixImgTags(source, outputDocument);
+
+		InputElementFacade.fixInputTags(source, outputDocument);
+
+		LegendFacade.fixLegendElements(source, outputDocument);
+
+		LiFacade.fixLiElements(source, outputDocument);
+
+		NobrFacade.fixNobrElements(source, outputDocument);
+
+		OlFacade.fixOlElements(source, outputDocument);
+
+		PFacade.fixPElements(source, outputDocument);
+
+		PreFacade.fixPreElements(source, outputDocument);
+
+		SpacerElementFacade.fixSpacerTags(source, outputDocument);
+
+		UlFacade.fixUlElements(source, outputDocument);
 	}
 
 	public static void fixBodyElementObsoleteFeatures(Source source,
-			OutputDocument outputDocument) throws HTML5ParserException {
+			OutputDocument outputDocument) {
 
 		logger.debug("Fixing body tag started...");
 
@@ -124,7 +121,7 @@ public class BodyElementFacade extends Facade {
 					if (rule != null) {
 
 						StringBuilder returnValue = rule.execute(
-								outputDocument, bodyAttribute, body); //@lahiru r: passed the body element as the orignal element
+								outputDocument, bodyAttribute, null);
 
 						if (returnValue != null) {
 							newBodyStyleValue.append(returnValue);
@@ -151,11 +148,8 @@ public class BodyElementFacade extends Facade {
 				// close body start tag
 				modifiedBodyTag.append(STYLE + "=\"" + newBodyStyleValue
 						+ "\">");
-				
-				//outputDocument.replace(body.getStartTag(), modifiedBodyTag);
-				
-				replace(body.getStartTag(),modifiedBodyTag,outputDocument);
-				
+
+				outputDocument.replace(body.getStartTag(), modifiedBodyTag);
 				// outputDocument.replace(tr.getEndTag(), "</" +
 				// HTMLElementName.BODY + ">");
 
