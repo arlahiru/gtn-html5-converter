@@ -342,7 +342,7 @@ public class JerichoJspParserUtil {
 		logger.debug("Rules map initialized successfully.");
 
 		// disable dblogger
-		dbLogger.enable(true);
+		dbLogger.enable(false);
 
 		if (dbLogger.isEnabled()) {
 			dbLogger.initialize();
