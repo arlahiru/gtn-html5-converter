@@ -13,11 +13,12 @@ import net.htmlparser.jericho.Element;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Source;
 
+import com.gtnexus.html5.facade.Facade;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.util.HTML5Util;
 
-public class ImageElementFacade {
+public class ImageElementFacade extends Facade {
 
 	public static boolean hspaceOrVspaceFound = false;
 
@@ -42,7 +43,7 @@ public class ImageElementFacade {
 				Rule apixelImgRule = new ImageApixelRule();
 
 				StringBuilder replaceTag = apixelImgRule.execute(
-						outputDocument, img, null);
+						outputDocument, img, img);
 
 				outputDocument.replace(img.getStartTag(), replaceTag);
 				// outputDocument.replace(img.getEndTag(), "</" + DIV + ">");
@@ -76,7 +77,7 @@ public class ImageElementFacade {
 						if (rule != null) {
 
 							StringBuilder returnValue = rule.execute(
-									outputDocument, trAttribute, null);
+									outputDocument, trAttribute, img);
 
 							if (returnValue != null) {
 								newImageStyleValue.append(returnValue);
@@ -98,15 +99,17 @@ public class ImageElementFacade {
 						}
 
 					}
-					
+
 					// append inner server tags if any
-					modifiedImageTag.append(" " + HTML5Util.getInnerServerTagContent(img) + " ");
+					modifiedImageTag.append(" "
+							+ HTML5Util.getInnerServerTagContent(img) + " ");
 
 					// close img start tag
 					modifiedImageTag.append(STYLE + "=\"" + newImageStyleValue
 							+ "\">");
 
-					outputDocument.replace(img.getStartTag(), modifiedImageTag);
+					replace(img.getStartTag(), modifiedImageTag,outputDocument);
+					
 					// outputDocument.replace(tr.getEndTag(), "</" + IMG + ">");
 
 					logger.debug("\t" + img.getDebugInfo() + " replace with "

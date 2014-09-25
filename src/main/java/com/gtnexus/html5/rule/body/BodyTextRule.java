@@ -9,7 +9,7 @@ import com.gtnexus.html5.util.HTML5Util;
 
 public class BodyTextRule implements Rule {
 
-	@Override
+	//@Override
 	public StringBuilder execute(OutputDocument outputDoc,
 			Segment originalAttribute, Segment originalElement) {
 		String value = ((Attribute)originalAttribute).getValue();

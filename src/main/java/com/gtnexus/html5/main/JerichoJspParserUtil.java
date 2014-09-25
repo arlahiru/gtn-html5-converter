@@ -126,7 +126,6 @@ public class JerichoJspParserUtil {
 	// Initialize rule map
 	public static void initialize() {
 
-		dbLogger.enable(false);
 
 		// configure log4j to output logs to the UI
 		consoleWriter = new StringWriter();
@@ -343,7 +342,7 @@ public class JerichoJspParserUtil {
 		logger.debug("Rules map initialized successfully.");
 
 		// disable dblogger
-		dbLogger.enable(false);
+		dbLogger.enable(true);
 
 		if (dbLogger.isEnabled()) {
 			dbLogger.initialize();
@@ -355,11 +354,13 @@ public class JerichoJspParserUtil {
 	 * public method that convert given JSP file to HTML5 ready JSP file
 	 */
 	public static void convertToHTML5(String filePath, boolean isIncludeFile)
-			throws HTML5ConversionException, FileNotFoundException, IOException {
+
+			throws FileNotFoundException, IOException, HTML5ParserException{
+
 
 		// Parse JSP file and remove obsolete html5 tags and apply relevant
 		// workaround.
-
+		dbLogger.insertPage(filePath, isIncludeFile);
 		if (!isIncludeFile) {
 			logger.info("Input File: " + filePath);
 		} else {
@@ -397,6 +398,7 @@ public class JerichoJspParserUtil {
 			// recursively convert include files
 			for (String includeFilePath : includeFilePathList) {
 
+
 				// Catch if any exception occurred and proceed with the other
 				// include files.
 				// It will allows to save other include files without breaking
@@ -404,8 +406,9 @@ public class JerichoJspParserUtil {
 				try {
 					convertToHTML5(includeFilePath, true);
 					numOfConvertedIncludeFiles = numOfConvertedIncludeFiles + 1;
-				} catch (HTML5ConversionException e) {
+				} catch (HTML5ParserException e) {
 					e.printStackTrace();
+					// db log here
 
 				}
 
@@ -426,9 +429,8 @@ public class JerichoJspParserUtil {
 					logger.error(filePath
 							+ " has not been saved. Source and output elements not matched!");
 
-					throw new HTML5ConversionException(
-							filePath
-									+ " has not been saved. Source and output elements not matched!");
+					throw new HTML5ParserException("Content Exception","File Formatting Error: Tags Missing",null);
+
 
 				}
 
@@ -437,8 +439,8 @@ public class JerichoJspParserUtil {
 				logger.error(filePath
 						+ " has not been saved. Errors in include file(s).");
 
-				throw new HTML5ConversionException(filePath
-						+ " has not been saved. Errors in include file(s).");
+				throw new HTML5ParserException("Content Exception","Include file conversion failed.",null);
+
 
 			}
 

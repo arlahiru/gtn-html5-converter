@@ -39,6 +39,7 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
 
+import com.gtnexus.html5.exception.HTML5ParserException;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.main.RevertBackChanges;
 
@@ -46,6 +47,10 @@ import static com.gtnexus.html5.main.JerichoJspParserUtil.dbLogger;
 
 public class MainUI extends JFrame {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private List preHTML5List = new List();
 	private List html5List = new List();
 
@@ -70,8 +75,10 @@ public class MainUI extends JFrame {
 	private TextField textFieldlocationDirectory = new TextField();
 	private final JButton btnOpenWithDreamweaver = new JButton(
 			"Open with Dreamweaver");
-	private final JButton btnOpenWithBrowser = new JButton("Open with Firefox");
+	private final JButton btnOpenWithFireFox = new JButton("Open with Firefox");
 	private JButton btnErrorsRecorded = new JButton("Errors Recorded");
+	private final JButton btnRemove = new JButton("Remove");
+	private final JButton btnOpenWithIE = new JButton("Open with IE");
 	private String sourcePath;
 	private String backupPath;
 
@@ -93,10 +100,14 @@ public class MainUI extends JFrame {
 		addActionListners();
 		JerichoJspParserUtil.initialize();
 		backupPath = DEFAULT_BACKUP_PATH;
-		// dbLogger.initialize();
+		dbLogger.initialize();
 		setBackupPath(backupPath);
-		// checkForPreviousErrors();
+
 		printOnConsole(JerichoJspParserUtil.getDebuggerOutput(), "log");
+
+		checkForPreviousErrors();
+		
+
 	}
 
 	public static void main(String[] args) {
@@ -126,6 +137,7 @@ public class MainUI extends JFrame {
 		getContentPane().setLayout(null);
 
 		getContentPane().add(textFieldlocationDirectory);
+
 		preHTML5List.setMultipleSelections(true);
 		// preHTML5List.setMultipleMode(true);
 
@@ -219,13 +231,28 @@ public class MainUI extends JFrame {
 		btnOpenWithDreamweaver.setBounds(1020, 423, 164, 23);
 		getContentPane().add(btnOpenWithDreamweaver);
 
-		btnErrorsRecorded.setEnabled(false);
+		btnErrorsRecorded.setEnabled(true);
 		btnErrorsRecorded.setHorizontalAlignment(SwingConstants.LEFT);
 		btnErrorsRecorded.setBounds(1016, 17, 154, 23);
 		getContentPane().add(btnErrorsRecorded);
 
-		btnOpenWithBrowser.setBounds(1016, 58, 154, 23);
-		getContentPane().add(btnOpenWithBrowser);
+		btnOpenWithFireFox.setBounds(835, 54, 154, 23);
+		getContentPane().add(btnOpenWithFireFox);
+		
+		
+		btnRemove.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				for(int i = 0;i <= preHTML5List.getSelectedIndexes().length;i++)
+				preHTML5List.remove(preHTML5List.getSelectedIndexes()[i]);
+			}
+		});
+		btnRemove.setBounds(278, 423, 89, 23);
+		getContentPane().add(btnRemove);
+		
+		
+		
+		btnOpenWithIE.setBounds(1016, 54, 154, 23);
+		getContentPane().add(btnOpenWithIE);
 
 		this.setBounds(0, 0, 1200, 700);
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
@@ -271,13 +298,14 @@ public class MainUI extends JFrame {
 	public ArrayList<String> readCSV() {
 
 		ArrayList<String> list = new ArrayList<String>();
-		try (BufferedReader br = new BufferedReader(new FileReader(sourcePath))) {
-
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(sourcePath));
 			String sCurrentLine;
 
 			while ((sCurrentLine = br.readLine()) != null) {
 				list.add(sCurrentLine);
 			}
+			br.close();
 
 		} catch (FileNotFoundException e) {
 			printOnConsole("File Not Found! Please check file path.\n", "error");
@@ -484,7 +512,7 @@ public class MainUI extends JFrame {
 				createErrorsFrame();
 			}
 		});
-		btnOpenWithBrowser.addActionListener(new ActionListener() {
+		btnOpenWithFireFox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
 					firefox_path = openWithBrowser("FIREFOX", firefox_path,
@@ -493,6 +521,18 @@ public class MainUI extends JFrame {
 							.getSelectedItem().substring(15));
 				} catch (NullPointerException e2) {
 					printOnConsole("Please select a file", "error");
+				}
+			}
+		});
+		btnOpenWithIE.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {
+					firefox_path = openWithBrowser("IE", internetExplorer_path,
+							LOCALHOST, html5List.getSelectedItem().substring(1));
+					openWithBrowser("IE", internetExplorer_path, QA2HOST, html5List
+							.getSelectedItem().substring(15));
+				} catch (NullPointerException e2) {
+					printOnConsole("Please select a file","error");
 				}
 			}
 		});
@@ -590,6 +630,7 @@ public class MainUI extends JFrame {
 		try {
 			if (isBackupValid && checkBackup(sourceFile)) {
 				JerichoJspParserUtil.clearConsoleWriter();
+
 				JerichoJspParserUtil.convertToHTML5(formatFilePath(sourceFile),
 						false);
 				printOnConsole(JerichoJspParserUtil.getDebuggerOutput(), "log");
@@ -600,12 +641,19 @@ public class MainUI extends JFrame {
 				printOnConsole("Conversion aborted.", "error");
 			}
 
-		} catch (Exception e) {
-			printOnConsole(e.getMessage(), "error");
-			printOnConsole(printStacktrace(e), "error");
+
+		} catch(HTML5ParserException ex){
+			ex.printStackTrace();
+			printOnConsole(ex.getType(),"error");
+			printOnConsole(ex.getMessage(),"error");
+			printOnConsole(ex.getTagInfo(),"error");
+			dbLogger.logError(formatFilePath(sourceFile), ex.getType(), ex.getMessage(), ex.getTagInfo());
+			
+		}
+		catch(Exception e){
+			e.printStackTrace();
 
 		}
-
 	}
 
 	public void revertBack(String convertedFilePath) {
@@ -898,6 +946,7 @@ public class MainUI extends JFrame {
 	public void createErrorsFrame() {
 		ErrorsFrame.getInstance(this);
 		disableErrorsRecordedButton();
+	
 	}
 
 	public String openWithBrowser(String browser, String browserPath,

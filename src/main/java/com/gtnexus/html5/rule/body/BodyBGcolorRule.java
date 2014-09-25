@@ -8,7 +8,7 @@ import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.util.HTML5Util;
 public class BodyBGcolorRule implements Rule {
 
-	@Override
+	//@Override
 	public StringBuilder execute(OutputDocument outputDoc,
 			Segment originalAttribute, Segment originalElement) {
 		

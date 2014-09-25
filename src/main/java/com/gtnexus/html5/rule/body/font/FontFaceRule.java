@@ -9,7 +9,7 @@ import com.gtnexus.html5.util.HTML5Util;
 
 public class FontFaceRule implements Rule {
 
-	@Override
+	//@Override
 	public StringBuilder execute(OutputDocument outputDoc,
 			Segment originalAttribute, Segment originalElement) {
 

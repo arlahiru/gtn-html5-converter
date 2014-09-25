@@ -1,6 +1,6 @@
 package com.gtnexus.html5.exception;
 
-public class HTML5ParserException extends Exception {
+public class HTML5ParserException extends RuntimeException {
 
 	/**
 	 * Exception class to generate parser specific exception
@@ -8,15 +8,16 @@ public class HTML5ParserException extends Exception {
 	private static final long serialVersionUID = 1L;
 
 	private String message;
-	private String tagInfo;
-	private String stackTrace;
 
-	public HTML5ParserException(String message, String tagInfo,
-			String stackTrace) {
+	private String type;
+	private String tagInfo;
+
+	public HTML5ParserException(String type, String message, String tagInfo) {
 		super();
+		this.type = type;
 		this.message = message;
 		this.tagInfo = tagInfo;
-		this.stackTrace = stackTrace;
+
 	}
 
 	public String getMessage() {
@@ -35,12 +36,9 @@ public class HTML5ParserException extends Exception {
 		this.tagInfo = tagInfo;
 	}
 
-	public String getParentStackTrace() {
-		return stackTrace;
-	}
+	public String getType() {
+		return type;
 
-	public void setParentStackTrace(String stackTrace) {
-		this.stackTrace = stackTrace;
 	}
 
 }
