@@ -12,11 +12,13 @@ import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Source;
 
+import com.gtnexus.html5.exception.HTML5ParserException;
+import com.gtnexus.html5.facade.Facade;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.util.HTML5Util;
 
-public class DivFacade {
+public class DivFacade extends Facade{
 
 	public static void fixDivElements(Source source,
 			OutputDocument outputDocument) {
@@ -54,7 +56,7 @@ public class DivFacade {
 					if (rule != null) {
 
 						StringBuilder returnValue = rule.execute(
-								outputDocument, divAttribute, null);
+								outputDocument, divAttribute, div);
 
 						if (returnValue != null) {
 							newDivStyleValue.append(returnValue);
@@ -81,7 +83,11 @@ public class DivFacade {
 				// close div start tag
 				modifiedDivTag.append(STYLE + "=\"" + newDivStyleValue + "\">");
 
-				outputDocument.replace(div.getStartTag(), modifiedDivTag);
+				//outputDocument.replace(div.getStartTag(), modifiedDivTag);
+
+				replace(div.getStartTag(), modifiedDivTag,outputDocument);
+					
+				
 				// outputDocument.replace(tr.getEndTag(), "</" +
 				// HTMLElementName.UL
 				// + ">");

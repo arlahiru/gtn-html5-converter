@@ -12,11 +12,12 @@ import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Source;
 
+import com.gtnexus.html5.facade.Facade;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.util.HTML5Util;
 
-public class CaptionFacade {
+public class CaptionFacade extends Facade{
 
 	public static void fixCaptionElements(Source source,
 			OutputDocument outputDocument) {
@@ -83,8 +84,8 @@ public class CaptionFacade {
 				modifiedCaptionTag.append(STYLE + "=\"" + newCaptionStyleValue
 						+ "\">");
 
-				outputDocument.replace(caption.getStartTag(),
-						modifiedCaptionTag);
+				replace(caption.getStartTag(),
+						modifiedCaptionTag,outputDocument);
 				// outputDocument.replace(tr.getEndTag(), "</" +
 				// HTMLElementName.UL
 				// + ">");

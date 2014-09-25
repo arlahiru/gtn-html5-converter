@@ -12,11 +12,12 @@ import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Source;
 
+import com.gtnexus.html5.facade.Facade;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.util.HTML5Util;
 
-public class LegendFacade {
+public class LegendFacade extends Facade{
 
 	public static void fixLegendElements(Source source,
 			OutputDocument outputDocument) {
@@ -82,7 +83,7 @@ public class LegendFacade {
 				modifiedLegendTag.append(STYLE + "=\"" + newLegendStyleValue
 						+ "\">");
 
-				outputDocument.replace(legend.getStartTag(), modifiedLegendTag);
+				replace(legend.getStartTag(), modifiedLegendTag,outputDocument);
 				// outputDocument.replace(tr.getEndTag(), "</" + TR + ">");
 
 				logger.debug("\t" + legend.getDebugInfo() + " replace with "

@@ -406,7 +406,7 @@ public class HTML5Util {
 
 	// verify new document is not missing anything by comparing with source file
 	public static boolean isCommonTagsCountMatch(Source source,
-			OutputDocument outputDocument, boolean isIncludeFile) {
+			OutputDocument outputDocument) {
 
 		// check if source file basic starting tag count and output starting
 		// basic tag count are equals.
