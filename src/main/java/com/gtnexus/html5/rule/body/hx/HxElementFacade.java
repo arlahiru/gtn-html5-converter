@@ -11,12 +11,11 @@ import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Source;
 
-import com.gtnexus.html5.facade.Facade;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.util.HTML5Util;
 
-public class HxElementFacade extends Facade{
+public class HxElementFacade {
 
 	private static String hxAlignRuleKey = "HX_" + ALIGN;
 
@@ -142,7 +141,7 @@ public class HxElementFacade extends Facade{
 			// close tr start tag
 			modifiedHTag.append(STYLE + "=\"" + newHStyleValue + "\">");
 
-			replace(h.getStartTag(), modifiedHTag,outputDocument);
+			outputDocument.replace(h.getStartTag(), modifiedHTag);
 			// outputDocument.replace(tr.getEndTag(), "</" + TR + ">");
 
 			logger.debug("\t" + h.getDebugInfo() + " replace with "

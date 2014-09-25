@@ -12,12 +12,11 @@ import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Source;
 
-import com.gtnexus.html5.facade.Facade;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.util.HTML5Util;
 
-public class OlFacade extends Facade{
+public class OlFacade {
 
 	public static void fixOlElements(Source source,
 			OutputDocument outputDocument) {
@@ -81,7 +80,7 @@ public class OlFacade extends Facade{
 				// close ul start tag
 				modifiedOlTag.append(STYLE + "=\"" + newOlStyleValue + "\">");
 
-				replace(ol.getStartTag(), modifiedOlTag,outputDocument);
+				outputDocument.replace(ol.getStartTag(), modifiedOlTag);
 				// outputDocument.replace(tr.getEndTag(), "</" +
 				// HTMLElementName.UL
 				// + ">");

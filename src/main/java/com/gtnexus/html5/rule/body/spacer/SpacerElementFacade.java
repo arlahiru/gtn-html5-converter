@@ -9,10 +9,9 @@ import net.htmlparser.jericho.Element;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Source;
 
-import com.gtnexus.html5.facade.Facade;
 import com.gtnexus.html5.rule.Rule;
 
-public class SpacerElementFacade extends Facade{
+public class SpacerElementFacade {
 
 	public static void fixSpacerTags(Source source, OutputDocument outputDocument) {
 
@@ -30,7 +29,7 @@ public class SpacerElementFacade extends Facade{
 			StringBuilder replaceTag = spacerRule.execute(outputDocument,
 					spacer, null);
 
-			replace(spacer.getStartTag(), replaceTag,outputDocument);
+			outputDocument.replace(spacer.getStartTag(), replaceTag);
 			// outputDocument.replace(img.getEndTag(), "</" + DIV + ">");
 
 		}

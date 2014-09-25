@@ -13,12 +13,11 @@ import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Source;
 
-import com.gtnexus.html5.facade.Facade;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.util.HTML5Util;
 
-public class BrFacade extends Facade {
+public class BrFacade {
 
 	public static void fixBRElements(Source source,
 			OutputDocument outputDocument) {
@@ -79,7 +78,7 @@ public class BrFacade extends Facade {
 				// close tr start tag
 				modifiedBRTag.append(STYLE + "=\"" + newBrStyleValue + "\">");
 
-				replace(br.getStartTag(), modifiedBRTag,outputDocument);
+				outputDocument.replace(br.getStartTag(), modifiedBRTag);
 				// outputDocument.replace(tr.getEndTag(), "</" + TR + ">");
 
 				logger.debug("\t" + br.getDebugInfo() + " replace with "
