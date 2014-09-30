@@ -1,5 +1,6 @@
 package com.gtnexus.html5.main;
 
+import static com.gtnexus.html5.main.JerichoJspParserUtil.dbLogger;
 import static com.gtnexus.html5.util.HTML5Util.ALIGN;
 import static com.gtnexus.html5.util.HTML5Util.ALINK;
 import static com.gtnexus.html5.util.HTML5Util.BACKGROUND;
@@ -342,7 +343,7 @@ public class JerichoJspParserUtil {
 		logger.debug("Rules map initialized successfully.");
 
 		// disable dblogger
-		dbLogger.enable(false);
+		dbLogger.enable(true);
 
 		if (dbLogger.isEnabled()) {
 			dbLogger.initialize();
@@ -408,14 +409,14 @@ public class JerichoJspParserUtil {
 					numOfConvertedIncludeFiles = numOfConvertedIncludeFiles + 1;
 				} catch (HTML5ParserException e) {
 					e.printStackTrace();
-					// db log here
+					dbLogger.logError(filePath, e.getType(), e.getMessage(), e.getTagInfo());
 
 				}
 
 			}
 
 			// check if all the include files have converted successfully
-			// before save
+			// before saving
 			if (includeFilePathList.size() == numOfConvertedIncludeFiles) {
 
 				if (HTML5Util.isCommonTagsCountMatch(source, outputDocument)) {
