@@ -1,5 +1,7 @@
 package com.gtnexus.html5.ui;
 
+import static com.gtnexus.html5.main.JerichoJspParserUtil.dbLogger;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -25,7 +27,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.SwingConstants;
@@ -40,11 +41,8 @@ import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
 
 import com.gtnexus.html5.exception.HTML5ParserException;
-import com.gtnexus.html5.main.ConverterThread;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.main.RevertBackChanges;
-
-import static com.gtnexus.html5.main.JerichoJspParserUtil.dbLogger;
 
 public class MainUI extends JFrame {
 
@@ -113,7 +111,7 @@ public class MainUI extends JFrame {
 
 		printOnConsole(JerichoJspParserUtil.getDebuggerOutput(), "log");
 
-		checkForPreviousErrors();
+		//checkForPreviousErrors();
 		
 
 	}

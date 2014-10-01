@@ -125,8 +125,8 @@ public class DbLogger {
 
 	private DbLogger() {
 		initialize();
-		makeStatements();
-		enabled=true;
+		//makeStatements();
+		//enabled=true;
 	}
 
 	public static synchronized DbLogger getInstance() {
