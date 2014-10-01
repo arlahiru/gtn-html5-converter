@@ -55,7 +55,7 @@ public class RevertBackChanges {
 		}
 
 		String[] filePathSplitArray = convertedFilePath.split("tcard");
-
+ 
 		String backupFilePath = backupBasePath + filePathSplitArray[1];
 
 		Path originalBackupFilePath = Paths.get(backupFilePath);
@@ -76,7 +76,7 @@ public class RevertBackChanges {
 		jspWriter.close();
 
 		// clear log tables
-		dblogger.delete(convertedFilePath);
+		dblogger.rollback(convertedFilePath);
 
 		logger.info("Backup file path:" + backupFilePath
 				+ " copied successfully!");

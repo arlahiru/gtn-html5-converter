@@ -40,6 +40,7 @@ import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
 
 import com.gtnexus.html5.exception.HTML5ParserException;
+import com.gtnexus.html5.main.ConverterThread;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.main.RevertBackChanges;
 
@@ -92,7 +93,14 @@ public class MainUI extends JFrame {
 	private final String LOCALHOST = "http://localhost:8080/";
 	private final String QA2HOST = "http://commerce.qa2.tradecard.com/";
 	private boolean isBackupValid = false;
-
+	private static int convertedItems = 0; //for the progressbar
+	
+	public void incrementConvertedItems(){
+		convertedItems++;
+	}
+	public boolean isBackupValid(){
+		return isBackupValid;
+	}
 	public MainUI() {
 
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -336,7 +344,7 @@ public class MainUI extends JFrame {
 
 							convertToHTML5(files[i]);
 
-							setProgressBarValue(files.length, i);
+							if(this.isDone()) setProgressBarValue(files.length, i);
 						}
 						return 0;
 					}
@@ -357,10 +365,10 @@ public class MainUI extends JFrame {
 					protected Integer doInBackground() throws Exception {
 						String[] selectedItems = preHTML5List
 								.getSelectedItems();
-
+						convertedItems=0;
 						for (int i = 0; i < selectedItems.length; i++) {
 							convertToHTML5(selectedItems[i]);
-							setProgressBarValue(selectedItems.length, i);
+							setProgressBarValue(selectedItems.length, convertedItems);
 						}
 
 						return 0;
@@ -626,15 +634,13 @@ public class MainUI extends JFrame {
 	}
 
 	public void convertToHTML5(String sourceFile) {
-
 		try {
-			if (isBackupValid && checkBackup(sourceFile)) {
+			if (isBackupValid() && checkBackup(sourceFile)) {
 				JerichoJspParserUtil.clearConsoleWriter();
-
-				JerichoJspParserUtil.convertToHTML5(formatFilePath(sourceFile),
-						false);
+				JerichoJspParserUtil.convertToHTML5(formatFilePath(sourceFile),false);
 				printOnConsole(JerichoJspParserUtil.getDebuggerOutput(), "log");
 				html4ToHtml5(sourceFile);
+				
 
 			} else {
 				printOnConsole("Backup path is not correct!", "error");
@@ -647,13 +653,14 @@ public class MainUI extends JFrame {
 			printOnConsole(ex.getType(),"error");
 			printOnConsole(ex.getMessage(),"error");
 			printOnConsole(ex.getTagInfo(),"error");
-			dbLogger.logError(formatFilePath(sourceFile), ex.getType(), ex.getMessage(), ex.getTagInfo());
+			
 			
 		}
 		catch(Exception e){
 			e.printStackTrace();
 
 		}
+		incrementConvertedItems();
 	}
 
 	public void revertBack(String convertedFilePath) {

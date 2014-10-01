@@ -19,7 +19,7 @@ public class ErrorsFrame extends JFrame {
 	/**
 	 * 
 	 */
-	
+	private static final String BASE_PATH = "C:/code/gtnexus/development/modules/main/tcard/web/tradecard/en/";
 	private static final long serialVersionUID = 1L;
 	
 	private static ErrorsFrame instance = null;
@@ -32,7 +32,7 @@ public class ErrorsFrame extends JFrame {
 	private MainUI parent;
 	
 	private ArrayList<Error> errorList;
-	private String[] COLUMNS = new String[]{ "Page Id", "Error Type", "Error Message" , "Last Converted Line"};
+	private String[] COLUMNS = new String[]{ "Page Id", "Path", "Error Type", "Error Message" , "Last Converted Line"};
 	
 	private ErrorsFrame(MainUI parentFrame) {
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -55,21 +55,30 @@ public class ErrorsFrame extends JFrame {
 		getContentPane().setLayout(null);
 		table = new JTable(errorsList,COLUMNS);
 		
-		table.setBounds(10, 30, 623, 321);
-		scrollPane.setBounds(10, 47, 760, 354);
+		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+		table.getColumnModel().getColumn(0).setPreferredWidth(50);
+		table.getColumnModel().getColumn(1).setPreferredWidth(450);
+		table.getColumnModel().getColumn(2).setPreferredWidth(100);
+		table.getColumnModel().getColumn(3).setPreferredWidth(250);
+		table.getColumnModel().getColumn(4).setPreferredWidth(150);
+		
+		
+		table.setBounds(10, 30, 960, 521);
+		scrollPane.setBounds(10, 47, 980, 554);
 		scrollPane.setViewportView(table);		
 		getContentPane().add(scrollPane);
 				
-		btnConvert.setBounds(780, 118, 180, 23);
+		btnConvert.setBounds(1000, 118, 180, 23);
 		getContentPane().add(btnConvert);		
 		
-		btnDreamweaver.setBounds(780, 50, 180, 23);
+		btnDreamweaver.setBounds(1000, 50, 180, 23);
 		getContentPane().add(btnDreamweaver);
 
 		
-		btnNotepad.setBounds(780, 84, 180, 23);
+		btnNotepad.setBounds(1000, 84, 180, 23);
 		getContentPane().add(btnNotepad);
-		this.setBounds(0, 0, 1000, 450);;
+		this.setBounds(0, 0, 1200, 640);
+		this.setTitle("Errors Recorded");;
 		this.setVisible(true);
 	}
 
@@ -118,8 +127,12 @@ public class ErrorsFrame extends JFrame {
 		String type = errorObject.getErrorType();
 		String message = errorObject.getErrorMessage();
 		String line = errorObject.getLastConvertedLine() +"";
-		
-		return new String[]{id,type,message,line};
+		String path ="";
+		if(errorObject.getPath().contains("en/"))
+			path = errorObject.getPath().substring(errorObject.getPath().indexOf("en/")+2);
+		else
+			path = errorObject.getPath().substring(errorObject.getPath().indexOf("en\\")+2);
+		return new String[]{id,path,type,message,line};
 	}
 	
     private void populateList(){
