@@ -18,7 +18,7 @@ import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.util.HTML5Util;
 
-public class DivFacade extends Facade{
+public class DivFacade extends Facade {
 
 	public static void fixDivElements(Source source,
 			OutputDocument outputDocument) {
@@ -40,54 +40,20 @@ public class DivFacade extends Facade{
 				// initialize default values. have to test this!
 				modifiedDivTag.append("<" + HTMLElementName.DIV + " ");
 
-				// remove table level obsolete attributes
-				Iterator<Attribute> divAttributeIterator = div.getAttributes()
-						.iterator();
+				applyRules(div, outputDocument, newDivStyleValue,
+						modifiedDivTag);
 
-				while (divAttributeIterator.hasNext()) {
-
-					Attribute divAttribute = divAttributeIterator.next();
-					String attributeName = divAttribute.getKey();
-					String ruleKey = div.getName() + "_"
-							+ attributeName.toLowerCase();
-
-					Rule rule = JerichoJspParserUtil.RULES_MAP.get(ruleKey);
-
-					if (rule != null) {
-
-						StringBuilder returnValue = rule.execute(
-								outputDocument, divAttribute, div);
-
-						if (returnValue != null) {
-							newDivStyleValue.append(returnValue);
-						} else {
-
-							// if rule does not return value, do appropriate fix
-							// here.
-
-						}
-
-					} else {
-
-						logger.info("Rule key not found for key: " + ruleKey);
-						modifiedDivTag.append(divAttribute);
-						modifiedDivTag.append(" ");
-						logger.info(ruleKey + " appended as it is.");
-					}
-
-				}
-				
 				// append inner server tags if any
-				modifiedDivTag.append(" " + HTML5Util.getInnerServerTagContent(div) + " ");
+				modifiedDivTag.append(" "
+						+ HTML5Util.getInnerServerTagContent(div) + " ");
 
 				// close div start tag
 				modifiedDivTag.append(STYLE + "=\"" + newDivStyleValue + "\">");
 
-				//outputDocument.replace(div.getStartTag(), modifiedDivTag);
+				// outputDocument.replace(div.getStartTag(), modifiedDivTag);
 
-				replace(div.getStartTag(), modifiedDivTag,outputDocument);
-					
-				
+				replace(div.getStartTag(), modifiedDivTag, outputDocument);
+
 				// outputDocument.replace(tr.getEndTag(), "</" +
 				// HTMLElementName.UL
 				// + ">");

@@ -40,8 +40,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +53,6 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.WriterAppender;
 
-import com.gtnexus.html5.exception.HTML5ConversionException;
 import com.gtnexus.html5.exception.HTML5ParserException;
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.rule.body.BodyBGcolorRule;

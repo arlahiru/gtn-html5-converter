@@ -17,7 +17,7 @@ import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.util.HTML5Util;
 
-public class LegendFacade extends Facade{
+public class LegendFacade extends Facade {
 
 	public static void fixLegendElements(Source source,
 			OutputDocument outputDocument) {
@@ -39,51 +39,18 @@ public class LegendFacade extends Facade{
 				// initialize default values. have to test this!
 				modifiedLegendTag.append("<" + HTMLElementName.LEGEND + " ");
 
-				// remove table level obsolete attributes
-				Iterator<Attribute> trAttributeIterator = legend
-						.getAttributes().iterator();
+				applyRules(legend, outputDocument, newLegendStyleValue,
+						modifiedLegendTag);
 
-				while (trAttributeIterator.hasNext()) {
-
-					Attribute trAttribute = trAttributeIterator.next();
-					String attributeName = trAttribute.getKey();
-					String ruleKey = legend.getName() + "_"
-							+ attributeName.toLowerCase();
-
-					Rule rule = JerichoJspParserUtil.RULES_MAP.get(ruleKey);
-
-					if (rule != null) {
-
-						StringBuilder returnValue = rule.execute(
-								outputDocument, trAttribute, null);
-
-						if (returnValue != null) {
-							newLegendStyleValue.append(returnValue);
-						} else {
-
-							// if rule does not return value, do appropriate fix
-							// here.
-
-						}
-
-					} else {
-
-						logger.info("Rule key not found for key: " + ruleKey);
-						modifiedLegendTag.append(trAttribute);
-						modifiedLegendTag.append(" ");
-						logger.info(ruleKey + " appended as it is.");
-					}
-
-				}
-				
 				// append inner server tags if any
-				modifiedLegendTag.append(" " + HTML5Util.getInnerServerTagContent(legend) + " ");
+				modifiedLegendTag.append(" "
+						+ HTML5Util.getInnerServerTagContent(legend) + " ");
 
 				// close tr start tag
 				modifiedLegendTag.append(STYLE + "=\"" + newLegendStyleValue
 						+ "\">");
 
-				replace(legend.getStartTag(), modifiedLegendTag,outputDocument);
+				replace(legend.getStartTag(), modifiedLegendTag, outputDocument);
 				// outputDocument.replace(tr.getEndTag(), "</" + TR + ">");
 
 				logger.debug("\t" + legend.getDebugInfo() + " replace with "

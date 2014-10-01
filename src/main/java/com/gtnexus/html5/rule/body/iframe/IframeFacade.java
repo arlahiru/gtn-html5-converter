@@ -41,42 +41,8 @@ public class IframeFacade extends Facade{
 				// initialize default values. have to test this!
 				modifiedIframeTag.append("<" + HTMLElementName.IFRAME + " ");
 
-				// remove table level obsolete attributes
-				Iterator<Attribute> iframeAttributeIterator = iframe
-						.getAttributes().iterator();
-
-				while (iframeAttributeIterator.hasNext()) {
-
-					Attribute iframeAttribute = iframeAttributeIterator.next();
-					String attributeName = iframeAttribute.getKey();
-					String ruleKey = iframe.getName() + "_"
-							+ attributeName.toLowerCase();
-
-					Rule rule = JerichoJspParserUtil.RULES_MAP.get(ruleKey);
-
-					if (rule != null) {
-
-						StringBuilder returnValue = rule.execute(
-								outputDocument, iframeAttribute, null);
-
-						if (returnValue != null) {
-							newIframeStyleValue.append(returnValue);
-						} else {
-
-							// if rule does not return value, do appropriate fix
-							// here.
-
-						}
-
-					} else {
-
-						logger.info("Rule key not found for key: " + ruleKey);
-						modifiedIframeTag.append(iframeAttribute);
-						modifiedIframeTag.append(" ");
-						logger.info(ruleKey + " appended as it is.");
-					}
-
-				}
+				applyRules(iframe, outputDocument, newIframeStyleValue,
+						modifiedIframeTag);
 				
 				// append inner server tags if any
 				modifiedIframeTag.append(" " + HTML5Util.getInnerServerTagContent(iframe) + " ");

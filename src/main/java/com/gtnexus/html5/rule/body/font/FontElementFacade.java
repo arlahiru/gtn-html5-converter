@@ -38,42 +38,7 @@ public class FontElementFacade extends Facade{
 
 			if (HTML5Util.hasAttributes((font))) {
 
-				// remove font level obsolete attributes
-				Iterator<Attribute> fontAttributeIterator = font
-						.getAttributes().iterator();
-
-				while (fontAttributeIterator.hasNext()) {
-
-					Attribute fontAttribute = fontAttributeIterator.next();
-					String attributeName = fontAttribute.getKey();
-					String ruleKey = font.getName() + "_"
-							+ attributeName.toLowerCase();
-
-					Rule rule = JerichoJspParserUtil.RULES_MAP.get(ruleKey);
-
-					if (rule != null) {
-
-						StringBuilder returnValue = rule.execute(
-								outputDocument, fontAttribute, null);
-
-						if (returnValue != null) {
-							spanStyleValue.append(returnValue);
-						} else {
-
-							// if rule does not return value, do appropriate fix
-							// here.
-
-						}
-
-					} else {
-
-						logger.info("Rule key not found for key: " + ruleKey);
-						spanTag.append(fontAttribute);
-						spanTag.append(" ");
-						logger.info(ruleKey + " appended as it is.");
-					}
-
-				}
+				applyRules(font, outputDocument, spanStyleValue, spanTag);
 				
 				// append inner server tags if any
 				spanTag.append(" " + HTML5Util.getInnerServerTagContent(font) + " ");

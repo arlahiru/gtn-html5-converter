@@ -38,42 +38,7 @@ public class OlFacade extends Facade{
 				// initialize default values. have to test this!
 				modifiedOlTag.append("<" + HTMLElementName.OL + " ");
 
-				// remove table level obsolete attributes
-				Iterator<Attribute> olAttributeIterator = ol.getAttributes()
-						.iterator();
-
-				while (olAttributeIterator.hasNext()) {
-
-					Attribute olAttribute = olAttributeIterator.next();
-					String attributeName = olAttribute.getKey();
-					String ruleKey = ol.getName() + "_"
-							+ attributeName.toLowerCase();
-
-					Rule rule = JerichoJspParserUtil.RULES_MAP.get(ruleKey);
-
-					if (rule != null) {
-
-						StringBuilder returnValue = rule.execute(
-								outputDocument, olAttribute, null);
-
-						if (returnValue != null) {
-							newOlStyleValue.append(returnValue);
-						} else {
-
-							// if rule does not return value, do appropriate fix
-							// here.
-
-						}
-
-					} else {
-
-						logger.info("Rule key not found for key: " + ruleKey);
-						modifiedOlTag.append(olAttribute);
-						modifiedOlTag.append(" ");
-						logger.info(ruleKey + " appended as it is.");
-					}
-
-				}
+				applyRules(ol, outputDocument, newOlStyleValue, modifiedOlTag);
 				
 				// append inner server tags if any
 				modifiedOlTag.append(" " + HTML5Util.getInnerServerTagContent(ol) + " ");

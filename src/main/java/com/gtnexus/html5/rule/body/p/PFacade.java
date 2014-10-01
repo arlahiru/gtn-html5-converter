@@ -37,42 +37,7 @@ public class PFacade extends Facade{
 				// initialize default values. have to test this!
 				modifiedPTag.append("<" + HTMLElementName.P + " ");
 
-				// remove table level obsolete attributes
-				Iterator<Attribute> pAttributeIterator = p.getAttributes()
-						.iterator();
-
-				while (pAttributeIterator.hasNext()) {
-
-					Attribute pAttribute = pAttributeIterator.next();
-					String attributeName = pAttribute.getKey();
-					String ruleKey = p.getName() + "_"
-							+ attributeName.toLowerCase();
-
-					Rule rule = JerichoJspParserUtil.RULES_MAP.get(ruleKey);
-
-					if (rule != null) {
-
-						StringBuilder returnValue = rule.execute(
-								outputDocument, pAttribute, null);
-
-						if (returnValue != null) {
-							newPStyleValue.append(returnValue);
-						} else {
-
-							// if rule does not return value, do appropriate fix
-							// here.
-
-						}
-
-					} else {
-
-						logger.info("Rule key not found for key: " + ruleKey);
-						modifiedPTag.append(pAttribute);
-						modifiedPTag.append(" ");
-						logger.info(ruleKey + " appended as it is.");
-					}
-
-				}
+				applyRules(p, outputDocument, newPStyleValue, modifiedPTag);
 				
 				// append inner server tags if any
 				modifiedPTag.append(" " + HTML5Util.getInnerServerTagContent(p) + " ");

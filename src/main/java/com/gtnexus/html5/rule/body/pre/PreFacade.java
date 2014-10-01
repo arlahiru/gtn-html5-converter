@@ -39,42 +39,7 @@ public class PreFacade extends Facade{
 				// initialize default values. have to test this!
 				modifiedPreTag.append("<" + HTMLElementName.PRE + " ");
 
-				// remove table level obsolete attributes
-				Iterator<Attribute> preAttributeIterator = pre.getAttributes()
-						.iterator();
-
-				while (preAttributeIterator.hasNext()) {
-
-					Attribute preAttribute = preAttributeIterator.next();
-					String attributeName = preAttribute.getKey();
-					String ruleKey = pre.getName() + "_"
-							+ attributeName.toLowerCase();
-
-					Rule rule = JerichoJspParserUtil.RULES_MAP.get(ruleKey);
-
-					if (rule != null) {
-
-						StringBuilder returnValue = rule.execute(
-								outputDocument, preAttribute, null);
-
-						if (returnValue != null) {
-							newPreStyleValue.append(returnValue);
-						} else {
-
-							// if rule does not return value, do appropriate fix
-							// here.
-
-						}
-
-					} else {
-
-						logger.info("Rule key not found for key: " + ruleKey);
-						modifiedPreTag.append(preAttribute);
-						modifiedPreTag.append(" ");
-						logger.info(ruleKey + " appended as it is.");
-					}
-
-				}
+				applyRules(pre, outputDocument, newPreStyleValue, modifiedPreTag);
 				
 				// append inner server tags if any
 				modifiedPreTag.append(" " + HTML5Util.getInnerServerTagContent(pre) + " ");

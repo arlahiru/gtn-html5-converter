@@ -39,42 +39,7 @@ public class UlFacade extends Facade {
 				// initialize default values. have to test this!
 				modifiedUlTag.append("<" + HTMLElementName.UL + " ");
 
-				// remove table level obsolete attributes
-				Iterator<Attribute> ulAttributeIterator = ul.getAttributes()
-						.iterator();
-
-				while (ulAttributeIterator.hasNext()) {
-
-					Attribute ulAttribute = ulAttributeIterator.next();
-					String attributeName = ulAttribute.getKey();
-					String ruleKey = ul.getName() + "_"
-							+ attributeName.toLowerCase();
-
-					Rule rule = JerichoJspParserUtil.RULES_MAP.get(ruleKey);
-
-					if (rule != null) {
-
-						StringBuilder returnValue = rule.execute(
-								outputDocument, ulAttribute, ul);
-
-						if (returnValue != null) {
-							newUlStyleValue.append(returnValue);
-						} else {
-
-							// if rule does not return value, do appropriate fix
-							// here.
-
-						}
-
-					} else {
-
-						logger.info("Rule key not found for key: " + ruleKey);
-						modifiedUlTag.append(ulAttribute);
-						modifiedUlTag.append(" ");
-						logger.info(ruleKey + " appended as it is.");
-					}
-
-				}
+				applyRules(ul, outputDocument, newUlStyleValue, modifiedUlTag);
 				
 				// append inner server tags if any
 				modifiedUlTag.append(" " + HTML5Util.getInnerServerTagContent(ul) + " ");

@@ -17,7 +17,7 @@ import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.util.HTML5Util;
 
-public class CaptionFacade extends Facade{
+public class CaptionFacade extends Facade {
 
 	public static void fixCaptionElements(Source source,
 			OutputDocument outputDocument) {
@@ -39,53 +39,19 @@ public class CaptionFacade extends Facade{
 				// initialize default values. have to test this!
 				modifiedCaptionTag.append("<" + HTMLElementName.CAPTION + " ");
 
-				// remove table level obsolete attributes
-				Iterator<Attribute> captionAttributeIterator = caption
-						.getAttributes().iterator();
+				applyRules(caption, outputDocument, newCaptionStyleValue,
+						modifiedCaptionTag);
 
-				while (captionAttributeIterator.hasNext()) {
-
-					Attribute captionAttribute = captionAttributeIterator
-							.next();
-					String attributeName = captionAttribute.getKey();
-					String ruleKey = caption.getName() + "_"
-							+ attributeName.toLowerCase();
-
-					Rule rule = JerichoJspParserUtil.RULES_MAP.get(ruleKey);
-
-					if (rule != null) {
-
-						StringBuilder returnValue = rule.execute(
-								outputDocument, captionAttribute, null);
-
-						if (returnValue != null) {
-							newCaptionStyleValue.append(returnValue);
-						} else {
-
-							// if rule does not return value, do appropriate fix
-							// here.
-
-						}
-
-					} else {
-
-						logger.info("Rule key not found for key: " + ruleKey);
-						modifiedCaptionTag.append(captionAttribute);
-						modifiedCaptionTag.append(" ");
-						logger.info(ruleKey + " appended as it is.");
-					}
-
-				}
-				
 				// append inner server tags if any
-				modifiedCaptionTag.append(" " + HTML5Util.getInnerServerTagContent(caption) + " ");
+				modifiedCaptionTag.append(" "
+						+ HTML5Util.getInnerServerTagContent(caption) + " ");
 
 				// close ul start tag
 				modifiedCaptionTag.append(STYLE + "=\"" + newCaptionStyleValue
 						+ "\">");
 
-				replace(caption.getStartTag(),
-						modifiedCaptionTag,outputDocument);
+				replace(caption.getStartTag(), modifiedCaptionTag,
+						outputDocument);
 				// outputDocument.replace(tr.getEndTag(), "</" +
 				// HTMLElementName.UL
 				// + ">");

@@ -39,42 +39,8 @@ public class BrFacade extends Facade {
 				// initialize default values. have to test this!
 				modifiedBRTag.append("<" + BR + " ");
 
-				// remove table level obsolete attributes
-				Iterator<Attribute> trAttributeIterator = br.getAttributes()
-						.iterator();
-
-				while (trAttributeIterator.hasNext()) {
-
-					Attribute trAttribute = trAttributeIterator.next();
-					String attributeName = trAttribute.getKey();
-					String ruleKey = br.getName() + "_"
-							+ attributeName.toLowerCase();
-
-					Rule rule = JerichoJspParserUtil.RULES_MAP.get(ruleKey);
-
-					if (rule != null) {
-
-						StringBuilder returnValue = rule.execute(
-								outputDocument, trAttribute, null);
-
-						if (returnValue != null) {
-							newBrStyleValue.append(returnValue);
-						} else {
-
-							// if rule does not return value, do appropriate fix
-							// here.
-
-						}
-
-					} else {
-
-						logger.info("Rule key not found for key: " + ruleKey);
-						modifiedBRTag.append(trAttribute);
-						modifiedBRTag.append(" ");
-						logger.info(ruleKey + " appended as it is.");
-					}
-
-				}
+				applyRules(br, outputDocument, newBrStyleValue,
+						modifiedBRTag);
 
 				// close tr start tag
 				modifiedBRTag.append(STYLE + "=\"" + newBrStyleValue + "\">");
