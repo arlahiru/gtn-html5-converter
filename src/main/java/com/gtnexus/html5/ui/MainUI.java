@@ -35,6 +35,7 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultCaret;
 import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
@@ -43,6 +44,7 @@ import javax.swing.text.StyledDocument;
 import com.gtnexus.html5.exception.HTML5ParserException;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.main.RevertBackChanges;
+import com.gtnexus.html5.util.ProgramLauncher;
 
 public class MainUI extends JFrame {
 
@@ -79,39 +81,28 @@ public class MainUI extends JFrame {
 	private final JButton btnRemove = new JButton("Remove");
 	private final JButton btnOpenWithIE = new JButton("Open with IE");
 	private String sourcePath;
-	private String backupPath;
 
-	private String araxis_path = "C:/Program Files/Araxis/Araxis Merge/merge.exe";
-	private String dreamweaver_path = "C:/Program Files (x86)/Macromedia/Dreamweaver 8/Dreamweaver.exe";
-	private String firefox_path = "C:/Program Files (x86)/Mozilla Firefox/firefox.exe";
-	private String internetExplorer_path = "C:/Program Files (x86)/Internet Explorer/iexplorer.exe";
-	private final String DEFAULT_BACKUP_PATH = "C:/TcardWebBackup";
-	private final String basePath = "C:/code/gtnexus/development/modules/main/tcard";
-	private final String CONFIG_FILE = "config.ini";
-	private final String LOCALHOST = "http://localhost:8080/";
-	private final String QA2HOST = "http://commerce.qa2.tradecard.com/";
-	private boolean isBackupValid = false;
+	public ProgramLauncher getProgramLauncher(){
+		return this.launcher;
+	}
+	private ProgramLauncher launcher = new ProgramLauncher(this);
+	
 	private static int convertedItems = 0; //for the progressbar
 	
 	public void incrementConvertedItems(){
 		convertedItems++;
 	}
-	public boolean isBackupValid(){
-		return isBackupValid;
-	}
+	
 	public MainUI() {
 
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		addContent();
 		addActionListners();
 		JerichoJspParserUtil.initialize();
-		backupPath = DEFAULT_BACKUP_PATH;
 		dbLogger.initialize();
-		setBackupPath(backupPath);
-
 		printOnConsole(JerichoJspParserUtil.getDebuggerOutput(), "log");
-
-		//checkForPreviousErrors();
+		
+		checkForPreviousErrors();
 		
 
 	}
@@ -196,7 +187,9 @@ public class MainUI extends JFrame {
 		getContentPane().add(scrollPane);
 		scrollPane.setViewportView(consoleArea);
 		consoleArea.setEditable(false);
-
+		DefaultCaret caret = (DefaultCaret)consoleArea.getCaret();
+		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+		
 		percentageTextArea.setEditable(false);
 		percentageTextArea.setBounds(976, 474, 53, 20);
 		getContentPane().add(percentageTextArea);
@@ -228,11 +221,11 @@ public class MainUI extends JFrame {
 		backupLocationLabel.setBounds(10, 58, 130, 14);
 		getContentPane().add(backupLocationLabel);
 
-		backupLocationField.setEditable(false);
-		backupLocationField.setBounds(150, 55, 425, 20);
-		getContentPane().add(backupLocationField);
-		backupLocationField.setColumns(10);
-		backupLocationField.setText(DEFAULT_BACKUP_PATH);
+		getBackupLocationField().setEditable(false);
+		getBackupLocationField().setBounds(150, 55, 425, 20);
+		getContentPane().add(getBackupLocationField());
+		getBackupLocationField().setColumns(10);
+		getBackupLocationField().setText(launcher.DEFAULT_BACKUP_PATH);
 
 		btnOpenWithDreamweaver.setBounds(1020, 423, 164, 23);
 		getContentPane().add(btnOpenWithDreamweaver);
@@ -342,7 +335,7 @@ public class MainUI extends JFrame {
 
 							convertToHTML5(files[i]);
 
-							if(this.isDone()) setProgressBarValue(files.length, i);
+							setProgressBarValue(files.length, i);
 						}
 						return 0;
 					}
@@ -451,6 +444,7 @@ public class MainUI extends JFrame {
 						sourcePath = chooser.getSelectedFile()
 								.getAbsolutePath();
 						loadToListFromFile();
+						textFieldlocationDirectory.setText(sourcePath);
 					}
 				} catch (Exception ex) {
 
@@ -471,9 +465,9 @@ public class MainUI extends JFrame {
 					chooser.setAcceptAllFileFilterUsed(false);
 					int returnVal = chooser.showOpenDialog(new Frame());
 					if (returnVal == JFileChooser.APPROVE_OPTION) {
-						setBackupPath(chooser.getCurrentDirectory()
+						launcher.setBackupPath(chooser.getCurrentDirectory()
 								.getAbsolutePath());
-						printOnConsole(backupPath, "info");
+						printOnConsole(launcher.getBackupPath(), "info");
 					}
 				} catch (Exception ex) {
 					printOnConsole(printStacktrace(ex), "error");
@@ -488,7 +482,7 @@ public class MainUI extends JFrame {
 		btnOpenWithAraxis.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (html5List.getSelectedIndex() != -1) {
-					openAraxis();
+					launcher.openAraxis(html5List.getSelectedItem().toString());
 				} else {
 					printOnConsole("Please select a specific file to compare!",
 							"warning");
@@ -503,9 +497,9 @@ public class MainUI extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 
 				if (html5List.getSelectedIndex() != -1)
-					openDreamweaver(formatFilePath(html5List.getSelectedItem()));
+					launcher.openDreamweaver(formatFilePath(html5List.getSelectedItem()));
 				else if (preHTML5List.getSelectedIndex() != -1)
-					openDreamweaver(formatFilePath(preHTML5List
+					launcher.openDreamweaver(formatFilePath(preHTML5List
 							.getSelectedItem()));
 				else
 					printOnConsole("Please select a specific file to open!",
@@ -521,21 +515,23 @@ public class MainUI extends JFrame {
 		btnOpenWithFireFox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
-					firefox_path = openWithBrowser("FIREFOX", firefox_path,
-							LOCALHOST, html5List.getSelectedItem().substring(1));
-					openWithBrowser("FIREFOX", firefox_path, QA2HOST, html5List
+					launcher.openWithBrowser("FIREFOX",launcher.LOCALHOST,html5List.getSelectedItem().substring(1));
+					
+					launcher.openWithBrowser("FIREFOX",launcher.QA2HOST, html5List
 							.getSelectedItem().substring(15));
 				} catch (NullPointerException e2) {
 					printOnConsole("Please select a file", "error");
+				}catch(Exception e3){
+					printOnConsole(e3.getMessage(),"error");
 				}
 			}
 		});
 		btnOpenWithIE.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
-					firefox_path = openWithBrowser("IE", internetExplorer_path,
-							LOCALHOST, html5List.getSelectedItem().substring(1));
-					openWithBrowser("IE", internetExplorer_path, QA2HOST, html5List
+					launcher.openWithBrowser("IE", 
+							launcher.LOCALHOST, html5List.getSelectedItem().substring(1));
+					launcher.openWithBrowser("IE", launcher.QA2HOST, html5List
 							.getSelectedItem().substring(15));
 				} catch (NullPointerException e2) {
 					printOnConsole("Please select a file","error");
@@ -561,28 +557,7 @@ public class MainUI extends JFrame {
 		updateProgressTextArea(progress);
 	}
 
-	public void setBackupPath(String backupPath) {
-
-		File loginFile = new File(backupPath
-				+ "\\web\\tradecard\\en\\administration\\login.jsp");
-		try {
-
-			if (loginFile.exists()) {
-				this.backupPath = backupPath;
-				backupLocationField.setText(backupPath);
-				isBackupValid = true;
-				printOnConsole("Backup path changed.", "info");
-			} else {
-				printOnConsole(
-						"Error: Backup directory file path seems to be incorrect.\n Resetting back to default path.\n Consider moving the files to : "
-								+ DEFAULT_BACKUP_PATH, "error");
-				isBackupValid = false;
-			}
-		} catch (Exception e1) {
-			printOnConsole(e1.getMessage(), "error");
-			printOnConsole(printStacktrace(e1), "error");
-		}
-	}
+	
 
 	public void loadToListFromFile() {
 
@@ -594,7 +569,7 @@ public class MainUI extends JFrame {
 		showProgressBar();
 		int fileCount = 0;
 		for (int i = 0; i < fileList.size(); i++) {
-			if (checkFile(fileList.get(i))) {
+			if (launcher.checkFile(fileList.get(i))) {
 				preHTML5List.add(fileList.get(i));
 				fileCount++;
 			} else
@@ -618,24 +593,14 @@ public class MainUI extends JFrame {
 				+ " HTML5 files exist.", "info");
 	}
 
-	public boolean checkFile(String filePathString) {
-
-		File f = new File(basePath + filePathString);
-		return (f.exists() && !f.isDirectory());
-	}
-
-	public boolean checkBackup(String filePathString) {
-
-		File f = new File(backupPath + filePathString);
-		printOnConsole(backupPath + filePathString, "info");
-		return (f.exists() && !f.isDirectory());
-	}
+	
 
 	public void convertToHTML5(String sourceFile) {
 		try {
-			if (isBackupValid() && checkBackup(sourceFile)) {
+			
+			if (launcher.isBackupValid() && launcher.checkBackup(sourceFile)) {
 				JerichoJspParserUtil.clearConsoleWriter();
-				JerichoJspParserUtil.convertToHTML5(formatFilePath(sourceFile),false);
+				JerichoJspParserUtil.convertToHTML5(formatFilePath(sourceFile),false,sourcePath);
 				printOnConsole(JerichoJspParserUtil.getDebuggerOutput(), "log");
 				html4ToHtml5(sourceFile);
 				
@@ -664,10 +629,10 @@ public class MainUI extends JFrame {
 	public void revertBack(String convertedFilePath) {
 
 		try {
-			if (isBackupValid && checkBackup(convertedFilePath)) {
+			if (launcher.isBackupValid() && launcher.checkBackup(convertedFilePath)) {  //////
 				JerichoJspParserUtil.clearConsoleWriter();
 				RevertBackChanges.revertChanges(
-						formatFilePath(convertedFilePath), backupPath);
+						formatFilePath(convertedFilePath), launcher.getBackupPath());
 				printOnConsole(JerichoJspParserUtil.getDebuggerOutput(), "log");
 				html5ToHtml4(convertedFilePath);
 
@@ -711,10 +676,11 @@ public class MainUI extends JFrame {
 		try {
 			consoleArea.getStyledDocument().insertString(doc.getLength(),
 					message + "\n", doc.getStyle(style));
+			consoleArea.setCaretPosition(consoleArea.getDocument().getLength()-1);
 		} catch (BadLocationException e) {
 			e.printStackTrace();
 		}
-
+		
 	}
 
 	public static String printStacktrace(Exception e) {
@@ -724,209 +690,11 @@ public class MainUI extends JFrame {
 	}
 
 	public String formatFilePath(String fileName) {
-		return basePath + fileName;
+		return launcher.getBasePath() + fileName;
 	}
 
 	public String getBackupFilePath(String fileName) {
-		return backupPath + fileName;
-	}
-
-	/*
-	 * returns the absolute file path of an executable file. provides a file
-	 * chooser to select the file.
-	 */
-	public String readFilePaths() {
-		try {
-			JFileChooser chooser = new JFileChooser();
-
-			chooser.addChoosableFileFilter(new FileNameExtensionFilter(
-					"Executable Files", "exe"));
-			chooser.setAcceptAllFileFilterUsed(false);
-			int returnVal = chooser.showOpenDialog(new Frame());
-			if (returnVal == JFileChooser.FILES_ONLY) {
-
-				return chooser.getSelectedFile().getAbsolutePath();
-			}
-		} catch (Exception ex) {
-
-		}
-		return null;
-	}
-
-	public String getFileName(String path) {
-		return path.substring(path.lastIndexOf("\\"));
-	}
-
-	/*
-	 * Replace/Append a value in/to the config file. elements are in xml format.
-	 * If the tag doesn't exist, program will append it to the file. else will
-	 * replace the value.
-	 * 
-	 * @param-newPath : the new value that should replace/should be appended.
-	 * 
-	 * @param-tag : tag name
-	 */
-	public void appendPathToConfigFile(String newPath, String tag) {
-		String fileContent = readFromConfigFile();
-		try {
-
-			String currentLine = fileContent.substring(
-					fileContent.indexOf(tag),
-					fileContent.indexOf(getEndingTag(tag)) + tag.length() + 1);
-			fileContent = fileContent.substring(0,
-					fileContent.indexOf(currentLine))
-					+ getAsXmlValue(newPath, tag)
-					+ fileContent.substring(fileContent.indexOf(currentLine)
-							+ currentLine.length(), fileContent.length());
-
-		} catch (StringIndexOutOfBoundsException e) {
-			fileContent = readFromConfigFile();
-			fileContent += getAsXmlValue(newPath, tag);
-		}
-		try {
-			PrintWriter writer = new PrintWriter(CONFIG_FILE);
-			writer.println(fileContent);
-			writer.close();
-
-		} catch (FileNotFoundException e) {
-
-			printOnConsole("Creating Config file.", "info");
-		}
-	}
-
-	public String getAsXmlValue(String value, String tag) {
-		return tag + value + getEndingTag(tag);
-	}
-
-	public String getEndingTag(String tag) {
-		return tag.substring(0, 1) + "/" + tag.substring(1, tag.length());
-	}
-
-	/*
-	 * Opens a file using Dreamweaver
-	 */
-	public void openDreamweaver(String path) {
-		ProcessBuilder pb = new ProcessBuilder(dreamweaver_path, path);
-		try {
-			pb.start();
-		} catch (IOException ex) {
-			printOnConsole(ex.getMessage(), "error");
-			if (ex.getMessage().contains(
-					"The system cannot find the file specified")) {
-
-				String directoryInConfigFile = extractValue("<DREAMWEAVER>",
-						"</DREAMWEAVER>");
-				try {
-					if (directoryInConfigFile != null
-							&& !directoryInConfigFile.equals(dreamweaver_path))
-						dreamweaver_path = directoryInConfigFile;
-					else {
-						dreamweaver_path = readFilePaths();
-						appendPathToConfigFile(dreamweaver_path,
-								"<DREAMWEAVER>");
-					}
-					openDreamweaver(path);
-				} catch (NullPointerException ex2) {
-					dreamweaver_path = readFilePaths();
-					appendPathToConfigFile(dreamweaver_path, "<DREAMWEAVER>");
-					openDreamweaver(path);
-				}
-			}
-
-		}
-	}
-
-	public void openAraxis() {
-
-		ProcessBuilder pb = new ProcessBuilder(araxis_path, backupPath
-				+ html5List.getSelectedItem(),
-				formatFilePath(html5List.getSelectedItem()));
-		try {
-			pb.start();
-		} catch (IOException ex) {
-			printOnConsole(ex.getMessage(), "error");
-			if (ex.getMessage().contains(
-					"The system cannot find the file specified")) {
-
-				String directoryInConfigFile = extractValue("<ARAXIS>",
-						"</ARAXIS>");
-				try {
-					if (directoryInConfigFile != null
-							&& !directoryInConfigFile.equals(araxis_path))
-						araxis_path = directoryInConfigFile;
-					else {
-						araxis_path = readFilePaths();
-						appendPathToConfigFile(araxis_path, "<ARAXIS>");
-					}
-					openAraxis();
-				} catch (NullPointerException ex2) {
-					araxis_path = readFilePaths();
-					appendPathToConfigFile(araxis_path, "<ARAXIS>");
-					openAraxis();
-				}
-			}
-
-		}
-	}
-
-	public String extractValue(String key, String ending) {
-		try {
-			return readFromConfigFile().substring(
-					readFromConfigFile().indexOf(key) + key.length(),
-					readFromConfigFile().indexOf(ending));
-		} catch (StringIndexOutOfBoundsException e) {
-			return null;
-		}
-	}
-
-	public String readFromConfigFile() {
-		StringBuilder fileContent = new StringBuilder();
-		FileReader configFile = null;
-		try {
-			configFile = new FileReader(CONFIG_FILE);
-		} catch (FileNotFoundException e) {
-			File newConfigFile = new File(CONFIG_FILE);
-			newConfigFile.mkdir();
-			try {
-				newConfigFile.createNewFile();
-			} catch (IOException e2) {
-				printOnConsole(
-						"ERROR: Config file not found. Creating a new config file failed. Consider creating it manually.",
-						"error");
-			}
-		}
-		BufferedReader br = null;
-		try {
-
-			if (configFile != null) {
-
-				br = new BufferedReader(configFile);
-
-				String sCurrentLine;
-
-				while ((sCurrentLine = br.readLine()) != null) {
-					fileContent.append(sCurrentLine);
-				}
-
-				configFile.close();
-
-			}
-
-		} catch (IOException e2) {
-
-			e2.printStackTrace();
-
-		} finally {
-			if (br != null)
-				try {
-					br.close();
-				} catch (IOException e) {
-
-					e.printStackTrace();
-				}
-		}
-		return fileContent.toString();
-
+		return launcher.getBackupPath() + fileName;
 	}
 
 	public void checkForPreviousErrors() {
@@ -954,36 +722,19 @@ public class MainUI extends JFrame {
 	
 	}
 
-	public String openWithBrowser(String browser, String browserPath,
-			String host, String file) {
-		ProcessBuilder pb = new ProcessBuilder(browserPath, host + file);
-		try {
-			pb.start();
-		} catch (IOException ex) {
-			printOnConsole(ex.getMessage(), "error");
-			if (ex.getMessage().contains(
-					"The system cannot find the file specified")) {
-
-				String directoryInConfigFile = extractValue(
-						"<" + browser + ">", "</" + browser + ">");
-				try {
-					if (directoryInConfigFile != null
-							&& !directoryInConfigFile.equals(browserPath))
-						browserPath = directoryInConfigFile;
-					else {
-						browserPath = readFilePaths();
-						appendPathToConfigFile(browserPath, "<" + browser + ">");
-						openWithBrowser(browser, browserPath, host, file);
-					}
-
-				} catch (NullPointerException ex2) {
-					browserPath = readFilePaths();
-					appendPathToConfigFile(browserPath, "<" + browser + ">");
-					openWithBrowser(browser, browserPath, host, file);
-				}
-			}
-
-		}
-		return browserPath;
+	/**
+	 * @return the backupLocationField
+	 */
+	public JTextField getBackupLocationField() {
+		return backupLocationField;
 	}
+
+	/**
+	 * @param backupLocationField the backupLocationField to set
+	 */
+	public void setBackupLocationField(JTextField backupLocationField) {
+		this.backupLocationField = backupLocationField;
+	}
+
+	
 }

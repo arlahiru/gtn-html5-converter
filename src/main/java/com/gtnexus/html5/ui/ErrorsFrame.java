@@ -14,6 +14,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 
 import com.gtnexus.html5.util.Error;
+import com.gtnexus.html5.util.ProgramLauncher;
 public class ErrorsFrame extends JFrame {
 	
 	/**
@@ -30,7 +31,7 @@ public class ErrorsFrame extends JFrame {
 	private JButton btnDreamweaver = new JButton("Open with Dreamweaver");
 	private JButton btnConvert = new JButton("Convert");
 	private MainUI parent;
-	
+	private ProgramLauncher launcher; 
 	private ArrayList<Error> errorList;
 	private String[] COLUMNS = new String[]{ "Page Id", "Path", "Error Type", "Error Message" , "Last Converted Line"};
 	
@@ -43,6 +44,7 @@ public class ErrorsFrame extends JFrame {
 			}
 		});
 		parent = parentFrame;
+		launcher = parent.getProgramLauncher();
 		populateList();
 		addActionListeners();
 	}
@@ -91,8 +93,8 @@ public class ErrorsFrame extends JFrame {
 		btnDreamweaver.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try{
-					String path = getPath();
-					parent.openDreamweaver(path);
+				
+					launcher.openDreamweaver(getPath());
 				}catch(NullPointerException ex){
 					
 				}
@@ -100,6 +102,7 @@ public class ErrorsFrame extends JFrame {
 		});
 		btnNotepad.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				launcher.openNotePad(getPath());
 			}
 		});
 	}

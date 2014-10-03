@@ -18,7 +18,7 @@ public class JerichoTest {
 		
 		JerichoJspParserUtil.initialize(); // load rules map
 
-		JerichoJspParserUtil.convertToHTML5(sourceFile,false);
+	//	JerichoJspParserUtil.convertToHTML5(sourceFile,false);
 		
 	}
 

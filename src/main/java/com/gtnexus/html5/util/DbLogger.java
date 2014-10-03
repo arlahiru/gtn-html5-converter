@@ -10,7 +10,7 @@ import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-
+import java.lang.System.*;
 import javax.swing.JTextArea;
 
 import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
@@ -34,7 +34,8 @@ public class DbLogger {
 	private static final String PATH = "Path";
 	private static final String IS_INCLUDE = "IncludeFile";
 	private static final String ACCESSED_DATE= "AccessedDate";
-	private static final String STATUS = "status";
+	private static final String STATUS = "Status";
+	private static final String FILENAME = "Filename";
 	
 	private static final String INCLUDE_FILE_TABLE = "IncludeFiles";
 	private static final String PARENT_ID = "ParentID";
@@ -65,7 +66,7 @@ public class DbLogger {
 	
 	private void makeStatements(){
 		String queryInsertPage = "INSERT INTO " + PAGE_TABLE + "(" + PATH + ","
-				+ IS_INCLUDE + "," + ACCESSED_DATE + ","+STATUS+") VALUES(?,?,?,?);";
+				+ IS_INCLUDE + "," + ACCESSED_DATE + ","+STATUS+","+FILENAME+") VALUES(?,?,?,?,?);";
 		
 		String queryInsertIncludeFile ="INSERT INTO " + INCLUDE_FILE_TABLE + " (" + ID
 				+ "," + PARENT_ID + ") VALUES " + "(?,?) ;";
@@ -125,8 +126,7 @@ public class DbLogger {
 
 	private DbLogger() {
 		initialize();
-		//makeStatements();
-		//enabled=true;
+
 	}
 
 	public static synchronized DbLogger getInstance() {
@@ -139,9 +139,10 @@ public class DbLogger {
 
 	// initialize db connection
 	public void initialize() {
-
+	
 		readCredentials();
 		setCon();
+
 	}
 
 	private synchronized void setCon() {
@@ -152,6 +153,8 @@ public class DbLogger {
 				Class.forName(JDBC_DRIVER).newInstance();
 
 				con = DriverManager.getConnection(DB_URL, USER, PASSWORD);
+				makeStatements();
+
 			} catch (SQLException e) {
 				System.out.println(e.getMessage());
 				enabled=false;
@@ -192,25 +195,25 @@ public class DbLogger {
 		return dateFormat.format(cal.getTime());
 	}
 
-	public synchronized void insertPage(String filepath, boolean isIncludeFile) {
+	public synchronized void insertPage(String filepath, boolean isIncludeFile,String filename) {
 
 		if (isEnabled()) {
 
-			
+			System.out.println(filepath+":"+isIncludeFile);
 			//PreparedStatement statement = null;
 			try {
-
 				insertPage.setString(1, filepath);
 				insertPage.setBoolean(2, isIncludeFile);
 				insertPage.setString(3, getDate());
 				insertPage.setString(4, STATUS_CONVERTED);
+				insertPage.setString(5,filename);
 				insertPage.executeUpdate();
-
+				
 				ResultSet set = insertPage.getGeneratedKeys();
 				if (set.next())
 					id = set.getInt(1);
-
-				//insertPage.close();
+				System.out.println("ID="+id);
+				
 
 				if (isIncludeFile) {
 					insertIncludeFile();
@@ -223,6 +226,7 @@ public class DbLogger {
 					id = queryID(filepath);
 					setStatus(id,STATUS_CONVERTED);
 				}
+				e.printStackTrace();
 
 			} finally {
 				/*

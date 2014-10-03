@@ -11,7 +11,11 @@ public class HTML5ParserException extends RuntimeException {
 
 	private String type;
 	private String tagInfo;
-
+	public HTML5ParserException(String type, String message) {
+		super();
+		this.type = type;
+		this.message = message;
+	}
 	public HTML5ParserException(String type, String message, String tagInfo) {
 		super();
 		this.type = type;
