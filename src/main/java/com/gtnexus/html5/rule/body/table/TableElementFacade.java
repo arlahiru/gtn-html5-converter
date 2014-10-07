@@ -93,7 +93,7 @@ public class TableElementFacade extends Facade {
 			applyRules(table, outputDocument, newTableStyleValue,
 					modifiedTableTag);
 
-			applyPostTableFixes(table, newTableStyleValue);
+			newTableStyleValue = applyPostTableFixes(table, newTableStyleValue);
 
 			// append inner server tags if any
 			modifiedTableTag.append(" "
@@ -317,7 +317,7 @@ public class TableElementFacade extends Facade {
 		}
 	}
 
-	private static void applyPostTableFixes(Element table,
+	private static StringBuilder applyPostTableFixes(Element table,
 			StringBuilder newTableStyleValue) {
 
 		// apply td align to the table if this table is inside a TD element
@@ -346,6 +346,18 @@ public class TableElementFacade extends Facade {
 			}
 
 		}
+		
+		// remove border from style if the table has a class and border is zero. This fixes the rounded corner table issue
+		if (table.getAttributeValue("class") != null && table.getAttributeValue("border") != null && table.getAttributeValue("border").equals("0")) {
+
+			String newStyle = newTableStyleValue.toString()
+					.replaceAll("border:\\s*[A-Za-z0-9 ]+\\s*;", "");
+			
+			newTableStyleValue = new StringBuilder(newStyle);
+
+		}
+		
+		return newTableStyleValue;
 
 	}
 

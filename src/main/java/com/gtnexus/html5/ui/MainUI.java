@@ -86,7 +86,7 @@ public class MainUI extends JFrame {
 		return this.launcher;
 	}
 	private ProgramLauncher launcher = new ProgramLauncher(this);
-	
+
 	public MainUI() {
 
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -619,7 +619,7 @@ public class MainUI extends JFrame {
 			e.printStackTrace();
 
 		}
-		
+
 	}
 
 	public void revertBack(String convertedFilePath) {

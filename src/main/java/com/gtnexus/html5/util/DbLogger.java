@@ -631,8 +631,7 @@ public class DbLogger {
 			
 			 
 			File file = new File("queries.txt");
-			FileWriter fw = new FileWriter(file.getAbsoluteFile());
-			BufferedWriter bw = new BufferedWriter(fw);
+			FileWriter fw = new FileWriter(file.getAbsoluteFile());			
 			fw.append(getDate()+" : "+query +"\n");
 			fw.close();
 	

@@ -487,7 +487,7 @@ public class HTML5Util {
 	public static boolean isContainAlignableComponent(Segment e) {
 
 		// check element contains table
-		boolean hasTable = e.getAllElements(HTML5Util.TABLE).size() == 0;
+		boolean hasTable = e.getAllElements(HTML5Util.TABLE).size() > 0;
 		boolean hasServerElement = false;
 
 		List<Element> allServerElements = e
@@ -515,7 +515,7 @@ public class HTML5Util {
 
 		}
 
-		return hasTable && hasServerElement;
+		return hasTable || hasServerElement;
 	}
 	
 	

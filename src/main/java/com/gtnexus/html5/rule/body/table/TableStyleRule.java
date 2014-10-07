@@ -13,7 +13,7 @@ public class TableStyleRule implements Rule {
 
 		String originalValue = ((Attribute)originalAttribute).getValue();
 		outputDoc.remove(originalAttribute);
-		return new StringBuilder(originalValue);
+		return new StringBuilder(originalValue+";");
 
 	}
 
