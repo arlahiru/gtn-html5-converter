@@ -87,12 +87,6 @@ public class MainUI extends JFrame {
 	}
 	private ProgramLauncher launcher = new ProgramLauncher(this);
 	
-	private static int convertedItems = 0; //for the progressbar
-	
-	public void incrementConvertedItems(){
-		convertedItems++;
-	}
-	
 	public MainUI() {
 
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -241,8 +235,10 @@ public class MainUI extends JFrame {
 		
 		btnRemove.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				for(int i = 0;i <= preHTML5List.getSelectedIndexes().length;i++)
-				preHTML5List.remove(preHTML5List.getSelectedIndexes()[i]);
+				int[] selectedIndexes = preHTML5List.getSelectedIndexes();
+				for(int i =selectedIndexes.length ;i >= 0;i--){
+					System.out.println(selectedIndexes[i]);
+				preHTML5List.remove(selectedIndexes[i]);}
 			}
 		});
 		btnRemove.setBounds(278, 423, 89, 23);
@@ -356,10 +352,10 @@ public class MainUI extends JFrame {
 					protected Integer doInBackground() throws Exception {
 						String[] selectedItems = preHTML5List
 								.getSelectedItems();
-						convertedItems=0;
+					
 						for (int i = 0; i < selectedItems.length; i++) {
 							convertToHTML5(selectedItems[i]);
-							setProgressBarValue(selectedItems.length, convertedItems);
+							setProgressBarValue(selectedItems.length, i);
 						}
 
 						return 0;
@@ -623,7 +619,7 @@ public class MainUI extends JFrame {
 			e.printStackTrace();
 
 		}
-		incrementConvertedItems();
+		
 	}
 
 	public void revertBack(String convertedFilePath) {
