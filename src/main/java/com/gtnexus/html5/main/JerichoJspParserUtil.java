@@ -351,14 +351,15 @@ public class JerichoJspParserUtil {
 	/*
 	 * public method that convert given JSP file to HTML5 ready JSP file
 	 */
-	public static void convertToHTML5(String filePath, boolean isIncludeFile)
+	public static void convertToHTML5(String filePath, boolean isIncludeFile,String textfileName)
 
 			throws FileNotFoundException, IOException, HTML5ParserException{
-
+		
 
 		// Parse JSP file and remove obsolete html5 tags and apply relevant
 		// workaround.
-		dbLogger.insertPage(filePath, isIncludeFile);
+
+		dbLogger.insertPage(filePath, isIncludeFile, textfileName);
 		if (!isIncludeFile) {
 			logger.info("Input File: " + filePath);
 		} else {
@@ -402,7 +403,7 @@ public class JerichoJspParserUtil {
 				// It will allows to save other include files without breaking
 				// the program.
 				try {
-					convertToHTML5(includeFilePath, true);
+					convertToHTML5(includeFilePath, true,textfileName);
 					numOfConvertedIncludeFiles = numOfConvertedIncludeFiles + 1;
 				} catch (HTML5ParserException e) {
 					e.printStackTrace();
