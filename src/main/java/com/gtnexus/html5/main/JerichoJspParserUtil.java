@@ -41,6 +41,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -123,7 +124,6 @@ public class JerichoJspParserUtil {
 
 	// Initialize rule map
 	public static void initialize() {
-
 
 		// configure log4j to output logs to the UI
 		consoleWriter = new StringWriter();
@@ -351,10 +351,10 @@ public class JerichoJspParserUtil {
 	/*
 	 * public method that convert given JSP file to HTML5 ready JSP file
 	 */
-	public static void convertToHTML5(String filePath, boolean isIncludeFile,String textfileName)
+	public static void convertToHTML5(String filePath, boolean isIncludeFile,
+			String textfileName)
 
-			throws FileNotFoundException, IOException, HTML5ParserException{
-		
+	throws FileNotFoundException, IOException, HTML5ParserException {
 
 		// Parse JSP file and remove obsolete html5 tags and apply relevant
 		// workaround.
@@ -368,6 +368,31 @@ public class JerichoJspParserUtil {
 		}
 
 		File sourceFile = new File(filePath);
+
+		logger.info("Dirty file check...");
+
+		String tradeFolder = "C:\\code\\gtnexus\\development\\modules\\main\\tcard\\web\\tradecard\\en\\trade";
+
+		// check if this file is link with the trade page by calling a
+		// appropriate sql query
+		if (false) {
+			
+			// nothing to do
+
+		}
+		// check this file links with trade site by scanning the trade folder
+		else {
+
+			List<String> tradePageList = HTML5Util
+					.getTradePagesLinkWithThisFile(filePath, new File(
+							tradeFolder), new ArrayList<String>());
+
+			if (!tradePageList.isEmpty()) {
+				// insert trade page list to pages db
+				logger.info(filePath +" file links with the trade site!");
+			}
+
+		}
 
 		Source source = new Source(new FileInputStream(sourceFile));
 
@@ -397,17 +422,17 @@ public class JerichoJspParserUtil {
 			// recursively convert include files
 			for (String includeFilePath : includeFilePathList) {
 
-
 				// Catch if any exception occurred and proceed with the other
 				// include files.
 				// It will allows to save other include files without breaking
 				// the program.
 				try {
-					convertToHTML5(includeFilePath, true,textfileName);
+					convertToHTML5(includeFilePath, true, textfileName);
 					numOfConvertedIncludeFiles = numOfConvertedIncludeFiles + 1;
 				} catch (HTML5ParserException e) {
 					e.printStackTrace();
-					dbLogger.logError(filePath, e.getType(), e.getMessage(), e.getTagInfo());
+					dbLogger.logError(filePath, e.getType(), e.getMessage(),
+							e.getTagInfo());
 
 				}
 
@@ -428,8 +453,8 @@ public class JerichoJspParserUtil {
 					logger.error(filePath
 							+ " has not been saved. Source and output elements not matched!");
 
-					throw new HTML5ParserException("Content Exception","File Formatting Error: Tags Missing",null);
-
+					throw new HTML5ParserException("Content Exception",
+							"File Formatting Error: Tags Missing", null);
 
 				}
 
@@ -438,8 +463,8 @@ public class JerichoJspParserUtil {
 				logger.error(filePath
 						+ " has not been saved. Errors in include file(s).");
 
-				throw new HTML5ParserException("Content Exception","Include file conversion failed.",null);
-
+				throw new HTML5ParserException("Content Exception",
+						"Include file conversion failed.", null);
 
 			}
 
@@ -452,7 +477,7 @@ public class JerichoJspParserUtil {
 	}
 
 	public static void saveOutputDoc(File sourceFile, OutputDocument outputDoc)
-			throws IOException {   
+			throws IOException {
 
 		// File output = new File("tmp\\login_modified2.jsp");
 

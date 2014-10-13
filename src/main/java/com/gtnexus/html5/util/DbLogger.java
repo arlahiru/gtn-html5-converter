@@ -206,7 +206,7 @@ public class DbLogger {
 				insertPage.setBoolean(2, isIncludeFile);
 				insertPage.setString(3, getDate());
 				insertPage.setString(4, STATUS_CONVERTED);
-				insertPage.setString(5,filename);
+				insertPage.setString(5,filename.substring(filename.lastIndexOf('\\')+1));
 				insertPage.executeUpdate();
 				
 				ResultSet set = insertPage.getGeneratedKeys();
@@ -226,7 +226,8 @@ public class DbLogger {
 					id = queryID(filepath);
 					setStatus(id,STATUS_CONVERTED);
 				}
-				e.printStackTrace();
+				System.out.println("Duplicate entry "+filepath);
+				//e.printStackTrace();
 
 			} finally {
 				/*
