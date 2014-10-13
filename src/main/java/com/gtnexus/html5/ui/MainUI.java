@@ -298,7 +298,15 @@ public class MainUI extends JFrame {
 			String sCurrentLine;
 
 			while ((sCurrentLine = br.readLine()) != null) {
-				list.add(sCurrentLine);
+				try{
+					list.add(sCurrentLine.substring(sCurrentLine.lastIndexOf("/en/")+3));
+				}catch(StringIndexOutOfBoundsException e){
+					try{
+						list.add(sCurrentLine.substring(sCurrentLine.lastIndexOf("\\en\\")+3));
+					}catch(StringIndexOutOfBoundsException e2){
+						list.add(sCurrentLine);
+					}
+				}
 			}
 			br.close();
 
@@ -565,7 +573,7 @@ public class MainUI extends JFrame {
 		showProgressBar();
 		int fileCount = 0;
 		for (int i = 0; i < fileList.size(); i++) {
-			if (launcher.checkFile(fileList.get(i))) {
+			if (launcher.checkFile(fileList.get(i),launcher.adminBasePath.substring(0,launcher.adminBasePath.indexOf("\\en\\")+3))) {
 				preHTML5List.add(fileList.get(i));
 				fileCount++;
 			} else
@@ -594,7 +602,7 @@ public class MainUI extends JFrame {
 	public void convertToHTML5(String sourceFile) {
 		try {
 			
-			if (launcher.isBackupValid() && launcher.checkBackup(sourceFile)) {
+			if (launcher.isBackupValid() && launcher.checkFile(sourceFile,launcher.adminBasePath.substring(0,launcher.adminBasePath.indexOf("\\en\\")+4))) {
 				JerichoJspParserUtil.clearConsoleWriter();
 				JerichoJspParserUtil.convertToHTML5(formatFilePath(sourceFile),false,sourcePath);
 				printOnConsole(JerichoJspParserUtil.getDebuggerOutput(), "log");
@@ -625,7 +633,7 @@ public class MainUI extends JFrame {
 	public void revertBack(String convertedFilePath) {
 
 		try {
-			if (launcher.isBackupValid() && launcher.checkBackup(convertedFilePath)) {  //////
+			if (launcher.isBackupValid()&& launcher.checkFile(convertedFilePath,launcher.adminBasePath.substring(0,launcher.adminBasePath.indexOf("\\en\\")+4))) {  //////
 				JerichoJspParserUtil.clearConsoleWriter();
 				RevertBackChanges.revertChanges(
 						formatFilePath(convertedFilePath), launcher.getBackupPath());
@@ -638,7 +646,6 @@ public class MainUI extends JFrame {
 			printOnConsole(printStacktrace(e), "error");
 
 		}
-
 	}
 
 	public void html4ToHtml5(String entry) {
@@ -686,7 +693,7 @@ public class MainUI extends JFrame {
 	}
 
 	public String formatFilePath(String fileName) {
-		return launcher.getBasePath() + fileName;
+		return launcher.adminBasePath.substring(0,launcher.adminBasePath.indexOf("\\en\\")+3)+ fileName;
 	}
 
 	public String getBackupFilePath(String fileName) {
