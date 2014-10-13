@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -22,7 +23,8 @@ public class ProgramLauncher {
 	private String internetExplorer_path = "C:/Program Files (x86)/Internet Explorer/iexplorer.exe";
 	private String notepadPath = "";
 	public final String DEFAULT_BACKUP_PATH = "C:/TcardWebBackup";
-	private final String basePath = "C:/code/gtnexus/development/modules/main/tcard";
+	public static String adminBasePath = "C:/code/gtnexus/development/modules/main/tcard";
+	public static String tradeBasePath = "";
 	public final String CONFIG_FILE = "config.ini";
 	public final String LOCALHOST = "http://localhost:8080/";
 	public final String QA2HOST = "http://commerce.qa2.tradecard.com/";
@@ -30,12 +32,14 @@ public class ProgramLauncher {
 	public String otherHost ="";
 	private MainUI mainUI;
 	private boolean isBackupValid = false;
+
 	public ProgramLauncher(){
 		
 	}
 	public ProgramLauncher(MainUI main){
 		mainUI=main;
 		setBackupPath(backupPath);
+		setBasePaths();
 	}
 	public boolean isBackupValid(){
 		return isBackupValid;
@@ -71,13 +75,7 @@ public class ProgramLauncher {
 		return internetExplorer_path;
 	}
 
-	/**
-	 * @return the basePath
-	 */
-	public String getBasePath() {
-		return basePath;
-	}
-
+	
 	private String getBrowserPath(String browserName){
 		switch(browserName){
 			case "FIREFOX":
@@ -132,13 +130,13 @@ public class ProgramLauncher {
 							&& !directoryInConfigFile.equals(browserPath))
 						setBrowserPath(browser,directoryInConfigFile);
 					else {
-						browserPath = readFilePaths();
+						browserPath = readFilePaths("Set "+browser+".");
 						appendPathToConfigFile(browserPath, "<" + browser + ">");
 						openWithBrowser(browser, host, file);
 					}
 
 				} catch (NullPointerException ex2) {
-					browserPath = readFilePaths();
+					browserPath = readFilePaths("Set "+browser+".");
 					appendPathToConfigFile(browserPath, "<" + browser + ">");
 					openWithBrowser(browser, host, file);
 				}
@@ -158,7 +156,6 @@ public class ProgramLauncher {
 			throw e;
 		}
 	}
-	
 	public String readFromConfigFile() throws HTML5ParserException{
 		StringBuilder fileContent = new StringBuilder();
 		FileReader configFile = null;
@@ -249,14 +246,16 @@ public class ProgramLauncher {
 	 * returns the absolute file path of an executable file. provides a file
 	 * chooser to select the file.
 	 */
-	public String readFilePaths() {
+	public String readFilePaths(String message) {
 		try {
 			JFileChooser chooser = new JFileChooser();
-
+			chooser.setApproveButtonText(message);
 			chooser.addChoosableFileFilter(new FileNameExtensionFilter(
 					"Executable Files", "exe"));
 			chooser.setAcceptAllFileFilterUsed(false);
-			int returnVal = chooser.showOpenDialog(new Frame());
+			Frame browser = new Frame();
+			browser.setTitle(message);
+			int returnVal = chooser.showOpenDialog(browser);
 			if (returnVal == JFileChooser.FILES_ONLY) {
 
 				return chooser.getSelectedFile().getAbsolutePath();
@@ -266,7 +265,23 @@ public class ProgramLauncher {
 		}
 		return null;
 	}
+	public String readDirectories(String message){
+		try {
+			JFileChooser chooser = new JFileChooser();
+			chooser.setApproveButtonText(message);
+			Frame browser = new Frame();
+			browser.setTitle(message);
+			chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			chooser.setAcceptAllFileFilterUsed(false);
+			int returnVal = chooser.showOpenDialog(browser);
+			if (returnVal == JFileChooser.APPROVE_OPTION)
+				return chooser.getCurrentDirectory().getAbsolutePath();
 
+		}catch (Exception ex) {
+
+		}
+		return null;
+	}
 	public String getFileName(String path) {
 		return path.substring(path.lastIndexOf("\\"));
 	}
@@ -301,13 +316,13 @@ public class ProgramLauncher {
 							&& !directoryInConfigFile.equals(dreamweaver_path))
 						dreamweaver_path = directoryInConfigFile;
 					else {
-						dreamweaver_path = readFilePaths();
+						dreamweaver_path = readFilePaths("Set Dreamweaver.");
 						appendPathToConfigFile(dreamweaver_path,
 								"<DREAMWEAVER>");
 					}
 					openDreamweaver(path);
 				} catch (NullPointerException ex2) {
-					dreamweaver_path = readFilePaths();
+					dreamweaver_path = readFilePaths("Set Dreamweaver.");
 					appendPathToConfigFile(dreamweaver_path, "<DREAMWEAVER>");
 					openDreamweaver(path);
 				}
@@ -333,14 +348,14 @@ public class ProgramLauncher {
 							&& !directoryInConfigFile.equals(notepadPath))
 						 notepadPath = directoryInConfigFile;
 					else {
-						notepadPath = readFilePaths();
+						notepadPath = readFilePaths("Set Notepad++.");
 						appendPathToConfigFile(notepadPath,
 								"<NOTEPAD++>");
 					}
 					openNotePad(path);
 				} catch (NullPointerException ex2) {
 					ex2.printStackTrace();
-					notepadPath = readFilePaths();
+					notepadPath = readFilePaths("Set Notepad++.");
 					appendPathToConfigFile(notepadPath, "<NOTEPAD++>");
 					openNotePad(path);
 				}
@@ -367,12 +382,12 @@ public class ProgramLauncher {
 							&& !directoryInConfigFile.equals(araxis_path))
 						araxis_path = directoryInConfigFile;
 					else {
-						araxis_path = readFilePaths();
+						araxis_path = readFilePaths("Please select Araxis.");
 						appendPathToConfigFile(araxis_path, "<ARAXIS>");
 					}
 					openAraxis(filename);
 				} catch (NullPointerException ex2) {
-					araxis_path = readFilePaths();
+					araxis_path = readFilePaths("Please select Araxis.");
 					appendPathToConfigFile(araxis_path, "<ARAXIS>");
 					openAraxis(filename);
 				}
@@ -382,11 +397,11 @@ public class ProgramLauncher {
 	}
 
 	public String formatFilePath(String fileName) {
-		return getBasePath() + fileName;
+		return adminBasePath.substring(0,adminBasePath.indexOf("/en/")) + fileName;
 	}
 
 	public String formatBackupFilePath(String fileName) {
-		return getBackupPath() + fileName;
+		return getBackupPath().substring(0,getBackupPath().indexOf("/en/")) + fileName;
 	}
 
 	/**
@@ -398,12 +413,14 @@ public class ProgramLauncher {
 
 
 	
-	public boolean checkFile(String filePathString) {
+	public boolean checkFile(String fileName,String basePath) {
 
-		File f = new File(getBasePath() + filePathString);
+		File f = new File(basePath + fileName);
+		System.out.println(basePath +"+"+ fileName);
+		
 		return (f.exists() && !f.isDirectory());
 	}
-
+ 
 	public boolean checkBackup(String filePathString) {
 
 		File f = new File(backupPath + filePathString);
@@ -432,5 +449,24 @@ public class ProgramLauncher {
 			mainUI.printOnConsole(mainUI.printStacktrace(e1), "error");
 		}
 	}
-	
+	public void setBasePaths(){
+		
+		if(extractValue("<adminBasePath>","</adminBasePath>")!=null && !checkFile("login.jsp",adminBasePath)){
+			adminBasePath = extractValue("<adminBasePath>","</adminBasePath>");
+			
+		}else{
+			adminBasePath = readDirectories("Set Admin Site Path")+"/";
+			if(checkFile("login.jsp",adminBasePath))
+				appendPathToConfigFile(adminBasePath,"<adminBasePath>");
+			else setBasePaths();
+		}
+		if(extractValue("<tradeBasePath>","</tradeBasePath>")!=null && !checkFile("Login.jsp",tradeBasePath) ){
+			tradeBasePath = extractValue("<tradeBasePath>","</tradeBasePath>");
+		}else{
+			tradeBasePath = readDirectories("Set Trade Site Path")+"/";
+			if(checkFile("Home.jsp",tradeBasePath))	
+				appendPathToConfigFile(tradeBasePath,"<tradeBasePath>");
+			else setBasePaths();
+		}
+	}
 }
