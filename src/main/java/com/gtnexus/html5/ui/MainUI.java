@@ -82,9 +82,10 @@ public class MainUI extends JFrame {
 	private final JButton btnOpenWithIE = new JButton("Open with IE");
 	private String sourcePath;
 
-	public ProgramLauncher getProgramLauncher(){
+	public ProgramLauncher getProgramLauncher() {
 		return this.launcher;
 	}
+
 	private ProgramLauncher launcher = new ProgramLauncher(this);
 
 	public MainUI() {
@@ -95,9 +96,8 @@ public class MainUI extends JFrame {
 		JerichoJspParserUtil.initialize();
 		dbLogger.initialize();
 		printOnConsole(JerichoJspParserUtil.getDebuggerOutput(), "log");
-		
+
 		checkForPreviousErrors();
-		
 
 	}
 
@@ -174,16 +174,16 @@ public class MainUI extends JFrame {
 		btnOpenWithAraxis.setBounds(872, 423, 138, 23);
 		getContentPane().add(btnOpenWithAraxis);
 
-		progressBar.setBounds(10, 480, 956, 14);
+		progressBar.setBounds(10, 474, 956, 20);
 		getContentPane().add(progressBar);
 
 		scrollPane.setBounds(10, 505, 1174, 160);
 		getContentPane().add(scrollPane);
 		scrollPane.setViewportView(consoleArea);
 		consoleArea.setEditable(false);
-		DefaultCaret caret = (DefaultCaret)consoleArea.getCaret();
+		DefaultCaret caret = (DefaultCaret) consoleArea.getCaret();
 		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
-		
+
 		percentageTextArea.setEditable(false);
 		percentageTextArea.setBounds(976, 474, 53, 20);
 		getContentPane().add(percentageTextArea);
@@ -231,21 +231,19 @@ public class MainUI extends JFrame {
 
 		btnOpenWithFireFox.setBounds(835, 54, 154, 23);
 		getContentPane().add(btnOpenWithFireFox);
-		
-		
+
 		btnRemove.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				int[] selectedIndexes = preHTML5List.getSelectedIndexes();
-				for(int i =selectedIndexes.length ;i >= 0;i--){
-					System.out.println(selectedIndexes[i]);
-				preHTML5List.remove(selectedIndexes[i]);}
+				for (int i = selectedIndexes.length - 1; i >= 0; i--) {
+				
+					preHTML5List.remove(selectedIndexes[i]);
+				}
 			}
 		});
 		btnRemove.setBounds(278, 423, 89, 23);
 		getContentPane().add(btnRemove);
-		
-		
-		
+
 		btnOpenWithIE.setBounds(1016, 54, 154, 23);
 		getContentPane().add(btnOpenWithIE);
 
@@ -298,12 +296,14 @@ public class MainUI extends JFrame {
 			String sCurrentLine;
 
 			while ((sCurrentLine = br.readLine()) != null) {
-				try{
-					list.add(sCurrentLine.substring(sCurrentLine.lastIndexOf("/en/")+3));
-				}catch(StringIndexOutOfBoundsException e){
-					try{
-						list.add(sCurrentLine.substring(sCurrentLine.lastIndexOf("\\en\\")+3));
-					}catch(StringIndexOutOfBoundsException e2){
+				try {
+					list.add(sCurrentLine.substring(sCurrentLine
+							.lastIndexOf("/en/") + 3));
+				} catch (StringIndexOutOfBoundsException e) {
+					try {
+						list.add(sCurrentLine.substring(sCurrentLine
+								.lastIndexOf("\\en\\") + 3));
+					} catch (StringIndexOutOfBoundsException e2) {
 						list.add(sCurrentLine);
 					}
 				}
@@ -337,12 +337,17 @@ public class MainUI extends JFrame {
 
 						for (int i = 0; i < files.length; i++) {
 
+							progressBar.setIndeterminate(true);
+
 							convertToHTML5(files[i]);
+
+							progressBar.setIndeterminate(false);
 
 							setProgressBarValue(files.length, i);
 						}
 						return 0;
 					}
+
 				};
 				convertFiles.execute();
 				printHtml5Count();
@@ -358,16 +363,22 @@ public class MainUI extends JFrame {
 				SwingWorker<Integer, Integer> convertFiles = new SwingWorker<Integer, Integer>() {
 					@Override
 					protected Integer doInBackground() throws Exception {
+
 						String[] selectedItems = preHTML5List
 								.getSelectedItems();
-					
+
 						for (int i = 0; i < selectedItems.length; i++) {
+
+							progressBar.setIndeterminate(true);
 							convertToHTML5(selectedItems[i]);
+							progressBar.setIndeterminate(false);
 							setProgressBarValue(selectedItems.length, i);
+
 						}
 
 						return 0;
 					}
+
 				};
 				convertFiles.execute();
 				printHtml5Count();
@@ -428,7 +439,6 @@ public class MainUI extends JFrame {
 				consoleArea.setText("");
 			}
 		});
-
 
 		/*
 		 * Sets the filepath textfield using a file chooser. Add the commented
@@ -501,7 +511,8 @@ public class MainUI extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 
 				if (html5List.getSelectedIndex() != -1)
-					launcher.openDreamweaver(formatFilePath(html5List.getSelectedItem()));
+					launcher.openDreamweaver(formatFilePath(html5List
+							.getSelectedItem()));
 				else if (preHTML5List.getSelectedIndex() != -1)
 					launcher.openDreamweaver(formatFilePath(preHTML5List
 							.getSelectedItem()));
@@ -519,26 +530,27 @@ public class MainUI extends JFrame {
 		btnOpenWithFireFox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
-					launcher.openWithBrowser("FIREFOX",launcher.LOCALHOST,html5List.getSelectedItem().substring(1));
-					
-					launcher.openWithBrowser("FIREFOX",launcher.QA2HOST, html5List
-							.getSelectedItem().substring(15));
+					launcher.openWithBrowser("FIREFOX", launcher.LOCALHOST,
+							html5List.getSelectedItem().substring(1));
+
+					launcher.openWithBrowser("FIREFOX", launcher.QA2HOST,
+							html5List.getSelectedItem().substring(15));
 				} catch (NullPointerException e2) {
 					printOnConsole("Please select a file", "error");
-				}catch(Exception e3){
-					printOnConsole(e3.getMessage(),"error");
+				} catch (Exception e3) {
+					printOnConsole(e3.getMessage(), "error");
 				}
 			}
 		});
 		btnOpenWithIE.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
-					launcher.openWithBrowser("IE", 
-							launcher.LOCALHOST, html5List.getSelectedItem().substring(1));
+					launcher.openWithBrowser("IE", launcher.LOCALHOST,
+							html5List.getSelectedItem().substring(1));
 					launcher.openWithBrowser("IE", launcher.QA2HOST, html5List
 							.getSelectedItem().substring(15));
 				} catch (NullPointerException e2) {
-					printOnConsole("Please select a file","error");
+					printOnConsole("Please select a file", "error");
 				}
 			}
 		});
@@ -561,8 +573,6 @@ public class MainUI extends JFrame {
 		updateProgressTextArea(progress);
 	}
 
-	
-
 	public void loadToListFromFile() {
 
 		// clear list
@@ -573,7 +583,10 @@ public class MainUI extends JFrame {
 		showProgressBar();
 		int fileCount = 0;
 		for (int i = 0; i < fileList.size(); i++) {
-			if (launcher.checkFile(fileList.get(i),launcher.adminBasePath.substring(0,launcher.adminBasePath.indexOf("\\en\\")+3))) {
+			if (launcher.checkFile(
+					fileList.get(i),
+					launcher.adminBasePath.substring(0,
+							launcher.adminBasePath.indexOf("\\en\\") + 3))) {
 				preHTML5List.add(fileList.get(i));
 				fileCount++;
 			} else
@@ -597,33 +610,32 @@ public class MainUI extends JFrame {
 				+ " HTML5 files exist.", "info");
 	}
 
-	
-
 	public void convertToHTML5(String sourceFile) {
 		try {
-			
-			if (launcher.isBackupValid() && launcher.checkFile(sourceFile,launcher.adminBasePath.substring(0,launcher.adminBasePath.indexOf("\\en\\")+4))) {
+
+			if (launcher.isBackupValid()
+					&& launcher.checkFile(sourceFile,
+							launcher.adminBasePath
+									.substring(0, launcher.adminBasePath
+											.indexOf("\\en\\") + 4))) {
 				JerichoJspParserUtil.clearConsoleWriter();
-				JerichoJspParserUtil.convertToHTML5(formatFilePath(sourceFile),false,sourcePath);
+				JerichoJspParserUtil.convertToHTML5(formatFilePath(sourceFile),
+						false, sourcePath);
 				printOnConsole(JerichoJspParserUtil.getDebuggerOutput(), "log");
 				html4ToHtml5(sourceFile);
-				
 
 			} else {
 				printOnConsole("Backup path is not correct!", "error");
 				printOnConsole("Conversion aborted.", "error");
 			}
 
-
-		} catch(HTML5ParserException ex){
+		} catch (HTML5ParserException ex) {
 			ex.printStackTrace();
-			printOnConsole(ex.getType(),"error");
-			printOnConsole(ex.getMessage(),"error");
-			printOnConsole(ex.getTagInfo(),"error");
-			
-			
-		}
-		catch(Exception e){
+			printOnConsole(ex.getType(), "error");
+			printOnConsole(ex.getMessage(), "error");
+			printOnConsole(ex.getTagInfo(), "error");
+
+		} catch (Exception e) {
 			e.printStackTrace();
 
 		}
@@ -633,10 +645,15 @@ public class MainUI extends JFrame {
 	public void revertBack(String convertedFilePath) {
 
 		try {
-			if (launcher.isBackupValid()&& launcher.checkFile(convertedFilePath,launcher.adminBasePath.substring(0,launcher.adminBasePath.indexOf("\\en\\")+4))) {  //////
+			if (launcher.isBackupValid()
+					&& launcher.checkFile(convertedFilePath,
+							launcher.adminBasePath
+									.substring(0, launcher.adminBasePath
+											.indexOf("\\en\\") + 4))) { // ////
 				JerichoJspParserUtil.clearConsoleWriter();
 				RevertBackChanges.revertChanges(
-						formatFilePath(convertedFilePath), launcher.getBackupPath());
+						formatFilePath(convertedFilePath),
+						launcher.getBackupPath());
 				printOnConsole(JerichoJspParserUtil.getDebuggerOutput(), "log");
 				html5ToHtml4(convertedFilePath);
 
@@ -679,11 +696,12 @@ public class MainUI extends JFrame {
 		try {
 			consoleArea.getStyledDocument().insertString(doc.getLength(),
 					message + "\n", doc.getStyle(style));
-			consoleArea.setCaretPosition(consoleArea.getDocument().getLength()-1);
+			consoleArea
+					.setCaretPosition(consoleArea.getDocument().getLength() - 1);
 		} catch (BadLocationException e) {
 			e.printStackTrace();
 		}
-		
+
 	}
 
 	public static String printStacktrace(Exception e) {
@@ -693,7 +711,9 @@ public class MainUI extends JFrame {
 	}
 
 	public String formatFilePath(String fileName) {
-		return launcher.adminBasePath.substring(0,launcher.adminBasePath.indexOf("\\en\\")+3)+ fileName;
+		return launcher.adminBasePath.substring(0,
+				launcher.adminBasePath.indexOf("\\en\\") + 3)
+				+ fileName;
 	}
 
 	public String getBackupFilePath(String fileName) {
@@ -722,7 +742,7 @@ public class MainUI extends JFrame {
 	public void createErrorsFrame() {
 		ErrorsFrame.getInstance(this);
 		disableErrorsRecordedButton();
-	
+
 	}
 
 	/**
@@ -733,11 +753,11 @@ public class MainUI extends JFrame {
 	}
 
 	/**
-	 * @param backupLocationField the backupLocationField to set
+	 * @param backupLocationField
+	 *            the backupLocationField to set
 	 */
 	public void setBackupLocationField(JTextField backupLocationField) {
 		this.backupLocationField = backupLocationField;
 	}
 
-	
 }

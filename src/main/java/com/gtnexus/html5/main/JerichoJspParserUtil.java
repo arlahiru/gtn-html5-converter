@@ -1,6 +1,5 @@
 package com.gtnexus.html5.main;
 
-import static com.gtnexus.html5.main.JerichoJspParserUtil.dbLogger;
 import static com.gtnexus.html5.util.HTML5Util.ALIGN;
 import static com.gtnexus.html5.util.HTML5Util.ALINK;
 import static com.gtnexus.html5.util.HTML5Util.BACKGROUND;
@@ -91,6 +90,7 @@ import com.gtnexus.html5.rule.common.ColorRule;
 import com.gtnexus.html5.rule.header.HeaderElementFacade;
 import com.gtnexus.html5.util.DbLogger;
 import com.gtnexus.html5.util.HTML5Util;
+import com.gtnexus.html5.util.ProgramLauncher;
 
 /*
  * A JSP Parser class with static utility methods
@@ -369,37 +369,36 @@ public class JerichoJspParserUtil {
 
 		File sourceFile = new File(filePath);
 
-		logger.info("Dirty file check...");
-
-		String tradeFolder = "C:\\code\\gtnexus\\development\\modules\\main\\tcard\\web\\tradecard\\en\\trade";
-
-		// check if this file is link with the trade page by calling a
-		// appropriate sql query
-		if (false) {
-			
-			// nothing to do
-
-		}
-		// check this file links with trade site by scanning the trade folder
-		else {
-
-			List<String> tradePageList = HTML5Util
-					.getTradePagesLinkWithThisFile(filePath, new File(
-							tradeFolder), new ArrayList<String>());
-
-			if (!tradePageList.isEmpty()) {
-				// insert trade page list to pages db
-				logger.info(filePath +" file links with the trade site!");
-			}
-
-		}
-
 		Source source = new Source(new FileInputStream(sourceFile));
 
 		// this should be called in order to use getParentElement() method
 		source.fullSequentialParse();
 
 		if (!HTML5Util.isHtml5Page(source)) {
+
+			logger.info("Dirty file check...");
+
+			// check if this file is already in the db. if true no need to scan trade site!
+			if (false) {
+
+				// nothing to do
+
+			}
+			// check this file links with trade site by scanning the trade
+			// folder
+			else {
+
+				List<String> tradePageList = HTML5Util
+						.getTradePagesLinkWithThisFile(filePath, new File(
+								ProgramLauncher.tradeBasePath),
+								new ArrayList<String>());
+
+				if (!tradePageList.isEmpty()) {
+					// insert trade page list to pages db
+					logger.info(filePath + " file links with the trade site!");
+				}
+
+			}
 
 			int numOfConvertedIncludeFiles = 0;
 
