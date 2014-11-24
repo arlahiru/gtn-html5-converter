@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.concurrent.Executor;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -80,8 +81,10 @@ public class MainUI extends JFrame {
 	private JButton btnErrorsRecorded = new JButton("Errors Recorded");
 	private final JButton btnRemove = new JButton("Remove");
 	private final JButton btnOpenWithIE = new JButton("Open with IE");
+	private JButton btnStop = new JButton("Stop");
 	private String sourcePath;
-
+	private SwingWorker currentThread;
+	private Executor current;
 	public ProgramLauncher getProgramLauncher() {
 		return this.launcher;
 	}
@@ -246,6 +249,12 @@ public class MainUI extends JFrame {
 
 		btnOpenWithIE.setBounds(1016, 54, 154, 23);
 		getContentPane().add(btnOpenWithIE);
+		
+		
+		
+		btnStop.setEnabled(true);
+		btnStop.setBounds(377, 423, 89, 23);
+		getContentPane().add(btnStop);
 
 		this.setBounds(0, 0, 1200, 700);
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
@@ -329,29 +338,35 @@ public class MainUI extends JFrame {
 
 			public void actionPerformed(ActionEvent e) {
 
-				SwingWorker<Integer, Integer> convertFiles = new SwingWorker<Integer, Integer>() {
+				currentThread = new SwingWorker<Integer, Integer>() {
 					@Override
 					protected Integer doInBackground() {
 
 						String[] files = preHTML5List.getItems();
-
+						
+							disableButtons();
+						
 						for (int i = 0; i < files.length; i++) {
-
-							progressBar.setIndeterminate(true);
-
-							convertToHTML5(files[i]);
-
-							progressBar.setIndeterminate(false);
-
-							setProgressBarValue(files.length, i);
+							if(!this.isCancelled()){
+								progressBar.setIndeterminate(true);
+	
+								convertToHTML5(files[i]);
+	
+								progressBar.setIndeterminate(false);
+	
+								setProgressBarValue(files.length, i);
+							}
 						}
+						enableButtons();
+		
 						return 0;
 					}
 
 				};
-				convertFiles.execute();
-				printHtml5Count();
 
+				currentThread.execute();
+				printHtml5Count();
+				
 			}
 		});
 		/*
@@ -360,27 +375,29 @@ public class MainUI extends JFrame {
 		btnConvertSelected.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 
-				SwingWorker<Integer, Integer> convertFiles = new SwingWorker<Integer, Integer>() {
+				currentThread = new SwingWorker<Integer, Integer>() {
 					@Override
 					protected Integer doInBackground() throws Exception {
-
+						
 						String[] selectedItems = preHTML5List
 								.getSelectedItems();
-
+						disableButtons();
 						for (int i = 0; i < selectedItems.length; i++) {
-
-							progressBar.setIndeterminate(true);
-							convertToHTML5(selectedItems[i]);
-							progressBar.setIndeterminate(false);
-							setProgressBarValue(selectedItems.length, i);
+							if(!isCancelled()){
+								progressBar.setIndeterminate(true);
+								convertToHTML5(selectedItems[i]);
+								progressBar.setIndeterminate(false);
+								setProgressBarValue(selectedItems.length, i);
 
 						}
-
+						
+					}
+						enableButtons();	
 						return 0;
 					}
 
 				};
-				convertFiles.execute();
+				currentThread.execute();
 				printHtml5Count();
 			}
 		});
@@ -393,13 +410,15 @@ public class MainUI extends JFrame {
 				SwingWorker<Integer, Integer> revertFiles = new SwingWorker<Integer, Integer>() {
 					@Override
 					protected Integer doInBackground() throws Exception {
+						disableButtons();
 						String[] files = html5List.getItems();
 
 						for (int i = 0; i < files.length; i++) {
 							revertBack(files[i]);
 							setProgressBarValue(files.length, i);
 						}
-
+						
+						enableButtons();
 						return 0;
 					}
 				};
@@ -416,6 +435,7 @@ public class MainUI extends JFrame {
 				SwingWorker<Integer, Integer> revertSelectedFiles = new SwingWorker<Integer, Integer>() {
 					@Override
 					protected Integer doInBackground() throws Exception {
+						disableButtons();
 						String[] selectedItems = html5List.getSelectedItems();
 						System.out.println(selectedItems.length + " "
 								+ selectedItems[0]);
@@ -423,7 +443,7 @@ public class MainUI extends JFrame {
 							revertBack(selectedItems[i]);
 							setProgressBarValue(selectedItems.length, i);
 						}
-
+						enableButtons();
 						return 0;
 					}
 				};
@@ -438,6 +458,15 @@ public class MainUI extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				consoleArea.setText("");
 			}
+		});
+		/*
+		 * Stops the current working thread
+		 */
+		btnStop.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				stopCurrentThread();
+			}
+			
 		});
 
 		/*
@@ -759,5 +788,27 @@ public class MainUI extends JFrame {
 	public void setBackupLocationField(JTextField backupLocationField) {
 		this.backupLocationField = backupLocationField;
 	}
-
+	
+	public void stopCurrentThread(){
+		currentThread.cancel(true);
+		enableButtons();
+	}
+	public void enableButtons(){
+		this.btnConvertSelected.setEnabled(true);
+		this.convertButton.setEnabled(true);
+		this.btnRollbackSelected.setEnabled(true);
+		this.btnRollbackAll.setEnabled(true);
+		this.btnBrowseSourceLocation.setEnabled(true);
+		this.btnSetBackupLocation.setEnabled(true);
+		this.btnRemove.setEnabled(true);
+	}
+	public void disableButtons(){
+		this.btnConvertSelected.setEnabled(false);
+		this.convertButton.setEnabled(false);
+		this.btnRollbackSelected.setEnabled(false);
+		this.btnRollbackAll.setEnabled(false);
+		this.btnBrowseSourceLocation.setEnabled(false);
+		this.btnSetBackupLocation.setEnabled(false);
+		this.btnRemove.setEnabled(false);
+	}
 }
