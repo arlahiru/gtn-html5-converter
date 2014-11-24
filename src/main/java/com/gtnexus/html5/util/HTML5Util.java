@@ -32,7 +32,7 @@ public class HTML5Util {
 	public final static String META_IS_HTML5 = "<meta isHtml5Page=\"true\">";
 
 	// HTML 5 converted comment tag
-	public final static String HTML5_CONVERTED_COMMENT = "<!--HTML5 Converted Page-->";
+	public final static String HTML5_CONVERTED_COMMENT = "<!-- HTML5 Converted Page -->";
 
 	// HTML AND CSS ATTRIBUTE NAMES
 	public final static String WIDTH = "width";
@@ -405,7 +405,7 @@ public class HTML5Util {
 		return false;
 	}
 
-	// verify new document is not missing anything by comparing with source file
+	// verify new html output file is not missing any html element from source file by comparing tag counts
 	public static boolean isCommonTagsCountMatch(Source source,
 			OutputDocument outputDocument) {
 
@@ -478,6 +478,9 @@ public class HTML5Util {
 			return false;
 		else if (source.getAllElements(HTMLElementName.UL).size() != output
 				.getAllElements(HTMLElementName.UL).size())
+			return false;
+		else if (source.getAllElements(HTMLElementName.FONT).size() != output
+				.getAllElements(HTMLElementName.SPAN).size())
 			return false;
 
 		return true;

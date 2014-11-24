@@ -22,7 +22,8 @@ public class ProgramLauncher {
 	private String firefox_path = "C:/Program Files (x86)/Mozilla Firefox/firefox.exe";
 	private String internetExplorer_path = "C:/Program Files (x86)/Internet Explorer/iexplorer.exe";
 	private String notepadPath = "";
-	public final String DEFAULT_BACKUP_PATH = "C:/TcardWebBackup";
+	//public final String DEFAULT_BACKUP_PATH = "C:/TcardWebBackup";
+	public final String DEFAULT_BACKUP_PATH = "C:/Alpha-HTML5-Backup/development/modules/main/tcard";
 	public static String adminBasePath = "C:/code/gtnexus/development/modules/main/tcard";
 	public static String tradeBasePath = "";
 	public final String CONFIG_FILE = "config.ini";

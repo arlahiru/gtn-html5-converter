@@ -340,7 +340,7 @@ public class JerichoJspParserUtil {
 		logger.debug("Rules map initialized successfully.");
 
 		// disable dblogger
-		dbLogger.enable(true);
+		dbLogger.enable(false);
 
 		if (dbLogger.isEnabled()) {
 			dbLogger.initialize();
@@ -376,6 +376,8 @@ public class JerichoJspParserUtil {
 
 		if (!HTML5Util.isHtml5Page(source)) {
 
+			//commented this to stop scanning trade folder
+			
 			logger.info("Dirty file check...");
 
 			// check if this file is already in the db. if true no need to scan trade site!
@@ -395,11 +397,11 @@ public class JerichoJspParserUtil {
 
 				if (!tradePageList.isEmpty()) {
 					// insert trade page list to pages db
-					logger.info(filePath + " file links with the trade site!");
+					logger.info(filePath + " file links with following trade pages=>"+tradePageList);
 				}
 
 			}
-
+			
 			int numOfConvertedIncludeFiles = 0;
 
 			// get include file paths

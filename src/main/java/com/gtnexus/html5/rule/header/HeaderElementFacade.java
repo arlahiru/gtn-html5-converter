@@ -5,6 +5,7 @@ import static com.gtnexus.html5.util.HTML5Util.DOCTYPE_HTML5;
 import static com.gtnexus.html5.util.HTML5Util.HTML5_CONVERTED_COMMENT;
 import static com.gtnexus.html5.util.HTML5Util.META_CHARSET_UTF8;
 
+import java.util.Date;
 import java.util.List;
 
 import net.htmlparser.jericho.Element;
@@ -63,7 +64,7 @@ public class HeaderElementFacade {
 
 		} else {
 
-			outputDocument.insert(source.getBegin(), HTML5_CONVERTED_COMMENT + "\n");
+			outputDocument.insert(source.getBegin(), HTML5_CONVERTED_COMMENT + "\n<!-- Converted Date:"+new Date()+" -->\n");
 		}
 
 		logger.debug("HTML5 comment tag added successfully!");
