@@ -36,6 +36,8 @@ public class DbLogger {
 	private static final String ACCESSED_DATE= "AccessedDate";
 	private static final String STATUS = "Status";
 	private static final String FILENAME = "Filename";
+	private static final String IS_ADMIN = "IsAdmin";
+	private static final String SCANNED = "Scanned";
 	
 	private static final String INCLUDE_FILE_TABLE = "IncludeFiles";
 	private static final String PARENT_ID = "ParentID";
@@ -51,9 +53,16 @@ public class DbLogger {
 	private static final String ERROR_TYPE = "ErrorType";
 	private static final String LAST_CONVERTED_LINE ="lastConvertedLine";
 	
-	private static final String STATUS_FAILED = "Failed";
-	private static final String STATUS_CONVERTED = "Converted";
-	private static final String STATUS_ROLLED_BACK = "Rolled Back";
+	private static final String CONFLICTING_PAGES = "ConflictingPages";
+	private static final String ADMIN_PAGE_COL = "AdminPage";
+	private static final String TRADE_PAGE_COL = "TradePage";
+	
+	public static final String STATUS_FAILED = "Failed";
+	public static final String STATUS_CONVERTED = "Converted";
+	public static final String STATUS_NOT_CONVERTED = "Not Converted";
+	public static final String STATUS_ROLLED_BACK = "Rolled Back";
+	
+	
 	
 	private volatile PreparedStatement insertPage;
 	private volatile PreparedStatement insertIncludeFile;
@@ -63,10 +72,12 @@ public class DbLogger {
 	private volatile PreparedStatement updateConvertedDate;
 	private volatile PreparedStatement deleteFromChangeLog; 
 	private volatile PreparedStatement getErrors;
+	private volatile PreparedStatement updateScannedState;
+	private volatile PreparedStatement insertConflict;
 	
 	private void makeStatements(){
 		String queryInsertPage = "INSERT INTO " + PAGE_TABLE + "(" + PATH + ","
-				+ IS_INCLUDE + "," + ACCESSED_DATE + ","+STATUS+","+FILENAME+") VALUES(?,?,?,?,?);";
+				+ IS_INCLUDE + "," + ACCESSED_DATE + ","+STATUS+","+FILENAME+","+IS_ADMIN+","+SCANNED+") VALUES(?,?,?,?,?,?,?);";
 		
 		String queryInsertIncludeFile ="INSERT INTO " + INCLUDE_FILE_TABLE + " (" + ID
 				+ "," + PARENT_ID + ") VALUES " + "(?,?) ;";
@@ -87,6 +98,11 @@ public class DbLogger {
 		
 		String queryGetErrors = "SELECT "+PAGE_TABLE+"."+PATH+","+ERRORS_TABLE+".* FROM "+PAGE_TABLE+" INNER JOIN "+ERRORS_TABLE+" ON "+
 				 PAGE_TABLE+"."+ID+"="+ERRORS_TABLE+"."+ID+";";
+		
+		String queryUpdateScannedState = "UPDATE "+PAGE_TABLE+" SET "+SCANNED+"=? WHERE "+ID+"=? ;";
+		
+		String quertInsertConflict = "INSERT INTO "+CONFLICTING_PAGES+" VALUES(?,?);";
+		
 		try{
 			insertPage=con.prepareStatement(queryInsertPage,
 					Statement.RETURN_GENERATED_KEYS);
@@ -103,6 +119,9 @@ public class DbLogger {
 			
 			getErrors = con.prepareStatement(queryGetErrors);
 			
+			updateScannedState = con.prepareStatement(queryUpdateScannedState);
+			
+			insertConflict = con.prepareStatement(quertInsertConflict);
 		}catch(SQLException e){
 			e.printStackTrace();
 		}
@@ -195,7 +214,7 @@ public class DbLogger {
 		return dateFormat.format(cal.getTime());
 	}
 
-	public synchronized void insertPage(String filepath, boolean isIncludeFile,String filename) {
+	public synchronized void insertPage(String filepath, boolean isIncludeFile,String filename,boolean isConversion) {
 
 		if (isEnabled()) {
 
@@ -205,8 +224,16 @@ public class DbLogger {
 				insertPage.setString(1, filepath);
 				insertPage.setBoolean(2, isIncludeFile);
 				insertPage.setString(3, getDate());
-				insertPage.setString(4, STATUS_CONVERTED);
+				if(isConversion)
+					insertPage.setString(4, STATUS_CONVERTED);
+				else 
+					insertPage.setString(4, STATUS_NOT_CONVERTED);
 				insertPage.setString(5,filename.substring(filename.lastIndexOf('\\')+1));
+				if(filepath.contains("/administration/")||filepath.contains("\\administration\\"))
+					insertPage.setBoolean(6, true);
+				else
+					insertPage.setBoolean(6, false);
+				insertPage.setBoolean(7, false);
 				insertPage.executeUpdate();
 				
 				ResultSet set = insertPage.getGeneratedKeys();
@@ -222,28 +249,17 @@ public class DbLogger {
 
 			} catch (SQLException e) {
 
-				if (e.getMessage().contains("Duplicate entry ")) {
+				if (e.getMessage().contains("Duplicate entry ") && isConversion) {
 					id = queryID(filepath);
 					setStatus(id,STATUS_CONVERTED);
 				}
 				System.out.println("Duplicate entry "+filepath);
 				//e.printStackTrace();
 
-			} finally {
-				/*
-				if (insertPage != null) {
-					try {
-					//	insertPage.close();
-
-					} catch (SQLException e) {
-
-						e.printStackTrace();
-					}
-				}*/
-
-			}
-		}
+			} 	
+		}	
 	}
+	
 
 	private synchronized void insertIncludeFile() {
 		//PreparedStatement statement = null;
@@ -638,6 +654,64 @@ public class DbLogger {
 	
 		}catch(IOException  e){
 			
+		}
+	}
+	
+	public void updateScannedState(String filename,boolean state){
+		try{
+			updateScannedState.setBoolean(1,state);
+			updateScannedState.setInt(2, queryID(filename));
+			updateScannedState.execute();
+		}catch(SQLException e){
+				e.printStackTrace();
+		}
+	}
+	
+	public ArrayList<String> getAllConflicts(){
+		ArrayList<String> paths = new ArrayList<String>();
+		
+		try{
+			String query = "SELECT * FROM "+CONFLICTING_PAGES;
+			PreparedStatement statement= con.prepareStatement(query);
+			ResultSet set = statement.executeQuery();
+			while(set.next()){
+				paths.add(set.getString(1));
+				paths.add(set.getString(2));
+			}
+		}catch(SQLException e){
+				e.printStackTrace();
+		}
+		return paths;
+	}
+	
+	public ArrayList<String> searchConflicts(String searchTag){
+		ArrayList<String> paths = new ArrayList<String>();
+		
+		try{
+			String query = "SELECT * FROM "+CONFLICTING_PAGES
+					+" WHERE "+ADMIN_PAGE_COL+" LIKE '%"+searchTag+"%' OR "+TRADE_PAGE_COL+" LIKE '%"+searchTag+"%';";
+			PreparedStatement statement= con.prepareStatement(query);
+			ResultSet set = statement.executeQuery();
+			while(set.next()){
+				paths.add(set.getString(1));
+				paths.add(set.getString(2));
+			}
+		}catch(SQLException e){
+				e.printStackTrace();
+		}
+		return paths;
+	}
+	
+	public void insertConflictingPages(String filename,ArrayList<String> list){
+		for(String file : list){
+			try{
+				
+				insertConflict.setString(1,filename);
+				insertConflict.setString(2,file);
+				insertConflict.execute();
+			}catch(SQLException e){
+					e.printStackTrace();
+			}
 		}
 	}
 

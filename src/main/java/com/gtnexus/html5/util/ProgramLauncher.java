@@ -33,9 +33,6 @@ public class ProgramLauncher {
 	private MainUI mainUI;
 	private boolean isBackupValid = false;
 
-	public ProgramLauncher(){
-		
-	}
 	public ProgramLauncher(MainUI main){
 		mainUI=main;
 		setBackupPath(backupPath);
@@ -397,11 +394,12 @@ public class ProgramLauncher {
 	}
 
 	public String formatFilePath(String fileName) {
-		return adminBasePath.substring(0,adminBasePath.indexOf("/en/")) + fileName;
+		return adminBasePath.substring(0,adminBasePath.indexOf("\\en\\")+4) + fileName;
 	}
 
 	public String formatBackupFilePath(String fileName) {
-		return getBackupPath().substring(0,getBackupPath().indexOf("/en/")) + fileName;
+		String base = "C:\\code\\gtnexus\\development\\modules\\main\\tcard";
+		return getBackupPath()+formatFilePath(fileName).substring(formatFilePath(fileName).indexOf(base)+base.length());
 	}
 
 	/**

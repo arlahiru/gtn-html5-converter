@@ -46,6 +46,7 @@ import com.gtnexus.html5.exception.HTML5ParserException;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.main.RevertBackChanges;
 import com.gtnexus.html5.util.ProgramLauncher;
+import com.gtnexus.html5.util.UsageScanner;
 
 public class MainUI extends JFrame {
 
@@ -81,15 +82,22 @@ public class MainUI extends JFrame {
 	private JButton btnErrorsRecorded = new JButton("Errors Recorded");
 	private final JButton btnRemove = new JButton("Remove");
 	private final JButton btnOpenWithIE = new JButton("Open with IE");
-	private JButton btnStop = new JButton("Stop");
+	private final JButton btnScan = new JButton("Scan");
+	private final JButton btnStop = new JButton("Stop");
+	private final JButton btnOpenScannedPages = new JButton("View Conflicts");
+	
 	private String sourcePath;
 	private SwingWorker currentThread;
 	private Executor current;
+	
+	private ProgramLauncher launcher = new ProgramLauncher(this);
+	private UsageScanner scanner = new UsageScanner(this);
+	
 	public ProgramLauncher getProgramLauncher() {
 		return this.launcher;
 	}
 
-	private ProgramLauncher launcher = new ProgramLauncher(this);
+	
 
 	public MainUI() {
 
@@ -193,7 +201,7 @@ public class MainUI extends JFrame {
 		percentageTextArea.setColumns(10);
 		btnConvertSelected.setHorizontalAlignment(SwingConstants.LEFT);
 
-		btnConvertSelected.setBounds(130, 423, 138, 22);
+		btnConvertSelected.setBounds(129, 423, 138, 22);
 
 		getContentPane().add(btnConvertSelected);
 		btnRollbackSelected.setHorizontalAlignment(SwingConstants.LEFT);
@@ -229,32 +237,33 @@ public class MainUI extends JFrame {
 
 		btnErrorsRecorded.setEnabled(true);
 		btnErrorsRecorded.setHorizontalAlignment(SwingConstants.LEFT);
-		btnErrorsRecorded.setBounds(1016, 17, 154, 23);
+		btnErrorsRecorded.setBounds(1030, 17, 154, 23);
 		getContentPane().add(btnErrorsRecorded);
 
-		btnOpenWithFireFox.setBounds(835, 54, 154, 23);
+		btnOpenWithFireFox.setBounds(820, 17, 154, 23);
 		getContentPane().add(btnOpenWithFireFox);
 
-		btnRemove.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				int[] selectedIndexes = preHTML5List.getSelectedIndexes();
-				for (int i = selectedIndexes.length - 1; i >= 0; i--) {
-				
-					preHTML5List.remove(selectedIndexes[i]);
-				}
-			}
-		});
-		btnRemove.setBounds(278, 423, 89, 23);
+		
+		btnRemove.setBounds(376, 423, 89, 23);
 		getContentPane().add(btnRemove);
 
-		btnOpenWithIE.setBounds(1016, 54, 154, 23);
+		btnOpenWithIE.setBounds(820, 54, 154, 23);
 		getContentPane().add(btnOpenWithIE);
 		
 		
 		
 		btnStop.setEnabled(true);
-		btnStop.setBounds(377, 423, 89, 23);
+		btnStop.setBounds(475, 423, 89, 23);
 		getContentPane().add(btnStop);
+		
+		
+		btnScan.setBounds(277, 423, 89, 23);
+		getContentPane().add(btnScan);
+		
+		
+		
+		btnOpenScannedPages.setBounds(1030, 54, 154, 23);
+		getContentPane().add(btnOpenScannedPages);
 
 		this.setBounds(0, 0, 1200, 700);
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
@@ -583,6 +592,44 @@ public class MainUI extends JFrame {
 				}
 			}
 		});
+
+		btnScan.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				SwingWorker<Integer, Integer> scan = new SwingWorker<Integer, Integer>() {
+					@Override
+					protected Integer doInBackground() throws Exception {
+						disableButtons();
+						setProgressBarValue(preHTML5List.getItemCount(),0);
+						int i=0;
+						for(String file : preHTML5List.getItems()){
+							scan(file);
+							setProgressBarValue(preHTML5List.getItemCount(),i);
+							i++;
+						}
+						enableButtons();
+						return 0;
+					}
+				};
+				scan.execute();
+			}
+		});
+		
+		btnOpenScannedPages.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				openConflictsFrame();
+				
+			}
+		});
+		
+		btnRemove.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				int[] selectedIndexes = preHTML5List.getSelectedIndexes();
+				for (int i = selectedIndexes.length - 1; i >= 0; i--) {
+				
+					preHTML5List.remove(selectedIndexes[i]);
+				}
+			}
+		});
 	}
 
 	/*
@@ -801,6 +848,7 @@ public class MainUI extends JFrame {
 		this.btnBrowseSourceLocation.setEnabled(true);
 		this.btnSetBackupLocation.setEnabled(true);
 		this.btnRemove.setEnabled(true);
+		this.btnScan.setEnabled(true);
 	}
 	public void disableButtons(){
 		this.btnConvertSelected.setEnabled(false);
@@ -810,5 +858,17 @@ public class MainUI extends JFrame {
 		this.btnBrowseSourceLocation.setEnabled(false);
 		this.btnSetBackupLocation.setEnabled(false);
 		this.btnRemove.setEnabled(false);
+		this.btnScan.setEnabled(false);
+	}
+	
+	private void openConflictsFrame(){
+		ConflictsFrame conflicts = new ConflictsFrame(this);
+		conflicts.show();
+	}
+	
+	private void scan(String filename){
+		printOnConsole("Scanning "+filename,"info");
+		scanner.performScan(formatFilePath(filename),sourcePath);
+		printOnConsole(filename+ "Completed.","info");
 	}
 }

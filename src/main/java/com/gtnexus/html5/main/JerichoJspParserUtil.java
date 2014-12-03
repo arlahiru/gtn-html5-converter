@@ -359,7 +359,7 @@ public class JerichoJspParserUtil {
 		// Parse JSP file and remove obsolete html5 tags and apply relevant
 		// workaround.
 
-		dbLogger.insertPage(filePath, isIncludeFile, textfileName);
+		dbLogger.insertPage(filePath, isIncludeFile, textfileName,true);
 		if (!isIncludeFile) {
 			logger.info("Input File: " + filePath);
 		} else {
@@ -386,7 +386,7 @@ public class JerichoJspParserUtil {
 			}
 			// check this file links with trade site by scanning the trade
 			// folder
-			else {
+/*			else {
 
 				List<String> tradePageList = HTML5Util
 						.getTradePagesLinkWithThisFile(filePath, new File(
@@ -398,7 +398,7 @@ public class JerichoJspParserUtil {
 					logger.info(filePath + " file links with the trade site!");
 				}
 
-			}
+			}*/
 
 			int numOfConvertedIncludeFiles = 0;
 
