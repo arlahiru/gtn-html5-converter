@@ -479,10 +479,10 @@ public class HTML5Util {
 		else if (source.getAllElements(HTMLElementName.UL).size() != output
 				.getAllElements(HTMLElementName.UL).size())
 			return false;
-		else if (source.getAllElements(HTMLElementName.FONT).size() != output
+		else if ((source.getAllElements(HTMLElementName.SPAN).size() + source.getAllElements(HTMLElementName.FONT).size())!= output
 				.getAllElements(HTMLElementName.SPAN).size())
 			return false;
-
+		
 		return true;
 
 	}

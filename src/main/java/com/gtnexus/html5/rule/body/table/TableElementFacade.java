@@ -202,6 +202,9 @@ public class TableElementFacade extends Facade {
 
 				newTdStyleValue.append(PADDING + ":" + cellPadding + "px;");
 
+			}else{
+				//this means td element does not have a proper parent. So we apply 0 paddings to them
+				newTdStyleValue.append(PADDING + ":" + "0" + "px;");
 			}
 
 			newTdStyleValue = applyPostTDFixes(td, newTdStyleValue);

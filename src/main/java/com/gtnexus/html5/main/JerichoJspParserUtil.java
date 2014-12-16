@@ -378,7 +378,7 @@ public class JerichoJspParserUtil {
 
 			//commented this to stop scanning trade folder
 			
-			logger.info("Dirty file check...");
+			/*logger.info("Dirty file check...");
 
 			// check if this file is already in the db. if true no need to scan trade site!
 			if (false) {
@@ -401,7 +401,7 @@ public class JerichoJspParserUtil {
 				}
 
 			}
-			
+			*/
 			int numOfConvertedIncludeFiles = 0;
 
 			// get include file paths

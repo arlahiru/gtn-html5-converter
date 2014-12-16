@@ -59,12 +59,11 @@ public class HeaderElementFacade {
 
 			Element headTag = allHeadTag.get(0);
 
-			outputDocument.insert(headTag.getBegin() + 6, "\n"
-					+ HTML5_CONVERTED_COMMENT + "\n");
+			outputDocument.insert(headTag.getBegin() + 6,"\n<!-- Converted Date:"+new Date()+" -->\n");
 
 		} else {
 
-			outputDocument.insert(source.getBegin(), HTML5_CONVERTED_COMMENT + "\n<!-- Converted Date:"+new Date()+" -->\n");
+			outputDocument.insert(source.getBegin(),"\n"+ HTML5_CONVERTED_COMMENT + "\n<!-- Converted Date:"+new Date()+" -->\n");
 		}
 
 		logger.debug("HTML5 comment tag added successfully!");
