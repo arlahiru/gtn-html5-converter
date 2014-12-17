@@ -204,6 +204,7 @@ public class TableElementFacade extends Facade {
 
 			}else{
 				//this means td element does not have a proper parent. So we apply 0 paddings to them
+				//GTBUG-6674
 				newTdStyleValue.append(PADDING + ":" + "0" + "px;");
 			}
 

@@ -32,7 +32,7 @@ public class HTML5Util {
 	public final static String META_IS_HTML5 = "<meta isHtml5Page=\"true\">";
 
 	// HTML 5 converted comment tag
-	public final static String HTML5_CONVERTED_COMMENT = "<!-- HTML5 Converted Page -->";
+	public final static String HTML5_CONVERTED_COMMENT = "<!-- HTML5 Converted Page:Phase1 -->";
 
 	// HTML AND CSS ATTRIBUTE NAMES
 	public final static String WIDTH = "width";
@@ -156,6 +156,8 @@ public class HTML5Util {
 
 	// check given attribute value has a unit
 	public static boolean hasUnit(String attributeValue) {
+		
+		attributeValue = attributeValue.toLowerCase();
 
 		if (attributeValue.endsWith("%") || attributeValue.endsWith("in")
 				|| attributeValue.endsWith("cm")
