@@ -107,6 +107,7 @@ public class HTML5Util {
 	public final static String BR = "br";
 	public final static String NO_BR = "nobr";
 	public final static String SPACER = "spacer";
+	public final static String ANCHOR = "a";
 	public final static String ACTIVE_LINK = "a:active";
 	public final static String VISITED_LINK = "a:visited";
 
@@ -488,7 +489,21 @@ public class HTML5Util {
 		return true;
 
 	}
-
+	
+	public static boolean containsLinkInTd(Segment td,String cssClass){
+		List<Element> immediateElements = td.getChildElements();
+		for(Element e : immediateElements){
+			
+			if(e.getName().equals(ANCHOR) ){
+				try{
+					if(e.getAttributeValue("class").equals(cssClass)) return true;
+				}catch(NullPointerException e2){
+					
+				}
+			}
+		}
+		return false;
+	}
 	public static boolean isContainAlignableComponent(Segment e) {
 
 		// check element contains table

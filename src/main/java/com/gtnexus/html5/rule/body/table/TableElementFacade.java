@@ -165,7 +165,7 @@ public class TableElementFacade extends Facade {
 	}
 
 	private static void fixTableData(Element tr, OutputDocument outputDocument) {
-
+		
 		// get all the td elements of this tr
 		List<Element> tdElementList = getTdElementList(tr);
 
@@ -192,6 +192,8 @@ public class TableElementFacade extends Facade {
 
 			} else {
 				modifiedTDTag.append("<" + TD + " ");
+				
+				
 			}
 
 			applyRules(td, outputDocument, newTdStyleValue, modifiedTDTag);
@@ -207,6 +209,7 @@ public class TableElementFacade extends Facade {
 				//GTBUG-6674
 				newTdStyleValue.append(PADDING + ":" + "0" + "px;");
 			}
+			
 
 			newTdStyleValue = applyPostTDFixes(td, newTdStyleValue);
 
@@ -214,9 +217,14 @@ public class TableElementFacade extends Facade {
 			modifiedTDTag.append(" " + HTML5Util.getInnerServerTagContent(td)
 					+ " ");
 
+			//append class to the td
+			if(HTML5Util.containsLinkInTd(td,"smallbuttontext")&&td.getAttributeValue("class")==null){
+				modifiedTDTag.append(" class=\"listtablecell\" ");
+			}
+			
 			// close tr start tag
 			modifiedTDTag.append(STYLE + "=\"" + newTdStyleValue + "\">");
-
+			
 			replace(td.getStartTag(), modifiedTDTag, outputDocument);
 
 			// outputDocument.replace(td.getEndTag(), "</" + TD + ">");
