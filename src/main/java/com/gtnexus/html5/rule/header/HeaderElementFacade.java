@@ -53,13 +53,13 @@ public class HeaderElementFacade {
 	private static void addHtml5ConvertedCommentTag(Source source,
 			OutputDocument outputDocument) {
 
-		List<Element> allHeadTag = source.getAllElements(HTMLElementName.HEAD);
+		List<Element> allHtmlTag = source.getAllElements(HTMLElementName.HTML);
 
-		if (!allHeadTag.isEmpty()) {
+		if (!allHtmlTag.isEmpty()) {
 
-			Element headTag = allHeadTag.get(0);
+			Element htmlTag = allHtmlTag.get(0);
 
-			outputDocument.insert(headTag.getBegin() + 6,"\n<!-- Converted Date:"+new Date()+" -->\n");
+			outputDocument.insert(htmlTag.getBegin() + 6,"\n"+ HTML5_CONVERTED_COMMENT + "\n<!-- Converted Date:"+new Date()+" -->\n");
 
 		} else {
 

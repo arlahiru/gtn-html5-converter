@@ -38,7 +38,7 @@ import com.gtnexus.html5.util.HTML5Util;
 
 public class TableElementFacade extends Facade {
 
-	private static String cellPadding;
+	private static String cellPadding = null;
 	private static Element thead;
 	private static Element tfoot;
 	private static Element tbody;
@@ -54,14 +54,10 @@ public class TableElementFacade extends Facade {
 				.getAllElements(HTMLElementName.TABLE);
 
 		for (Element table : tableElementList) {
-
+			resetGlovalValues();
 			loadChildElements(table);
 			removeAndReplaceTableElementObsoleteFeatures(table, outputDocument);
-
-		}
-
-		// clear cellpadding variable
-		cellPadding = null;
+		}		
 
 		// fix non well-formed elements
 		fixNonWellformedTdThTags(source, outputDocument);
@@ -69,6 +65,12 @@ public class TableElementFacade extends Facade {
 
 		logger.debug("Fixing legacy tables finished.");
 
+	}
+
+	private static void resetGlovalValues() {
+		trElements = new ArrayList<Element>(0);
+		thead = tfoot = tbody = null;
+		cellPadding=null;
 	}
 
 	private static void removeAndReplaceTableElementObsoleteFeatures(
@@ -86,9 +88,6 @@ public class TableElementFacade extends Facade {
 
 			// initialize default values. have to test this!
 			modifiedTableTag.append("<" + TABLE + " ");
-
-			// keep table cellpadding value to apply in <td> level
-			cellPadding = null;
 
 			applyRules(table, outputDocument, newTableStyleValue,
 					modifiedTableTag);
@@ -389,14 +388,15 @@ public class TableElementFacade extends Facade {
 		return newTdStyleValue;
 	}
 
-	private static void loadChildElements(Element table) {
-
-		trElements = new ArrayList<Element>(0);
-		thead = tfoot = tbody = null;
+	private static void loadChildElements(Element table) {		
 
 		List<Element> childElements = table.getChildElements();
 
 		for (Element child : childElements) {
+			
+			if(child.getName().equals(HTML5Util.FORM)){				
+				loadChildElements(child);				
+			}
 
 			if (child.getName().equals(HTMLElementName.THEAD)) {
 
@@ -411,7 +411,6 @@ public class TableElementFacade extends Facade {
 				tfoot = child;
 				trElements.addAll(child.getChildElements());
 			} else if (child.getName().equals(HTMLElementName.TR)) {
-
 				trElements.add(child);
 			}
 
@@ -439,45 +438,66 @@ public class TableElementFacade extends Facade {
 
 	private static void fixNonWellformedTdThTags(Source source,
 			OutputDocument outputDocument) {
+		
+		logger.debug("Fixing non-well formed <td> tags started...");
 
 		List<Element> allTdThTags = source.getAllElements(HTML5Util.TD);
 		allTdThTags.addAll(source.getAllElements(HTML5Util.TH));
 
 		for (Element td : allTdThTags) {
-
-			if (td.getParentElement() == null) {
-
-				// fix each td tag
+			// fix each parentless td tag
+			if (td.getParentElement() == null) {				
 				fixTdTag(td, outputDocument);
-			} else if (!td.getParentElement().getName().equals(HTML5Util.TR)) {
-
-				// fix each td tag
+			// fix each non-well formed td tag
+			/*
+			 * But ignore this kind of scenario:
+			 *<table   style="border-spacing:0px;border:0px solid black;">
+	              	<tr>
+	  					<form>
+	  						<td></td>
+	  					<form>
+	  				</tr>	              
+            </table>
+			 */
+			} else if (!td.getParentElement().getName().equals(HTML5Util.TR)
+					&& !(td.getParentElement().getName().equals(HTML5Util.FORM) && td.getParentElement().getParentElement() !=null && td.getParentElement().getParentElement().getName().equals(HTML5Util.TR))) {
 				fixTdTag(td, outputDocument);
-
 			}
 
 		}
+		logger.debug("Fixing non-well formed <td> tags completed...");
 	}
 
 	private static void fixNonWellformedTrTags(Source source,
 			OutputDocument outputDocument) {
+		
+		logger.debug("Fixing non-well formed <tr> tags started...");
 
 		List<Element> allTrTags = source.getAllElements(HTML5Util.TR);
 
 		for (Element tr : allTrTags) {
 
-			if (tr.getParentElement() == null) {
-
-				// fix each tr tag
+			// fix each parentless tr tag
+			if (tr.getParentElement() == null) {				
 				fixTrTag(tr, outputDocument);
-			} else if (!tr.getParentElement().getName().equals(HTML5Util.TABLE)) {
-
-				// fix each tr tag
+			// fix not-well formed each tr tag
+			/*
+			 * But ignore this kind of scenario:
+			 *<table   style="border-spacing:0px;border:0px solid black;">
+	              <form>
+	  				<tr>	  					
+	  					<td></td>	  					
+	  				</tr>
+	              </form>
+            </table>
+			 */
+			} else if (!tr.getParentElement().getName().equals(HTML5Util.TABLE)
+					&& !(tr.getParentElement().getName().equals(HTML5Util.FORM) && tr.getParentElement().getParentElement() !=null && tr.getParentElement().getParentElement().getName().equals(HTML5Util.TABLE))) {				
 				fixTrTag(tr, outputDocument);
 			}
 
 		}
-
+		logger.debug("Fixing non-well formed <tr> tags completed...");
 	}
 
 	// override this method from Facade class
@@ -506,7 +526,6 @@ public class TableElementFacade extends Facade {
 				if (returnValue != null) {
 					newStyle.append(returnValue);
 				} else {
-
 					// this padding should go to td and tr level of the
 					// table
 					if (attributeName.equals(CELLPADDING)) {
