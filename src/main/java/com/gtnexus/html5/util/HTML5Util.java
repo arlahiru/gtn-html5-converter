@@ -539,51 +539,5 @@ public class HTML5Util {
 		return hasTable || hasServerElement;
 	}
 
-	public static List<String> getTradePagesLinkWithThisFile(
-			String targetFilePath, final File tradeFolder,
-			List<String> tradePageList) {
-
-		for (final File tradeFileEntry : tradeFolder.listFiles()) {
-			if (tradeFileEntry.isDirectory()) {
-				getTradePagesLinkWithThisFile(targetFilePath, tradeFileEntry,
-						tradePageList);
-
-			} else {
-				if (tradeFileEntry.getName().toLowerCase().endsWith(".jsp")
-						|| tradeFileEntry.getName().toLowerCase()
-								.endsWith(".html")) {
-
-					try {
-
-						// get include file paths
-						List<String> includeFilePathList = HTML5Util
-								.getIncludeFilePaths(tradeFileEntry
-										.getAbsolutePath());
-
-						for (String includeFilePath : includeFilePathList) {
-
-							// check include file link to the given file name
-							if (new File(targetFilePath).getAbsolutePath()
-									.equals(new File(includeFilePath)
-											.getAbsolutePath())) {
-
-								tradePageList.add(tradeFileEntry
-										.getAbsolutePath());
-							}
-
-						}
-
-					}
-
-					catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-			}
-		}
-
-		return tradePageList;
-	}
-
+	
 }

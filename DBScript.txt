@@ -1,0 +1,15 @@
+CREATE DATABASE logs;
+
+CREATE TABLE Page(ID int AUTO_INCREMENT PRIMARY KEY, Path VARCHAR(767),
+			IncludeFile BOOL, AccessedDate DateTime, STATUS VARCHAR(20), FileName VARCHAR(50), UNIQUE(PATH), scanned bool);
+
+CREATE TABLE IncludeFiles(ID int NOT NULL, ParentID int NOT NULL, 
+			PRIMARY KEY (ID,ParentID), 
+			FOREIGN KEY(ID) REFERENCES Page(ID), FOREIGN KEY(ParentID) REFERENCES Page(ID));
+
+CREATE TABLE ChangeLog(ID int NOT NULL, Source TEXT, Fix TEXT, Tag VARCHAR(100), line int, FOREIGN KEY(ID) REFERENCES Page(ID));
+
+CREATE TABLE Errors(ID int NOT NULL, Error TEXT, lastConvertedLine int, errorType TEXT,FOREIGN KEY(ID) REFERENCES Page(ID), PRIMARY KEY(ID));
+
+CREATE TABLE ConflictingPages(AdminPage VARCHAR(767) NOT NULL, TradePage VARCHAR(767) NOT NULL, PRIMARY KEY(AdminPage,TradePage));
+

@@ -388,7 +388,7 @@ public class JerichoJspParserUtil {
 			}
 			// check this file links with trade site by scanning the trade
 			// folder
-			else {
+/*			else {
 
 				List<String> tradePageList = HTML5Util
 						.getTradePagesLinkWithThisFile(filePath, new File(
@@ -397,7 +397,7 @@ public class JerichoJspParserUtil {
 
 				if (!tradePageList.isEmpty()) {
 					// insert trade page list to pages db
-					logger.info(filePath + " file links with following trade pages=>"+tradePageList);
+					logger.info(filePath + " file links with the trade site!");
 				}
 
 			}
