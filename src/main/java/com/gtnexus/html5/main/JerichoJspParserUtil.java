@@ -359,7 +359,7 @@ public class JerichoJspParserUtil {
 		// Parse JSP file and remove obsolete html5 tags and apply relevant
 		// workaround.
 
-		dbLogger.insertPage(filePath, isIncludeFile, textfileName);
+		dbLogger.insertPage(filePath, isIncludeFile, textfileName,true);
 		if (!isIncludeFile) {
 			logger.info("Input File: " + filePath);
 		} else {
