@@ -1,5 +1,8 @@
 package com.gtnexus.html5.ui;
 
+import static com.gtnexus.html5.main.JerichoJspParserUtil.dbLogger;
+
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Frame;
@@ -17,6 +20,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.concurrent.Executor;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -24,19 +28,25 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JTextPane;
 import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultCaret;
+import javax.swing.text.Style;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyleContext;
+import javax.swing.text.StyledDocument;
 
 import com.gtnexus.html5.exception.HTML5ParserException;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.main.RevertBackChanges;
-
-import static com.gtnexus.html5.main.JerichoJspParserUtil.dbLogger;
+import com.gtnexus.html5.util.ProgramLauncher;
+import com.gtnexus.html5.util.UsageScanner;
 
 public class MainUI extends JFrame {
 
@@ -46,7 +56,8 @@ public class MainUI extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private List preHTML5List = new List();
 	private List html5List = new List();
-	private JTextArea notificationArea = new JTextArea();
+
+	private JTextPane consoleArea = createConsole();
 
 	private JProgressBar progressBar = new JProgressBar(0, 100);
 
@@ -55,37 +66,38 @@ public class MainUI extends JFrame {
 	private JTextField percentageTextArea = new JTextField("0%");
 	private JTextField backupLocationField = new JTextField();
 	private final JButton convertButton = new JButton("Convert All");
-	private final JButton openWithAraxis = new JButton("Open with Araxis");
-	private final JButton revertButton = new JButton("Rollback All");
-	private final JButton convertSelectedButton = new JButton(
-			"Convert Selected");
-	private final JButton revertSelectedButton = new JButton(
-			"Rollback Selected");
-	private final JButton clearNotificationArea = new JButton("Clear Console");
-	private final JButton browseSourceLocation = new JButton(
+	private final JButton btnOpenWithAraxis = new JButton("Open with Araxis");
+	private final JButton btnRollbackAll = new JButton("Rollback All");
+	private final JButton btnConvertSelected = new JButton("Convert Selected");
+	private final JButton btnRollbackSelected = new JButton("Rollback Selected");
+	private final JButton btnClearConsole = new JButton("Clear Console");
+	private final JButton btnBrowseSourceLocation = new JButton(
 			"Browse URL Source");
-	private final JButton setBackupLocation = new JButton(
+	private final JButton btnSetBackupLocation = new JButton(
 			"Change Backup Location");
-	private TextField locationDirectory = new TextField();
+	private TextField textFieldlocationDirectory = new TextField();
 	private final JButton btnOpenWithDreamweaver = new JButton(
 			"Open with Dreamweaver");
 	private final JButton btnOpenWithFireFox = new JButton("Open with Firefox");
 	private JButton btnErrorsRecorded = new JButton("Errors Recorded");
 	private final JButton btnRemove = new JButton("Remove");
 	private final JButton btnOpenWithIE = new JButton("Open with IE");
+	private final JButton btnScan = new JButton("Scan");
+	private final JButton btnStop = new JButton("Stop");
+	private final JButton btnOpenScannedPages = new JButton("View Conflicts");
+	
 	private String sourcePath;
-	private String backupPath;
+	private SwingWorker currentThread;
+	private Executor current;
+	
+	private ProgramLauncher launcher = new ProgramLauncher(this);
+	private UsageScanner scanner = new UsageScanner(this);
+	
+	public ProgramLauncher getProgramLauncher() {
+		return this.launcher;
+	}
 
-	private String araxis_path = "C:/Program Files/Araxis/Araxis Merge/merge.exe";
-	private String dreamweaver_path = "C:/Program Files (x86)/Macromedia/Dreamweaver 8/Dreamweaver.exe";
-	private String firefox_path = "C:/Program Files (x86)/Mozilla Firefox/firefox.exe";
-	private String internetExplorer_path = "C:/Program Files (x86)/Internet Explorer/iexplorer.exe";
-	private final String DEFAULT_BACKUP_PATH = "C:/TcardWebBackup";
-	private final String basePath = "C:/code/gtnexus/development/modules/main/tcard";
-	private final String CONFIG_FILE = "config.ini";
-	private final String LOCALHOST = "http://localhost:8080/";
-	private final String QA2HOST = "http://commerce.qa2.tradecard.com/";
-	private boolean isBackupValid = false;
+	
 
 	public MainUI() {
 
@@ -93,11 +105,11 @@ public class MainUI extends JFrame {
 		addContent();
 		addActionListners();
 		JerichoJspParserUtil.initialize();
-		backupPath = DEFAULT_BACKUP_PATH;
 		dbLogger.initialize();
-		setBackupPath(backupPath);
+		printOnConsole(JerichoJspParserUtil.getDebuggerOutput(), "log");
+
 		checkForPreviousErrors();
-		printOnConsole(JerichoJspParserUtil.getDebuggerOutput());
+
 	}
 
 	public static void main(String[] args) {
@@ -122,15 +134,15 @@ public class MainUI extends JFrame {
 
 		setTitle("HTML5 Converter");
 
-		locationDirectory.setBounds(150, 18, 425, 22);
+		textFieldlocationDirectory.setBounds(150, 18, 425, 22);
 
 		getContentPane().setLayout(null);
 
-		getContentPane().add(locationDirectory);
-		preHTML5List.setMultipleMode(true);
+		getContentPane().add(textFieldlocationDirectory);
+
 		preHTML5List.setMultipleSelections(true);
 		// preHTML5List.setMultipleMode(true);
-		
+
 		preHTML5List.setFont(new Font("Dialog", Font.PLAIN, 13));
 		html5List.setFont(new Font("Dialog", Font.PLAIN, 13));
 
@@ -158,91 +170,100 @@ public class MainUI extends JFrame {
 
 		convertButton.setBounds(10, 423, 109, 23);
 		getContentPane().add(convertButton);
-		revertButton.setHorizontalAlignment(SwingConstants.LEFT);
+		btnRollbackAll.setHorizontalAlignment(SwingConstants.LEFT);
 
-		revertButton.setBounds(609, 423, 109, 23);
-		getContentPane().add(revertButton);
+		btnRollbackAll.setBounds(609, 423, 109, 23);
+		getContentPane().add(btnRollbackAll);
 
-		openWithAraxis.setHorizontalAlignment(SwingConstants.LEFT);
+		btnOpenWithAraxis.setHorizontalAlignment(SwingConstants.LEFT);
 
-		revertButton.setHorizontalAlignment(SwingConstants.LEFT);
+		btnRollbackAll.setHorizontalAlignment(SwingConstants.LEFT);
 
-		revertButton.setBounds(609, 423, 109, 23);
-		getContentPane().add(revertButton);
+		btnRollbackAll.setBounds(609, 423, 109, 23);
+		getContentPane().add(btnRollbackAll);
 
-		openWithAraxis.setBounds(872, 423, 138, 23);
-		getContentPane().add(openWithAraxis);
+		btnOpenWithAraxis.setBounds(872, 423, 138, 23);
+		getContentPane().add(btnOpenWithAraxis);
 
-		progressBar.setBounds(10, 480, 956, 14);
+		progressBar.setBounds(10, 474, 956, 20);
 		getContentPane().add(progressBar);
 
 		scrollPane.setBounds(10, 505, 1174, 160);
 		getContentPane().add(scrollPane);
-		scrollPane.setViewportView(notificationArea);
-		notificationArea.setEditable(false);
+		scrollPane.setViewportView(consoleArea);
+		consoleArea.setEditable(false);
+		DefaultCaret caret = (DefaultCaret) consoleArea.getCaret();
+		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
 		percentageTextArea.setEditable(false);
 		percentageTextArea.setBounds(976, 474, 53, 20);
 		getContentPane().add(percentageTextArea);
 		percentageTextArea.setColumns(10);
-		convertSelectedButton.setHorizontalAlignment(SwingConstants.LEFT);
+		btnConvertSelected.setHorizontalAlignment(SwingConstants.LEFT);
 
-		convertSelectedButton.setBounds(130, 423, 138, 22);
+		btnConvertSelected.setBounds(129, 423, 138, 22);
 
-		getContentPane().add(convertSelectedButton);
-		revertSelectedButton.setHorizontalAlignment(SwingConstants.LEFT);
+		getContentPane().add(btnConvertSelected);
+		btnRollbackSelected.setHorizontalAlignment(SwingConstants.LEFT);
 
-		revertSelectedButton.setBounds(729, 423, 140, 22);
+		btnRollbackSelected.setBounds(729, 423, 140, 22);
 
-		getContentPane().add(revertSelectedButton);
+		getContentPane().add(btnRollbackSelected);
 
-		clearNotificationArea.setBounds(1054, 472, 132, 22);
+		btnClearConsole.setBounds(1054, 472, 132, 22);
 
-		getContentPane().add(clearNotificationArea);
-		browseSourceLocation.setHorizontalAlignment(SwingConstants.LEFT);
+		getContentPane().add(btnClearConsole);
+		btnBrowseSourceLocation.setHorizontalAlignment(SwingConstants.LEFT);
 
-		browseSourceLocation.setBounds(581, 17, 179, 23);
-		getContentPane().add(browseSourceLocation);
-		setBackupLocation.setHorizontalAlignment(SwingConstants.LEFT);
+		btnBrowseSourceLocation.setBounds(581, 17, 179, 23);
+		getContentPane().add(btnBrowseSourceLocation);
+		btnSetBackupLocation.setHorizontalAlignment(SwingConstants.LEFT);
 
-		setBackupLocation.setBounds(581, 54, 179, 23);
-		getContentPane().add(setBackupLocation);
+		btnSetBackupLocation.setBounds(581, 54, 179, 23);
+		getContentPane().add(btnSetBackupLocation);
 
 		JLabel backupLocationLabel = new JLabel("Backup Directory ");
 		backupLocationLabel.setBounds(10, 58, 130, 14);
 		getContentPane().add(backupLocationLabel);
 
-		backupLocationField.setEditable(false);
-		backupLocationField.setBounds(150, 55, 425, 20);
-		getContentPane().add(backupLocationField);
-		backupLocationField.setColumns(10);
-		backupLocationField.setText(DEFAULT_BACKUP_PATH);
+		getBackupLocationField().setEditable(false);
+		getBackupLocationField().setBounds(150, 55, 425, 20);
+		getContentPane().add(getBackupLocationField());
+		getBackupLocationField().setColumns(10);
+		getBackupLocationField().setText(launcher.DEFAULT_BACKUP_PATH);
 
 		btnOpenWithDreamweaver.setBounds(1020, 423, 164, 23);
 		getContentPane().add(btnOpenWithDreamweaver);
 
 		btnErrorsRecorded.setEnabled(true);
 		btnErrorsRecorded.setHorizontalAlignment(SwingConstants.LEFT);
-		btnErrorsRecorded.setBounds(1016, 17, 154, 23);
+		btnErrorsRecorded.setBounds(1030, 17, 154, 23);
 		getContentPane().add(btnErrorsRecorded);
 
-		btnOpenWithFireFox.setBounds(835, 54, 154, 23);
+		btnOpenWithFireFox.setBounds(820, 17, 154, 23);
 		getContentPane().add(btnOpenWithFireFox);
+
 		
-		
-		btnRemove.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				for(int i = 0;i <= preHTML5List.getSelectedIndexes().length;i++)
-				preHTML5List.remove(preHTML5List.getSelectedIndexes()[i]);
-			}
-		});
-		btnRemove.setBounds(278, 423, 89, 23);
+		btnRemove.setBounds(376, 423, 89, 23);
 		getContentPane().add(btnRemove);
-		
-		
-		
-		btnOpenWithIE.setBounds(1016, 54, 154, 23);
+
+		btnOpenWithIE.setBounds(820, 54, 154, 23);
 		getContentPane().add(btnOpenWithIE);
+		
+		
+		
+		btnStop.setEnabled(true);
+		btnStop.setBounds(475, 423, 89, 23);
+		getContentPane().add(btnStop);
+		
+		
+		btnScan.setBounds(277, 423, 89, 23);
+		getContentPane().add(btnScan);
+		
+		
+		
+		btnOpenScannedPages.setBounds(1030, 54, 154, 23);
+		getContentPane().add(btnOpenScannedPages);
 
 		this.setBounds(0, 0, 1200, 700);
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
@@ -251,6 +272,34 @@ public class MainUI extends JFrame {
 		this.setVisible(true);
 		this.setResizable(false);
 		hideProgressBar();
+	}
+
+	private JTextPane createConsole() {
+
+		JTextPane textPane = new JTextPane();
+		StyledDocument doc = textPane.getStyledDocument();
+
+		// Initialize some styles.
+		Style def = StyleContext.getDefaultStyleContext().getStyle(
+				StyleContext.DEFAULT_STYLE);
+
+		Style regular = doc.addStyle("regular", def);
+		StyleConstants.setFontFamily(def, "Dialog");
+		StyleConstants.setFontSize(def, 12);
+
+		Style s = doc.addStyle("error", regular);
+		StyleConstants.setForeground(s, Color.RED);
+
+		s = doc.addStyle("warning", regular);
+		StyleConstants.setForeground(s, Color.ORANGE);
+
+		s = doc.addStyle("info", regular);
+		StyleConstants.setForeground(s, Color.GREEN);
+
+		s = doc.addStyle("log", regular);
+		StyleConstants.setForeground(s, Color.blue);
+
+		return textPane;
 	}
 
 	/*
@@ -265,16 +314,25 @@ public class MainUI extends JFrame {
 			String sCurrentLine;
 
 			while ((sCurrentLine = br.readLine()) != null) {
-				list.add(sCurrentLine);
+				try {
+					list.add(sCurrentLine.substring(sCurrentLine
+							.lastIndexOf("/en/") + 3));
+				} catch (StringIndexOutOfBoundsException e) {
+					try {
+						list.add(sCurrentLine.substring(sCurrentLine
+								.lastIndexOf("\\en\\") + 3));
+					} catch (StringIndexOutOfBoundsException e2) {
+						list.add(sCurrentLine);
+					}
+				}
 			}
 			br.close();
 
 		} catch (FileNotFoundException e) {
-			notificationArea
-					.append("File Not Found! Please check file path.\n");
+			printOnConsole("File Not Found! Please check file path.\n", "error");
 
 		} catch (IOException e2) {
-			notificationArea.setText(e2.getMessage());
+			consoleArea.setText(e2.getMessage());
 		} catch (Exception e3) {
 
 		}
@@ -289,66 +347,87 @@ public class MainUI extends JFrame {
 
 			public void actionPerformed(ActionEvent e) {
 
-				SwingWorker<Integer, Integer> convertFiles = new SwingWorker<Integer, Integer>() {
+				currentThread = new SwingWorker<Integer, Integer>() {
 					@Override
 					protected Integer doInBackground() {
 
 						String[] files = preHTML5List.getItems();
-
+						
+							disableButtons();
+						
 						for (int i = 0; i < files.length; i++) {
-
-							convertToHTML5(files[i]);
-
-							setProgressBarValue(files.length, i);
+							if(!this.isCancelled()){
+								progressBar.setIndeterminate(true);
+	
+								convertToHTML5(files[i]);
+	
+								progressBar.setIndeterminate(false);
+	
+								setProgressBarValue(files.length, i);
+							}
 						}
+						enableButtons();
+		
 						return 0;
 					}
-				};
-				convertFiles.execute();
-				printHtml5Count();
 
+				};
+
+				currentThread.execute();
+				printHtml5Count();
+				
 			}
 		});
 		/*
 		 * converts the selected file/files.
 		 */
-		convertSelectedButton.addActionListener(new ActionListener() {
+		btnConvertSelected.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 
-				SwingWorker<Integer, Integer> convertFiles = new SwingWorker<Integer, Integer>() {
+				currentThread = new SwingWorker<Integer, Integer>() {
 					@Override
 					protected Integer doInBackground() throws Exception {
+						
 						String[] selectedItems = preHTML5List
 								.getSelectedItems();
-
+						disableButtons();
 						for (int i = 0; i < selectedItems.length; i++) {
-							convertToHTML5(selectedItems[i]);
-							setProgressBarValue(selectedItems.length, i);
-						}
+							if(!isCancelled()){
+								progressBar.setIndeterminate(true);
+								convertToHTML5(selectedItems[i]);
+								progressBar.setIndeterminate(false);
+								setProgressBarValue(selectedItems.length, i);
 
+						}
+						
+					}
+						enableButtons();	
 						return 0;
 					}
+
 				};
-				convertFiles.execute();
+				currentThread.execute();
 				printHtml5Count();
 			}
 		});
 		/*
 		 * Revert all converted files
 		 */
-		revertButton.addActionListener(new ActionListener() {
+		btnRollbackAll.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 
 				SwingWorker<Integer, Integer> revertFiles = new SwingWorker<Integer, Integer>() {
 					@Override
 					protected Integer doInBackground() throws Exception {
+						disableButtons();
 						String[] files = html5List.getItems();
 
 						for (int i = 0; i < files.length; i++) {
 							revertBack(files[i]);
 							setProgressBarValue(files.length, i);
 						}
-
+						
+						enableButtons();
 						return 0;
 					}
 				};
@@ -359,12 +438,13 @@ public class MainUI extends JFrame {
 		/*
 		 * Reverts only the selected file/files.
 		 */
-		revertSelectedButton.addActionListener(new ActionListener() {
+		btnRollbackSelected.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 
 				SwingWorker<Integer, Integer> revertSelectedFiles = new SwingWorker<Integer, Integer>() {
 					@Override
 					protected Integer doInBackground() throws Exception {
+						disableButtons();
 						String[] selectedItems = html5List.getSelectedItems();
 						System.out.println(selectedItems.length + " "
 								+ selectedItems[0]);
@@ -372,7 +452,7 @@ public class MainUI extends JFrame {
 							revertBack(selectedItems[i]);
 							setProgressBarValue(selectedItems.length, i);
 						}
-
+						enableButtons();
 						return 0;
 					}
 				};
@@ -383,36 +463,26 @@ public class MainUI extends JFrame {
 		/*
 		 * Clears the console
 		 */
-		clearNotificationArea.addActionListener(new ActionListener() {
+		btnClearConsole.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				notificationArea.setText("");
+				consoleArea.setText("");
 			}
 		});
-
 		/*
-		 * Opens the selected file using notepad++;
+		 * Stops the current working thread
 		 */
-		openWithAraxis.addActionListener(new ActionListener() {
+		btnStop.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				// ProcessBuilder pb = new ProcessBuilder(NOTEPAD_PATH,
-				// html5List.getSelectedItem());
-				ProcessBuilder pb = new ProcessBuilder(araxis_path, backupPath
-						+ html5List.getSelectedItem(), formatFilePath(html5List
-						.getSelectedItem()));
-				try {
-					pb.start();
-				} catch (IOException ex) {
-					printOnConsole(ex.getMessage());
-					printOnConsole(printStacktrace(ex));
-
-				}
+				stopCurrentThread();
 			}
+			
 		});
+
 		/*
 		 * Sets the filepath textfield using a file chooser. Add the commented
 		 * out lines to load files from the source text file instantly.
 		 */
-		browseSourceLocation.addActionListener(new ActionListener() {
+		btnBrowseSourceLocation.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
 					JFileChooser chooser = new JFileChooser();
@@ -426,6 +496,7 @@ public class MainUI extends JFrame {
 						sourcePath = chooser.getSelectedFile()
 								.getAbsolutePath();
 						loadToListFromFile();
+						textFieldlocationDirectory.setText(sourcePath);
 					}
 				} catch (Exception ex) {
 
@@ -436,7 +507,7 @@ public class MainUI extends JFrame {
 		/*
 		 * Sets the backup location.
 		 */
-		setBackupLocation.addActionListener(new ActionListener() {
+		btnSetBackupLocation.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 
 				try {
@@ -446,12 +517,12 @@ public class MainUI extends JFrame {
 					chooser.setAcceptAllFileFilterUsed(false);
 					int returnVal = chooser.showOpenDialog(new Frame());
 					if (returnVal == JFileChooser.APPROVE_OPTION) {
-						setBackupPath(chooser.getCurrentDirectory()
+						launcher.setBackupPath(chooser.getCurrentDirectory()
 								.getAbsolutePath());
-						printOnConsole(backupPath);
+						printOnConsole(launcher.getBackupPath(), "info");
 					}
 				} catch (Exception ex) {
-					printOnConsole(printStacktrace(ex));
+					printOnConsole(printStacktrace(ex), "error");
 				}
 
 			}
@@ -460,17 +531,32 @@ public class MainUI extends JFrame {
 		 * Opens the selected converted file and its preHTML5 version(taken from
 		 * the corresponding directory in back) in Araxis Merge
 		 */
-		openWithAraxis.addActionListener(new ActionListener() {
+		btnOpenWithAraxis.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				openAraxis();
+				if (html5List.getSelectedIndex() != -1) {
+					launcher.openAraxis(html5List.getSelectedItem().toString());
+				} else {
+					printOnConsole("Please select a specific file to compare!",
+							"warning");
+				}
 			}
+
 		});
 		/*
 		 * 
 		 */
 		btnOpenWithDreamweaver.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				openDreamweaver(formatFilePath(html5List.getSelectedItem()));
+
+				if (html5List.getSelectedIndex() != -1)
+					launcher.openDreamweaver(formatFilePath(html5List
+							.getSelectedItem()));
+				else if (preHTML5List.getSelectedIndex() != -1)
+					launcher.openDreamweaver(formatFilePath(preHTML5List
+							.getSelectedItem()));
+				else
+					printOnConsole("Please select a specific file to open!",
+							"warning");
 			}
 		});
 
@@ -482,24 +568,65 @@ public class MainUI extends JFrame {
 		btnOpenWithFireFox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
-					firefox_path = openWithBrowser("FIREFOX", firefox_path,
-							LOCALHOST, html5List.getSelectedItem().substring(1));
-					openWithBrowser("FIREFOX", firefox_path, QA2HOST, html5List
-							.getSelectedItem().substring(15));
+					launcher.openWithBrowser("FIREFOX", launcher.LOCALHOST,
+							html5List.getSelectedItem().substring(1));
+
+					launcher.openWithBrowser("FIREFOX", launcher.QA2HOST,
+							html5List.getSelectedItem().substring(15));
 				} catch (NullPointerException e2) {
-					printWarning("Please select a file");
+					printOnConsole("Please select a file", "error");
+				} catch (Exception e3) {
+					printOnConsole(e3.getMessage(), "error");
 				}
 			}
 		});
 		btnOpenWithIE.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
-					firefox_path = openWithBrowser("IE", internetExplorer_path,
-							LOCALHOST, html5List.getSelectedItem().substring(1));
-					openWithBrowser("IE", internetExplorer_path, QA2HOST, html5List
+					launcher.openWithBrowser("IE", launcher.LOCALHOST,
+							html5List.getSelectedItem().substring(1));
+					launcher.openWithBrowser("IE", launcher.QA2HOST, html5List
 							.getSelectedItem().substring(15));
 				} catch (NullPointerException e2) {
-					printWarning("Please select a file");
+					printOnConsole("Please select a file", "error");
+				}
+			}
+		});
+
+		btnScan.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				SwingWorker<Integer, Integer> scan = new SwingWorker<Integer, Integer>() {
+					@Override
+					protected Integer doInBackground() throws Exception {
+						disableButtons();
+						setProgressBarValue(preHTML5List.getItemCount(),0);
+						int i=0;
+						for(String file : preHTML5List.getItems()){
+							scan(file);
+							setProgressBarValue(preHTML5List.getItemCount(),i);
+							i++;
+						}
+						enableButtons();
+						return 0;
+					}
+				};
+				scan.execute();
+			}
+		});
+		
+		btnOpenScannedPages.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				openConflictsFrame();
+				
+			}
+		});
+		
+		btnRemove.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				int[] selectedIndexes = preHTML5List.getSelectedIndexes();
+				for (int i = selectedIndexes.length - 1; i >= 0; i--) {
+				
+					preHTML5List.remove(selectedIndexes[i]);
 				}
 			}
 		});
@@ -522,28 +649,6 @@ public class MainUI extends JFrame {
 		updateProgressTextArea(progress);
 	}
 
-	public void setBackupPath(String backupPath) {
-
-		File loginFile = new File(backupPath
-				+ "\\web\\tradecard\\en\\administration\\login.jsp");
-		try {
-
-			if (loginFile.exists()) {
-				this.backupPath = backupPath;
-				backupLocationField.setText(backupPath);
-				isBackupValid = true;
-				printOnConsole("Backup path changed.");
-			} else {
-				printOnConsole("Error: Backup directory file path seems to be incorrect.\n Resetting back to default path.\n Consider moving the files to : "
-						+ DEFAULT_BACKUP_PATH);
-				isBackupValid = false;
-			}
-		} catch (Exception e1) {
-			printOnConsole(e1.getMessage());
-			printOnConsole(printStacktrace(e1));
-		}
-	}
-
 	public void loadToListFromFile() {
 
 		// clear list
@@ -554,90 +659,86 @@ public class MainUI extends JFrame {
 		showProgressBar();
 		int fileCount = 0;
 		for (int i = 0; i < fileList.size(); i++) {
-			if (checkFile(fileList.get(i))) {
+			if (launcher.checkFile(
+					fileList.get(i),
+					launcher.adminBasePath.substring(0,
+							launcher.adminBasePath.indexOf("\\en\\") + 3))) {
 				preHTML5List.add(fileList.get(i));
 				fileCount++;
 			} else
-				printWarning(fileList.get(i) + " File Doesn't exist.");
+				printOnConsole(fileList.get(i) + " File Doesn't exist.",
+						"error");
 			setProgressBarValue(fileList.size(), i);
 
 		}
 
-		printOnConsole(fileCount + " new files Loaded.");
+		printOnConsole(fileCount + " new files Loaded.", "info");
 		printPreHtml5Count();
 	}
 
 	public void printPreHtml5Count() {
 		printOnConsole("Total of " + preHTML5List.getItemCount()
-				+ " pre-HTML5 files exist.");
+				+ " pre-HTML5 files exist.", "info");
 	}
 
 	public void printHtml5Count() {
 		printOnConsole("Total of " + html5List.getItemCount()
-				+ " HTML5 files exist.");
-	}
-
-	public void printWarning(String message) {
-		printOnConsole("Warning! : " + message);
-	}
-
-	public boolean checkFile(String filePathString) {
-
-		File f = new File(basePath + filePathString);
-		return (f.exists() && !f.isDirectory());
-	}
-
-	public boolean checkBackup(String filePathString) {
-
-		File f = new File(backupPath + filePathString);
-		printOnConsole(backupPath + filePathString);
-		return (f.exists() && !f.isDirectory());
+				+ " HTML5 files exist.", "info");
 	}
 
 	public void convertToHTML5(String sourceFile) {
-
 		try {
-			if (isBackupValid && checkBackup(sourceFile)) {
+
+			if (launcher.isBackupValid()
+					&& launcher.checkFile(sourceFile,
+							launcher.adminBasePath
+									.substring(0, launcher.adminBasePath
+											.indexOf("\\en\\") + 4))) {
 				JerichoJspParserUtil.clearConsoleWriter();
-				JerichoJspParserUtil.convertToHTML5(
-							formatFilePath(sourceFile), false);
-				printOnConsole(JerichoJspParserUtil.getDebuggerOutput());
+				JerichoJspParserUtil.convertToHTML5(formatFilePath(sourceFile),
+						false, sourcePath);
+				printOnConsole(JerichoJspParserUtil.getDebuggerOutput(), "log");
 				html4ToHtml5(sourceFile);
+
 			} else {
-				printWarning("Backup path is not correct!");
-				printOnConsole("Conversion aborted.");
+				printOnConsole("Backup path is not correct!", "error");
+				printOnConsole("Conversion aborted.", "error");
 			}
 
-		} catch(HTML5ParserException ex){
+		} catch (HTML5ParserException ex) {
 			ex.printStackTrace();
-			printWarning(ex.getType());
-			printOnConsole(ex.getMessage());
-			printOnConsole(ex.getTagInfo());
-			dbLogger.logError(formatFilePath(sourceFile), ex.getType(), ex.getMessage(), ex.getTagInfo());
-			
-		}
-		catch(Exception e){
+			printOnConsole(ex.getType(), "error");
+			printOnConsole(ex.getMessage(), "error");
+			printOnConsole(ex.getTagInfo(), "error");
+
+		} catch (Exception e) {
 			e.printStackTrace();
+
 		}
+
 	}
 
 	public void revertBack(String convertedFilePath) {
 
 		try {
-			if (isBackupValid && checkBackup(convertedFilePath)) {
+			if (launcher.isBackupValid()
+					&& launcher.checkFile(convertedFilePath,
+							launcher.adminBasePath
+									.substring(0, launcher.adminBasePath
+											.indexOf("\\en\\") + 4))) { // ////
 				JerichoJspParserUtil.clearConsoleWriter();
 				RevertBackChanges.revertChanges(
-						formatFilePath(convertedFilePath), backupPath);
-				printOnConsole(JerichoJspParserUtil.getDebuggerOutput());
+						formatFilePath(convertedFilePath),
+						launcher.getBackupPath());
+				printOnConsole(JerichoJspParserUtil.getDebuggerOutput(), "log");
 				html5ToHtml4(convertedFilePath);
 
 			}
 		} catch (Exception e) {
-			printOnConsole(e.getMessage());
-			printOnConsole(printStacktrace(e));
+			printOnConsole(e.getMessage(), "error");
+			printOnConsole(printStacktrace(e), "error");
 
 		}
-
 	}
 
 	public void html4ToHtml5(String entry) {
@@ -665,8 +766,18 @@ public class MainUI extends JFrame {
 		percentageTextArea.setText(Math.rint(displayValue) + "%");
 	}
 
-	public void printOnConsole(String message) {
-		notificationArea.append(message + "\n");
+	public void printOnConsole(String message, String style) {
+
+		StyledDocument doc = consoleArea.getStyledDocument();
+		try {
+			consoleArea.getStyledDocument().insertString(doc.getLength(),
+					message + "\n", doc.getStyle(style));
+			consoleArea
+					.setCaretPosition(consoleArea.getDocument().getLength() - 1);
+		} catch (BadLocationException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	public static String printStacktrace(Exception e) {
@@ -676,207 +787,13 @@ public class MainUI extends JFrame {
 	}
 
 	public String formatFilePath(String fileName) {
-		return basePath + fileName;
+		return launcher.adminBasePath.substring(0,
+				launcher.adminBasePath.indexOf("\\en\\") + 3)
+				+ fileName;
 	}
 
 	public String getBackupFilePath(String fileName) {
-		return backupPath + fileName;
-	}
-
-	/*
-	 * returns the absolute file path of an executable file. provides a file
-	 * chooser to select the file.
-	 */
-	public String readFilePaths() {
-		try {
-			JFileChooser chooser = new JFileChooser();
-
-			chooser.addChoosableFileFilter(new FileNameExtensionFilter(
-					"Executable Files", "exe"));
-			chooser.setAcceptAllFileFilterUsed(false);
-			int returnVal = chooser.showOpenDialog(new Frame());
-			if (returnVal == JFileChooser.FILES_ONLY) {
-
-				return chooser.getSelectedFile().getAbsolutePath();
-			}
-		} catch (Exception ex) {
-
-		}
-		return null;
-	}
-
-	public String getFileName(String path) {
-		return path.substring(path.lastIndexOf("\\"));
-	}
-
-	/*
-	 * Replace/Append a value in/to the config file. elements are in xml format.
-	 * If the tag doesn't exist, program will append it to the file. else will
-	 * replace the value.
-	 * 
-	 * @param-newPath : the new value that should replace/should be appended.
-	 * 
-	 * @param-tag : tag name
-	 */
-	public void appendPathToConfigFile(String newPath, String tag) {
-		String fileContent = readFromConfigFile();
-		try {
-
-			String currentLine = fileContent.substring(
-					fileContent.indexOf(tag),
-					fileContent.indexOf(getEndingTag(tag)) + tag.length() + 1);
-			fileContent = fileContent.substring(0,
-					fileContent.indexOf(currentLine))
-					+ getAsXmlValue(newPath, tag)
-					+ fileContent.substring(fileContent.indexOf(currentLine)
-							+ currentLine.length(), fileContent.length());
-
-		} catch (StringIndexOutOfBoundsException e) {
-			fileContent = readFromConfigFile();
-			fileContent += getAsXmlValue(newPath, tag);
-		}
-		try {
-			PrintWriter writer = new PrintWriter(CONFIG_FILE);
-			writer.println(fileContent);
-			writer.close();
-
-		} catch (FileNotFoundException e) {
-
-			printOnConsole("Creating Config file.");
-		}
-	}
-
-	public String getAsXmlValue(String value, String tag) {
-		return tag + value + getEndingTag(tag);
-	}
-
-	public String getEndingTag(String tag) {
-		return tag.substring(0, 1) + "/" + tag.substring(1, tag.length());
-	}
-
-	/*
-	 * Opens a file using Dreamweaver
-	 */
-	public void openDreamweaver(String path) {
-		ProcessBuilder pb = new ProcessBuilder(dreamweaver_path, path);
-		try {
-			pb.start();
-		} catch (IOException ex) {
-			printOnConsole(ex.getMessage());
-			if (ex.getMessage().contains(
-					"The system cannot find the file specified")) {
-
-				String directoryInConfigFile = extractValue("<DREAMWEAVER>",
-						"</DREAMWEAVER>");
-				try {
-					if (directoryInConfigFile != null
-							&& !directoryInConfigFile.equals(dreamweaver_path))
-						dreamweaver_path = directoryInConfigFile;
-					else {
-						dreamweaver_path = readFilePaths();
-						appendPathToConfigFile(dreamweaver_path,
-								"<DREAMWEAVER>");
-					}
-					openDreamweaver(path);
-				} catch (NullPointerException ex2) {
-					dreamweaver_path = readFilePaths();
-					appendPathToConfigFile(dreamweaver_path, "<DREAMWEAVER>");
-					openDreamweaver(path);
-				}
-			}
-
-		}
-	}
-
-	public void openAraxis() {
-
-		ProcessBuilder pb = new ProcessBuilder(araxis_path, backupPath
-				+ html5List.getSelectedItem(),
-				formatFilePath(html5List.getSelectedItem()));
-		try {
-			pb.start();
-		} catch (IOException ex) {
-			printOnConsole(ex.getMessage());
-			if (ex.getMessage().contains(
-					"The system cannot find the file specified")) {
-
-				String directoryInConfigFile = extractValue("<ARAXIS>",
-						"</ARAXIS>");
-				try {
-					if (directoryInConfigFile != null
-							&& !directoryInConfigFile.equals(araxis_path))
-						araxis_path = directoryInConfigFile;
-					else {
-						araxis_path = readFilePaths();
-						appendPathToConfigFile(araxis_path, "<ARAXIS>");
-					}
-					openAraxis();
-				} catch (NullPointerException ex2) {
-					araxis_path = readFilePaths();
-					appendPathToConfigFile(araxis_path, "<ARAXIS>");
-					openAraxis();
-				}
-			}
-
-		}
-	}
-
-	public String extractValue(String key, String ending) {
-		try {
-			return readFromConfigFile().substring(
-					readFromConfigFile().indexOf(key) + key.length(),
-					readFromConfigFile().indexOf(ending));
-		} catch (StringIndexOutOfBoundsException e) {
-			return null;
-		}
-	}
-
-	public String readFromConfigFile() {
-		StringBuilder fileContent = new StringBuilder();
-		FileReader configFile = null;
-		try {
-			configFile = new FileReader(CONFIG_FILE);
-		} catch (FileNotFoundException e) {
-			File newConfigFile = new File(CONFIG_FILE);
-			newConfigFile.mkdir();
-			try {
-				newConfigFile.createNewFile();
-			} catch (IOException e2) {
-				printOnConsole("ERROR: Config file not found. Creating a new config file failed. Consider creating it manually.");
-			}
-		}
-		BufferedReader br = null;
-		try {
-
-			if (configFile != null) {
-
-				br = new BufferedReader(configFile);
-
-				String sCurrentLine;
-
-				while ((sCurrentLine = br.readLine()) != null) {
-					fileContent.append(sCurrentLine);
-				}
-
-				configFile.close();
-
-			}
-
-		} catch (IOException e2) {
-
-			e2.printStackTrace();
-
-		} finally {
-			if (br != null)
-				try {
-					br.close();
-				} catch (IOException e) {
-
-					e.printStackTrace();
-				}
-		}
-		return fileContent.toString();
-
+		return launcher.getBackupPath() + fileName;
 	}
 
 	public void checkForPreviousErrors() {
@@ -901,39 +818,57 @@ public class MainUI extends JFrame {
 	public void createErrorsFrame() {
 		ErrorsFrame.getInstance(this);
 		disableErrorsRecordedButton();
-	
+
 	}
 
-	public String openWithBrowser(String browser, String browserPath,
-			String host, String file) {
-		ProcessBuilder pb = new ProcessBuilder(browserPath, host + file);
-		try {
-			pb.start();
-		} catch (IOException ex) {
-			printOnConsole(ex.getMessage());
-			if (ex.getMessage().contains(
-					"The system cannot find the file specified")) {
+	/**
+	 * @return the backupLocationField
+	 */
+	public JTextField getBackupLocationField() {
+		return backupLocationField;
+	}
 
-				String directoryInConfigFile = extractValue(
-						"<" + browser + ">", "</" + browser + ">");
-				try {
-					if (directoryInConfigFile != null
-							&& !directoryInConfigFile.equals(browserPath))
-						browserPath = directoryInConfigFile;
-					else {
-						browserPath = readFilePaths();
-						appendPathToConfigFile(browserPath, "<" + browser + ">");
-						openWithBrowser(browser, browserPath, host, file);
-					}
-
-				} catch (NullPointerException ex2) {
-					browserPath = readFilePaths();
-					appendPathToConfigFile(browserPath, "<" + browser + ">");
-					openWithBrowser(browser, browserPath, host, file);
-				}
-			}
-
-		}
-		return browserPath;
+	/**
+	 * @param backupLocationField
+	 *            the backupLocationField to set
+	 */
+	public void setBackupLocationField(JTextField backupLocationField) {
+		this.backupLocationField = backupLocationField;
+	}
+	
+	public void stopCurrentThread(){
+		currentThread.cancel(true);
+		enableButtons();
+	}
+	public void enableButtons(){
+		this.btnConvertSelected.setEnabled(true);
+		this.convertButton.setEnabled(true);
+		this.btnRollbackSelected.setEnabled(true);
+		this.btnRollbackAll.setEnabled(true);
+		this.btnBrowseSourceLocation.setEnabled(true);
+		this.btnSetBackupLocation.setEnabled(true);
+		this.btnRemove.setEnabled(true);
+		this.btnScan.setEnabled(true);
+	}
+	public void disableButtons(){
+		this.btnConvertSelected.setEnabled(false);
+		this.convertButton.setEnabled(false);
+		this.btnRollbackSelected.setEnabled(false);
+		this.btnRollbackAll.setEnabled(false);
+		this.btnBrowseSourceLocation.setEnabled(false);
+		this.btnSetBackupLocation.setEnabled(false);
+		this.btnRemove.setEnabled(false);
+		this.btnScan.setEnabled(false);
+	}
+	
+	private void openConflictsFrame(){
+		ConflictsFrame conflicts = new ConflictsFrame(this);
+		conflicts.show();
+	}
+	
+	private void scan(String filename){
+		printOnConsole("Scanning "+filename,"info");
+		scanner.performScan(formatFilePath(filename),sourcePath);
+		printOnConsole(filename+ "Completed.","info");
 	}
 }

@@ -6,6 +6,7 @@ public class Error {
 	private String errorType;
 	private String errorMessage;
 	private int lastConvertedLine;
+	private String path;
 	
 	public int getPageId() {
 		return pageId;
@@ -30,6 +31,12 @@ public class Error {
 	}
 	public void setLastConvertedLine(int lastConvertedLine) {
 		this.lastConvertedLine = lastConvertedLine;
+	}
+	public String getPath() {
+		return path;
+	}
+	public void setPath(String path) {
+		this.path = path;
 	}
 
 	

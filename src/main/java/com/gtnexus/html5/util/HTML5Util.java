@@ -11,13 +11,14 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.StringUtils;
-
 import net.htmlparser.jericho.Element;
 import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.OutputDocument;
+import net.htmlparser.jericho.Segment;
 import net.htmlparser.jericho.Source;
 import net.htmlparser.jericho.StartTagType;
+
+import org.apache.commons.lang3.StringUtils;
 
 public class HTML5Util {
 
@@ -483,4 +484,40 @@ public class HTML5Util {
 
 	}
 
+	public static boolean isContainAlignableComponent(Segment e) {
+
+		// check element contains table
+		boolean hasTable = e.getAllElements(HTML5Util.TABLE).size() > 0;
+		boolean hasServerElement = false;
+
+		List<Element> allServerElements = e
+				.getAllElements(StartTagType.SERVER_COMMON);
+
+		for (Element serverElement : allServerElements) {
+
+			if (serverElement.toString().contains("include")) {
+
+				// check whether file include a table
+				Pattern pattern = Pattern.compile("\"(.*?)\"");
+				Matcher matcher = pattern.matcher(serverElement.toString());
+				if (matcher.find()) {
+
+					String includeFileName = matcher.group(1);
+
+					// this is not the best way to detect this!!! but no simple
+					// option other than this
+					if (includeFileName.toLowerCase().contains("table")) {
+						hasServerElement = true;
+						break;
+					}
+				}
+
+			}
+
+		}
+
+		return hasTable || hasServerElement;
+	}
+
+	
 }

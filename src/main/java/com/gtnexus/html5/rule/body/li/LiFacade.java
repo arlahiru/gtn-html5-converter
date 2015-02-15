@@ -38,50 +38,16 @@ public class LiFacade extends Facade {
 				// initialize default values. have to test this!
 				modifiedLiTag.append("<" + HTMLElementName.LI + " ");
 
-				// remove table level obsolete attributes
-				Iterator<Attribute> liAttributeIterator = li.getAttributes()
-						.iterator();
+				applyRules(li, outputDocument, newLiStyleValue, modifiedLiTag);
 
-				while (liAttributeIterator.hasNext()) {
-
-					Attribute liAttribute = liAttributeIterator.next();
-					String attributeName = liAttribute.getKey();
-					String ruleKey = li.getName() + "_"
-							+ attributeName.toLowerCase();
-
-					Rule rule = JerichoJspParserUtil.RULES_MAP.get(ruleKey);
-
-					if (rule != null) {
-
-						StringBuilder returnValue = rule.execute(
-								outputDocument, liAttribute, null);
-
-						if (returnValue != null) {
-							newLiStyleValue.append(returnValue);
-						} else {
-
-							// if rule does not return value, do appropriate fix
-							// here.
-
-						}
-
-					} else {
-
-						logger.info("Rule key not found for key: " + ruleKey);
-						modifiedLiTag.append(liAttribute);
-						modifiedLiTag.append(" ");
-						logger.info(ruleKey + " appended as it is.");
-					}
-
-				}
-				
 				// append inner server tags if any
-				modifiedLiTag.append(" " + HTML5Util.getInnerServerTagContent(li) + " ");
+				modifiedLiTag.append(" "
+						+ HTML5Util.getInnerServerTagContent(li) + " ");
 
 				// close tr start tag
 				modifiedLiTag.append(STYLE + "=\"" + newLiStyleValue + "\">");
 
-				replace(li.getStartTag(), modifiedLiTag,outputDocument);
+				replace(li.getStartTag(), modifiedLiTag, outputDocument);
 				// outputDocument.replace(tr.getEndTag(), "</" + TR + ">");
 
 				logger.debug("\t" + li.getDebugInfo() + " replace with "

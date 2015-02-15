@@ -8,15 +8,20 @@ public class HTML5ParserException extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 
 	private String message;
+
 	private String type;
 	private String tagInfo;
-	
-	
-	public HTML5ParserException(String type,String message, String tagInfo) {
+	public HTML5ParserException(String type, String message) {
+		super();
+		this.type = type;
+		this.message = message;
+	}
+	public HTML5ParserException(String type, String message, String tagInfo) {
 		super();
 		this.type = type;
 		this.message = message;
 		this.tagInfo = tagInfo;
+
 	}
 
 	public String getMessage() {
@@ -34,8 +39,10 @@ public class HTML5ParserException extends RuntimeException {
 	public void setTagInfo(String tagInfo) {
 		this.tagInfo = tagInfo;
 	}
-	public String getType(){
+
+	public String getType() {
 		return type;
+
 	}
 
 }

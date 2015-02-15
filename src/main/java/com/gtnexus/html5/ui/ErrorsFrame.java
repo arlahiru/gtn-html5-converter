@@ -1,31 +1,26 @@
 package com.gtnexus.html5.ui;
 
-import javax.swing.JFrame;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-
-import java.util.ArrayList;
-
-import javax.swing.JTable;
-
-import com.gtnexus.html5.ui.MainUI;
-import com.gtnexus.html5.util.Error;
-
-import javax.swing.JButton;
-
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-
 import static com.gtnexus.html5.main.JerichoJspParserUtil.dbLogger;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.ArrayList;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+
+import com.gtnexus.html5.util.Error;
+import com.gtnexus.html5.util.ProgramLauncher;
 public class ErrorsFrame extends JFrame {
 	
 	/**
 	 * 
 	 */
-	
+	private static final String BASE_PATH = "C:/code/gtnexus/development/modules/main/tcard/web/tradecard/en/";
 	private static final long serialVersionUID = 1L;
 	
 	private static ErrorsFrame instance = null;
@@ -36,9 +31,9 @@ public class ErrorsFrame extends JFrame {
 	private JButton btnDreamweaver = new JButton("Open with Dreamweaver");
 	private JButton btnConvert = new JButton("Convert");
 	private MainUI parent;
-	
+	private ProgramLauncher launcher; 
 	private ArrayList<Error> errorList;
-	private String[] COLUMNS = new String[]{ "Page Id", "Error Type", "Error Message" , "Last Converted Line"};
+	private String[] COLUMNS = new String[]{ "Page Id", "Path", "Error Type", "Error Message" , "Last Converted Line"};
 	
 	private ErrorsFrame(MainUI parentFrame) {
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -49,6 +44,7 @@ public class ErrorsFrame extends JFrame {
 			}
 		});
 		parent = parentFrame;
+		launcher = parent.getProgramLauncher();
 		populateList();
 		addActionListeners();
 	}
@@ -61,21 +57,30 @@ public class ErrorsFrame extends JFrame {
 		getContentPane().setLayout(null);
 		table = new JTable(errorsList,COLUMNS);
 		
-		table.setBounds(10, 30, 623, 321);
-		scrollPane.setBounds(10, 47, 760, 354);
+		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+		table.getColumnModel().getColumn(0).setPreferredWidth(50);
+		table.getColumnModel().getColumn(1).setPreferredWidth(450);
+		table.getColumnModel().getColumn(2).setPreferredWidth(100);
+		table.getColumnModel().getColumn(3).setPreferredWidth(250);
+		table.getColumnModel().getColumn(4).setPreferredWidth(150);
+		
+		
+		table.setBounds(10, 30, 960, 521);
+		scrollPane.setBounds(10, 47, 980, 554);
 		scrollPane.setViewportView(table);		
 		getContentPane().add(scrollPane);
 				
-		btnConvert.setBounds(780, 118, 180, 23);
+		btnConvert.setBounds(1000, 118, 180, 23);
 		getContentPane().add(btnConvert);		
 		
-		btnDreamweaver.setBounds(780, 50, 180, 23);
+		btnDreamweaver.setBounds(1000, 50, 180, 23);
 		getContentPane().add(btnDreamweaver);
 
 		
-		btnNotepad.setBounds(780, 84, 180, 23);
+		btnNotepad.setBounds(1000, 84, 180, 23);
 		getContentPane().add(btnNotepad);
-		this.setBounds(0, 0, 1000, 450);;
+		this.setBounds(0, 0, 1200, 640);
+		this.setTitle("Errors Recorded");;
 		this.setVisible(true);
 	}
 
@@ -88,8 +93,8 @@ public class ErrorsFrame extends JFrame {
 		btnDreamweaver.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try{
-					String path = getPath();
-					parent.openDreamweaver(path);
+				
+					launcher.openDreamweaver(getPath());
 				}catch(NullPointerException ex){
 					
 				}
@@ -97,6 +102,7 @@ public class ErrorsFrame extends JFrame {
 		});
 		btnNotepad.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				launcher.openNotePad(getPath());
 			}
 		});
 	}
@@ -115,7 +121,7 @@ public class ErrorsFrame extends JFrame {
 		try{
 			return dbLogger.getPath(errorList.get(table.getSelectedRow()).getPageId());
 		}catch(ArrayIndexOutOfBoundsException e){
-			parent.printWarning("No file has been selected!");
+			parent.printOnConsole("No file has been selected!","error");
 			return null;
 		}
 	}
@@ -124,8 +130,12 @@ public class ErrorsFrame extends JFrame {
 		String type = errorObject.getErrorType();
 		String message = errorObject.getErrorMessage();
 		String line = errorObject.getLastConvertedLine() +"";
-		
-		return new String[]{id,type,message,line};
+		String path ="";
+		if(errorObject.getPath().contains("en/"))
+			path = errorObject.getPath().substring(errorObject.getPath().indexOf("en/")+2);
+		else
+			path = errorObject.getPath().substring(errorObject.getPath().indexOf("en\\")+2);
+		return new String[]{id,path,type,message,line};
 	}
 	
     private void populateList(){

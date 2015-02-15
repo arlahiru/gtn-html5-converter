@@ -61,45 +61,9 @@ public class ImageElementFacade extends Facade {
 					// initialize default values. have to test this!
 					modifiedImageTag.append("<" + IMG + " ");
 
-					// remove table level obsolete attributes
-					Iterator<Attribute> trAttributeIterator = img
-							.getAttributes().iterator();
-
-					while (trAttributeIterator.hasNext()) {
-
-						Attribute trAttribute = trAttributeIterator.next();
-						String attributeName = trAttribute.getKey();
-						String ruleKey = img.getName() + "_"
-								+ attributeName.toLowerCase();
-
-						Rule rule = JerichoJspParserUtil.RULES_MAP.get(ruleKey);
-
-						if (rule != null) {
-
-							StringBuilder returnValue = rule.execute(
-									outputDocument, trAttribute, img);
-
-							if (returnValue != null) {
-								newImageStyleValue.append(returnValue);
-							} else {
-
-								// if rule does not return value, do appropriate
-								// fix
-								// here.
-
-							}
-
-						} else {
-
-							logger.info("Rule key not found for key: "
-									+ ruleKey);
-							modifiedImageTag.append(trAttribute);
-							modifiedImageTag.append(" ");
-							logger.info(ruleKey + " appended as it is.");
-						}
-
-					}
-
+					applyRules(img, outputDocument, newImageStyleValue,
+							modifiedImageTag);
+					
 					// append inner server tags if any
 					modifiedImageTag.append(" "
 							+ HTML5Util.getInnerServerTagContent(img) + " ");

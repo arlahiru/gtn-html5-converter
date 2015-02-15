@@ -42,50 +42,50 @@ public class BodyElementFacade extends Facade {
 	// fix obsolete features in all the elements inside html body including the
 	// body tag
 	public static void fixAllBodyElementObsoleteFeatures(Source source,
-			OutputDocument outputDocument) throws HTML5ParserException{
+			OutputDocument outputDocument) throws HTML5ParserException {
 
-			fixBodyElementObsoleteFeatures(source, outputDocument);
-	
-			TableElementFacade.fixLegacyTables(source, outputDocument);
-	
-			FontElementFacade.fixFontTags(source, outputDocument);
-	
-			ImageElementFacade.fixImgTags(source, outputDocument);
-	
-			FormElementFacade.fixFormObsoleteFeatures(source, outputDocument);
-	
-			BrFacade.fixBRElements(source, outputDocument);
-	
-			CaptionFacade.fixCaptionElements(source, outputDocument);
-	
-			CenterFacade.fixCenterTags(source, outputDocument);
-	
-			DivFacade.fixDivElements(source, outputDocument);
-	
-			HrFacade.fixHRElements(source, outputDocument);
-	
-			HxElementFacade.fixH1to6Elements(source, outputDocument);
-	
-			ImageElementFacade.fixImgTags(source, outputDocument);
-	
-			InputElementFacade.fixInputTags(source, outputDocument);
-	
-			LegendFacade.fixLegendElements(source, outputDocument);
-	
-			LiFacade.fixLiElements(source, outputDocument);
-	
-			NobrFacade.fixNobrElements(source, outputDocument);
-	
-			OlFacade.fixOlElements(source, outputDocument);
-	
-			PFacade.fixPElements(source, outputDocument);
-	
-			PreFacade.fixPreElements(source, outputDocument);
-	
-			SpacerElementFacade.fixSpacerTags(source, outputDocument);
-	
-			UlFacade.fixUlElements(source, outputDocument);
-		
+		fixBodyElementObsoleteFeatures(source, outputDocument);
+
+		TableElementFacade.fixLegacyTables(source, outputDocument);
+
+		FontElementFacade.fixFontTags(source, outputDocument);
+
+		ImageElementFacade.fixImgTags(source, outputDocument);
+
+		FormElementFacade.fixFormObsoleteFeatures(source, outputDocument);
+
+		BrFacade.fixBRElements(source, outputDocument);
+
+		CaptionFacade.fixCaptionElements(source, outputDocument);
+
+		CenterFacade.fixCenterTags(source, outputDocument);
+
+		DivFacade.fixDivElements(source, outputDocument);
+
+		HrFacade.fixHRElements(source, outputDocument);
+
+		HxElementFacade.fixH1to6Elements(source, outputDocument);
+
+		ImageElementFacade.fixImgTags(source, outputDocument);
+
+		InputElementFacade.fixInputTags(source, outputDocument);
+
+		LegendFacade.fixLegendElements(source, outputDocument);
+
+		LiFacade.fixLiElements(source, outputDocument);
+
+		NobrFacade.fixNobrElements(source, outputDocument);
+
+		OlFacade.fixOlElements(source, outputDocument);
+
+		PFacade.fixPElements(source, outputDocument);
+
+		PreFacade.fixPreElements(source, outputDocument);
+
+		SpacerElementFacade.fixSpacerTags(source, outputDocument);
+
+		UlFacade.fixUlElements(source, outputDocument);
+
 	}
 
 	public static void fixBodyElementObsoleteFeatures(Source source,
@@ -108,54 +108,21 @@ public class BodyElementFacade extends Facade {
 				// initialize replacing start tag
 				modifiedBodyTag.append("<" + HTMLElementName.BODY + " ");
 
-				// remove table level obsolete attributes
-				Iterator<Attribute> bodyAttributeIterator = body
-						.getAttributes().iterator();
+				applyRules(body, outputDocument, newBodyStyleValue,
+						modifiedBodyTag);
 
-				while (bodyAttributeIterator.hasNext()) {
-
-					Attribute bodyAttribute = bodyAttributeIterator.next();
-					String attributeName = bodyAttribute.getKey();
-					String ruleKey = body.getName() + "_"
-							+ attributeName.toLowerCase();
-
-					Rule rule = JerichoJspParserUtil.RULES_MAP.get(ruleKey);
-
-					if (rule != null) {
-
-						StringBuilder returnValue = rule.execute(
-								outputDocument, bodyAttribute, body); //@lahiru r: passed the body element as the orignal element
-
-						if (returnValue != null) {
-							newBodyStyleValue.append(returnValue);
-						} else {
-
-							// if rule does not return value, do appropriate fix
-							// here.
-
-						}
-
-					} else {
-
-						logger.info("Rule key not found for key: " + ruleKey);
-						modifiedBodyTag.append(bodyAttribute);
-						modifiedBodyTag.append(" ");
-						logger.info(ruleKey + " appended as it is.");
-					}
-
-				}
-				
 				// append inner server tags if any
-				modifiedBodyTag.append(" " + HTML5Util.getInnerServerTagContent(body) + " ");
+				modifiedBodyTag.append(" "
+						+ HTML5Util.getInnerServerTagContent(body) + " ");
 
 				// close body start tag
 				modifiedBodyTag.append(STYLE + "=\"" + newBodyStyleValue
 						+ "\">");
-				
-				//outputDocument.replace(body.getStartTag(), modifiedBodyTag);
-				
-				replace(body.getStartTag(),modifiedBodyTag,outputDocument);
-				
+
+				// outputDocument.replace(body.getStartTag(), modifiedBodyTag);
+
+				replace(body.getStartTag(), modifiedBodyTag, outputDocument);
+
 				// outputDocument.replace(tr.getEndTag(), "</" +
 				// HTMLElementName.BODY + ">");
 

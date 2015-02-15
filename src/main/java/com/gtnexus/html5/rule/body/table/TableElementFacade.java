@@ -36,7 +36,7 @@ import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.util.HTML5Util;
 
-public class TableElementFacade extends Facade{
+public class TableElementFacade extends Facade {
 
 	private static String cellPadding;
 	private static Element thead;
@@ -45,7 +45,7 @@ public class TableElementFacade extends Facade{
 	private static List<Element> trElements;
 
 	public static void fixLegacyTables(Source source,
-			OutputDocument outputDocument) throws HTML5ParserException{
+			OutputDocument outputDocument) throws HTML5ParserException {
 
 		logger.debug("Fixing legacy tables started...");
 
@@ -59,6 +59,13 @@ public class TableElementFacade extends Facade{
 			removeAndReplaceTableElementObsoleteFeatures(table, outputDocument);
 
 		}
+
+		// clear cellpadding variable
+		cellPadding = null;
+
+		// fix non well-formed elements
+		fixNonWellformedTdThTags(source, outputDocument);
+		fixNonWellformedTrTags(source, outputDocument);
 
 		logger.debug("Fixing legacy tables finished.");
 
@@ -83,59 +90,25 @@ public class TableElementFacade extends Facade{
 			// keep table cellpadding value to apply in <td> level
 			cellPadding = null;
 
-			// remove table level obsolete attributes
-			Iterator<Attribute> attributeIterator = table.getAttributes()
-					.iterator();
+			applyRules(table, outputDocument, newTableStyleValue,
+					modifiedTableTag);
 
-			while (attributeIterator.hasNext()) {
+			newTableStyleValue = applyPostTableFixes(table, newTableStyleValue);
 
-				Attribute tableAttribute = attributeIterator.next();
-				String attributeName = tableAttribute.getKey();
-				String ruleKey = table.getName() + "_"
-						+ attributeName.toLowerCase();
-
-				Rule rule = JerichoJspParserUtil.RULES_MAP.get(ruleKey);
-
-				if (rule != null) {
-
-					StringBuilder returnValue = rule.execute(outputDocument,
-							tableAttribute, table);
-
-					if (returnValue != null) {
-						newTableStyleValue.append(returnValue);
-					} else {
-
-						// this padding should go to td and tr level of the
-						// table
-						if (attributeName.equals(CELLPADDING)) {
-							cellPadding = tableAttribute.getValue();
-						}
-					}
-
-				} else {
-
-					logger.debug("Rule key not found for key: " + ruleKey);
-					modifiedTableTag.append(tableAttribute);
-					modifiedTableTag.append(" ");
-					logger.debug(ruleKey + " appended as it is.");
-				}
-
-			}
-
-			applyPostTableFixes(table, newTableStyleValue);
-			
 			// append inner server tags if any
-			modifiedTableTag.append(" " + HTML5Util.getInnerServerTagContent(table) + " ");
+			modifiedTableTag.append(" "
+					+ HTML5Util.getInnerServerTagContent(table) + " ");
 
 			// close table start tag
 			modifiedTableTag.append(STYLE + "=\"" + newTableStyleValue + "\">");
-	
-			replace(table.getStartTag(), modifiedTableTag,outputDocument);
-			replace(table.getEndTag(), new StringBuilder("</" + TABLE + ">"),outputDocument);
+
+			replace(table.getStartTag(), modifiedTableTag, outputDocument);
+			replace(table.getEndTag(), new StringBuilder("</" + TABLE + ">"),
+					outputDocument);
 
 			logger.debug(table.getDebugInfo() + " replace with "
 					+ modifiedTableTag);
-			
+
 			fixTableHead(table, outputDocument);
 
 			fixTableBody(table, outputDocument);
@@ -143,78 +116,50 @@ public class TableElementFacade extends Facade{
 			fixTableRow(table, outputDocument);
 
 			fixTableFooter(table, outputDocument);
-			
+
 		}
 	}
 
-	private static void fixTableRow(Element table, OutputDocument outputDocument) throws HTML5ParserException {
+	private static void fixTableRow(Element table, OutputDocument outputDocument)
+			throws HTML5ParserException {
 
 		for (Element tr : trElements) {
+			fixTrTag(tr, outputDocument);
+		}
 
-			// first check if this a TR element and it has attributes
-			if (tr.getName().toLowerCase().equals(HTML5Util.TR) && HTML5Util.hasAttributes((tr))) {
+	}
 
-				StringBuilder modifiedTRTag = new StringBuilder();
+	private static void fixTrTag(Element tr, OutputDocument outputDocument) {
 
-				StringBuilder newTrStyleValue = new StringBuilder();
+		// first check if this a TR element and it has attributes
+		if (tr.getName().toLowerCase().equals(HTML5Util.TR)
+				&& HTML5Util.hasAttributes((tr))) {
 
-				// initialize default values. have to test this!
-				modifiedTRTag.append("<" + TR + " ");
+			StringBuilder modifiedTRTag = new StringBuilder();
 
-				// remove table level obsolete attributes
-				Iterator<Attribute> trAttributeIterator = tr.getAttributes()
-						.iterator();
+			StringBuilder newTrStyleValue = new StringBuilder();
 
-				while (trAttributeIterator.hasNext()) {
+			// initialize default values. have to test this!
+			modifiedTRTag.append("<" + TR + " ");
 
-					Attribute trAttribute = trAttributeIterator.next();
-					String attributeName = trAttribute.getKey();
-					String ruleKey = tr.getName() + "_"
-							+ attributeName.toLowerCase();
+			applyRules(tr, outputDocument, newTrStyleValue, modifiedTRTag);
 
-					Rule rule = JerichoJspParserUtil.RULES_MAP.get(ruleKey);
+			// append inner server tags if any
+			modifiedTRTag.append(" " + HTML5Util.getInnerServerTagContent(tr)
+					+ " ");
 
-					if (rule != null) {
+			// close tr start tag
+			modifiedTRTag.append(STYLE + "=\"" + newTrStyleValue + "\">");
 
-						StringBuilder returnValue = rule.execute(
-								outputDocument, trAttribute, tr);
+			outputDocument.replace(tr.getStartTag(), modifiedTRTag);
 
-						if (returnValue != null) {
-							newTrStyleValue.append(returnValue);
-						} else {
+			// outputDocument.replace(tr.getEndTag(), "</" + TR + ">");
 
-							// if rule does not return value, do appropriate fix
-							// here.
+			logger.debug("\t" + tr.getDebugInfo() + " replace with "
+					+ modifiedTRTag);
 
-						}
+			fixTableData(tr, outputDocument);
 
-					} else {
-
-						logger.info("Rule key not found for key: " + ruleKey);
-						modifiedTRTag.append(trAttribute);
-						modifiedTRTag.append(" ");
-						logger.info(ruleKey + " appended as it is.");
-					}
-
-				}
-				
-				// append inner server tags if any
-				modifiedTRTag.append(" " + HTML5Util.getInnerServerTagContent(tr) + " ");
-
-				// close tr start tag
-				modifiedTRTag.append(STYLE + "=\"" + newTrStyleValue + "\">");
-							
-
-				outputDocument.replace(tr.getStartTag(), modifiedTRTag);
-				
-				// outputDocument.replace(tr.getEndTag(), "</" + TR + ">");
-
-				logger.debug("\t" + tr.getDebugInfo() + " replace with "
-						+ modifiedTRTag);
-
-				fixTableData(tr, outputDocument);
-
-			}
 		}
 
 	}
@@ -222,97 +167,65 @@ public class TableElementFacade extends Facade{
 	private static void fixTableData(Element tr, OutputDocument outputDocument) {
 
 		// get all the td elements of this tr
-		List<Element> tdElementList =getTdElementList(tr);
+		List<Element> tdElementList = getTdElementList(tr);
 
 		for (Element td : tdElementList) {
 
-			if (HTML5Util.hasAttributes((td))) {
-
-				StringBuilder modifiedTDTag = new StringBuilder();
-
-				StringBuilder newTdStyleValue = new StringBuilder();
-
-				// initialize start tag
-
-				// check if the child tag is th or td
-				if (td.getName().equals(HTMLElementName.TH)) {
-
-					modifiedTDTag.append("<" + TH + " ");
-
-				} else {
-					modifiedTDTag.append("<" + TD + " ");
-				}
-
-				// remove td level obsolete attributes
-				Iterator<Attribute> tdAttributeIterator = td.getAttributes()
-						.iterator();
-
-				while (tdAttributeIterator.hasNext()) {
-
-					Attribute tdAttribute = tdAttributeIterator.next();
-					String attributeName = tdAttribute.getKey();
-					String ruleKey = td.getName() + "_"
-							+ attributeName.toLowerCase();
-
-					Rule rule = JerichoJspParserUtil.RULES_MAP.get(ruleKey);
-
-					if (rule != null) {
-
-						StringBuilder returnValue = rule.execute(
-								outputDocument, tdAttribute, td);
-
-						if (returnValue != null) {
-							newTdStyleValue.append(returnValue);
-						} else {
-
-							// if rule does not return value, do appropriate
-							// fix
-							// here.
-
-						}
-
-					} else {
-
-						logger.info("Rule key not found for key: " + ruleKey);
-						modifiedTDTag.append(tdAttribute);
-						modifiedTDTag.append(" ");
-						logger.info(ruleKey + " appended as it is.");
-					}
-
-				}
-
-				// apply table level attributes if necessary. e.g. cell
-				// padding
-				if (cellPadding != null) {
-
-					newTdStyleValue.append(PADDING + ":" + cellPadding + "px;");
-
-				}
-
-				newTdStyleValue = applyPostTDFixes(td, newTdStyleValue);
-				
-				// append inner server tags if any
-				modifiedTDTag.append(" " + HTML5Util.getInnerServerTagContent(td) + " ");
-
-				// close tr start tag
-				modifiedTDTag.append(STYLE + "=\"" + newTdStyleValue + "\">");
-
-			
-					replace(td.getStartTag(), modifiedTDTag,outputDocument);
-				
-					// outputDocument.replace(td.getEndTag(), "</" + TD + ">");
-				
-
-				logger.debug("\t\t" + td.getDebugInfo() + " replace with "
-						+ modifiedTDTag);
-
-			}
-
+			fixTdTag(td, outputDocument);
 		}
 	}
 
+	private static void fixTdTag(Element td, OutputDocument outputDocument) {
+
+		if (HTML5Util.hasAttributes((td))) {
+
+			StringBuilder modifiedTDTag = new StringBuilder();
+
+			StringBuilder newTdStyleValue = new StringBuilder();
+
+			// initialize start tag
+
+			// check if the child tag is th or td
+			if (td.getName().equals(HTMLElementName.TH)) {
+
+				modifiedTDTag.append("<" + TH + " ");
+
+			} else {
+				modifiedTDTag.append("<" + TD + " ");
+			}
+
+			applyRules(td, outputDocument, newTdStyleValue, modifiedTDTag);
+
+			// apply table level attributes if necessary. e.g. cell
+			// padding
+			if (cellPadding != null) {
+
+				newTdStyleValue.append(PADDING + ":" + cellPadding + "px;");
+
+			}
+
+			newTdStyleValue = applyPostTDFixes(td, newTdStyleValue);
+
+			// append inner server tags if any
+			modifiedTDTag.append(" " + HTML5Util.getInnerServerTagContent(td)
+					+ " ");
+
+			// close tr start tag
+			modifiedTDTag.append(STYLE + "=\"" + newTdStyleValue + "\">");
+
+			replace(td.getStartTag(), modifiedTDTag, outputDocument);
+
+			// outputDocument.replace(td.getEndTag(), "</" + TD + ">");
+
+			logger.debug("\t\t" + td.getDebugInfo() + " replace with "
+					+ modifiedTDTag);
+
+		}
+
+	}
+
 	private static void fixTableHead(Element table,
-			OutputDocument outputDocument){
+			OutputDocument outputDocument) {
 
 		if (thead != null) {
 
@@ -325,50 +238,16 @@ public class TableElementFacade extends Facade{
 				// initialize default values. have to test this!
 				modifiedTheadTag.append("<" + THEAD + " ");
 
-				// remove table level obsolete attributes
-				Iterator<Attribute> trAttributeIterator = thead.getAttributes()
-						.iterator();
-
-				while (trAttributeIterator.hasNext()) {
-
-					Attribute trAttribute = trAttributeIterator.next();
-					String attributeName = trAttribute.getKey();
-					String ruleKey = thead.getName() + "_"
-							+ attributeName.toLowerCase();
-
-					Rule rule = JerichoJspParserUtil.RULES_MAP.get(ruleKey);
-
-					if (rule != null) {
-
-						StringBuilder returnValue = rule.execute(
-								outputDocument, trAttribute, null);
-
-						if (returnValue != null) {
-							newTheadStyleValue.append(returnValue);
-						} else {
-
-							// if rule does not return value, do appropriate fix
-							// here.
-
-						}
-
-					} else {
-
-						logger.info("Rule key not found for key: " + ruleKey);
-						modifiedTheadTag.append(trAttribute);
-						modifiedTheadTag.append(" ");
-						logger.info(ruleKey + " appended as it is.");
-					}
-
-				}
+				applyRules(thead, outputDocument, newTheadStyleValue,
+						modifiedTheadTag);
 
 				// close tr start tag
 				modifiedTheadTag.append(STYLE + "=\"" + newTheadStyleValue
 						+ "\">");
-				
-					replace(thead.getStartTag(), modifiedTheadTag,outputDocument);
-				
-					// outputDocument.replace(tr.getEndTag(), "</" + TR + ">");
+
+				replace(thead.getStartTag(), modifiedTheadTag, outputDocument);
+
+				// outputDocument.replace(tr.getEndTag(), "</" + TR + ">");
 
 				logger.debug("\t" + thead.getDebugInfo() + " replace with "
 						+ modifiedTheadTag);
@@ -379,7 +258,7 @@ public class TableElementFacade extends Facade{
 	}
 
 	private static void fixTableBody(Element table,
-			OutputDocument outputDocument){
+			OutputDocument outputDocument) {
 
 		if (tbody != null) {
 
@@ -392,50 +271,15 @@ public class TableElementFacade extends Facade{
 				// initialize default values. have to test this!
 				modifiedTbodyTag.append("<" + TBODY + " ");
 
-				// remove table level obsolete attributes
-				Iterator<Attribute> trAttributeIterator = tbody.getAttributes()
-						.iterator();
-
-				while (trAttributeIterator.hasNext()) {
-
-					Attribute trAttribute = trAttributeIterator.next();
-					String attributeName = trAttribute.getKey();
-					String ruleKey = tbody.getName() + "_"
-							+ attributeName.toLowerCase();
-
-					Rule rule = JerichoJspParserUtil.RULES_MAP.get(ruleKey);
-
-					if (rule != null) {
-
-						StringBuilder returnValue = rule.execute(
-								outputDocument, trAttribute, null);
-
-						if (returnValue != null) {
-							newTbodyStyleValue.append(returnValue);
-						} else {
-
-							// if rule does not return value, do appropriate fix
-							// here.
-
-						}
-
-					} else {
-
-						logger.info("Rule key not found for key: " + ruleKey);
-						modifiedTbodyTag.append(trAttribute);
-						modifiedTbodyTag.append(" ");
-						logger.info(ruleKey + " appended as it is.");
-					}
-
-				}
+				applyRules(tbody, outputDocument, newTbodyStyleValue,
+						modifiedTbodyTag);
 
 				// close tr start tag
 				modifiedTbodyTag.append(STYLE + "=\"" + newTbodyStyleValue
 						+ "\">");
-			
-					
-					replace(tbody.getStartTag(), modifiedTbodyTag,outputDocument);
-				
+
+				replace(tbody.getStartTag(), modifiedTbodyTag, outputDocument);
+
 				// outputDocument.replace(tr.getEndTag(), "</" + TR + ">");
 
 				logger.debug("\t" + tbody.getDebugInfo() + " replace with "
@@ -445,7 +289,7 @@ public class TableElementFacade extends Facade{
 	}
 
 	private static void fixTableFooter(Element table,
-			OutputDocument outputDocument){
+			OutputDocument outputDocument) {
 
 		if (tfoot != null) {
 
@@ -458,50 +302,14 @@ public class TableElementFacade extends Facade{
 				// initialize default values. have to test this!
 				modifiedTfootTag.append("<" + TFOOT + " ");
 
-				// remove table level obsolete attributes
-				Iterator<Attribute> trAttributeIterator = tfoot.getAttributes()
-						.iterator();
-
-				while (trAttributeIterator.hasNext()) {
-
-					Attribute trAttribute = trAttributeIterator.next();
-					String attributeName = trAttribute.getKey();
-					String ruleKey = tfoot.getName() + "_"
-							+ attributeName.toLowerCase();
-
-					Rule rule = JerichoJspParserUtil.RULES_MAP.get(ruleKey);
-
-					if (rule != null) {
-
-						StringBuilder returnValue = rule.execute(
-								outputDocument, trAttribute, null);
-
-						if (returnValue != null) {
-							newTfootStyleValue.append(returnValue);
-						} else {
-
-							// if rule does not return value, do appropriate fix
-							// here.
-
-						}
-
-					} else {
-
-						logger.info("Rule key not found for key: " + ruleKey);
-						modifiedTfootTag.append(trAttribute);
-						modifiedTfootTag.append(" ");
-						logger.info(ruleKey + " appended as it is.");
-					}
-
-				}
+				applyRules(tbody, outputDocument, newTfootStyleValue,
+						modifiedTfootTag);
 
 				// close tr start tag
 				modifiedTfootTag.append(STYLE + "=\"" + newTfootStyleValue
 						+ "\">");
 
-					replace(tfoot.getStartTag(),modifiedTfootTag,outputDocument);
-				
-
+				replace(tfoot.getStartTag(), modifiedTfootTag, outputDocument);
 
 				logger.debug("\t" + tfoot.getDebugInfo() + " replace with "
 						+ modifiedTfootTag);
@@ -509,7 +317,7 @@ public class TableElementFacade extends Facade{
 		}
 	}
 
-	private static void applyPostTableFixes(Element table,
+	private static StringBuilder applyPostTableFixes(Element table,
 			StringBuilder newTableStyleValue) {
 
 		// apply td align to the table if this table is inside a TD element
@@ -538,6 +346,18 @@ public class TableElementFacade extends Facade{
 			}
 
 		}
+		
+		// remove border from style if the table has a class and border is zero. This fixes the rounded corner table issue
+		if (table.getAttributeValue("class") != null && table.getAttributeValue("border") != null && table.getAttributeValue("border").equals("0")) {
+
+			String newStyle = newTableStyleValue.toString()
+					.replaceAll("border:\\s*[A-Za-z0-9 ]+\\s*;", "");
+			
+			newTableStyleValue = new StringBuilder(newStyle);
+
+		}
+		
+		return newTableStyleValue;
 
 	}
 
@@ -586,26 +406,112 @@ public class TableElementFacade extends Facade{
 		}
 
 	}
-	
-	private static List<Element> getTdElementList(Element tr){
-		
+
+	private static List<Element> getTdElementList(Element tr) {
+
 		List<Element> childElements = tr.getChildElements();
-		
+
 		List<Element> tdElements = new ArrayList<>(0);
-		
-		for(Element e: childElements){
-			
-			if(e.getName().toLowerCase().equals(HTML5Util.TD) || e.getName().toLowerCase().equals(HTML5Util.TH))
+
+		for (Element e : childElements) {
+
+			if (e.getName().toLowerCase().equals(HTML5Util.TD)
+					|| e.getName().toLowerCase().equals(HTML5Util.TH))
 				tdElements.add(e);
-			
+
 		}
-		
+
 		return tdElements;
-		
+
 	}
-		
-		
-		
-	
+
+	private static void fixNonWellformedTdThTags(Source source,
+			OutputDocument outputDocument) {
+
+		List<Element> allTdThTags = source.getAllElements(HTML5Util.TD);
+		allTdThTags.addAll(source.getAllElements(HTML5Util.TH));
+
+		for (Element td : allTdThTags) {
+
+			if (td.getParentElement() == null) {
+
+				// fix each td tag
+				fixTdTag(td, outputDocument);
+			} else if (!td.getParentElement().getName().equals(HTML5Util.TR)) {
+
+				// fix each td tag
+				fixTdTag(td, outputDocument);
+
+			}
+
+		}
+	}
+
+	private static void fixNonWellformedTrTags(Source source,
+			OutputDocument outputDocument) {
+
+		List<Element> allTrTags = source.getAllElements(HTML5Util.TR);
+
+		for (Element tr : allTrTags) {
+
+			if (tr.getParentElement() == null) {
+
+				// fix each tr tag
+				fixTrTag(tr, outputDocument);
+			} else if (!tr.getParentElement().getName().equals(HTML5Util.TABLE)) {
+
+				// fix each tr tag
+				fixTrTag(tr, outputDocument);
+			}
+
+		}
+
+	}
+
+	// override this method from Facade class
+	public static void applyRules(Element element,
+			OutputDocument outputDocument, StringBuilder newStyle,
+			StringBuilder modifiedTag) {
+
+		// remove table level obsolete attributes
+		Iterator<Attribute> attributeIterator = element.getAttributes()
+				.iterator();
+
+		while (attributeIterator.hasNext()) {
+
+			Attribute tableAttribute = attributeIterator.next();
+			String attributeName = tableAttribute.getKey();
+			String ruleKey = element.getName() + "_"
+					+ attributeName.toLowerCase();
+
+			Rule rule = JerichoJspParserUtil.RULES_MAP.get(ruleKey);
+
+			if (rule != null) {
+
+				StringBuilder returnValue = rule.execute(outputDocument,
+						tableAttribute, element);
+
+				if (returnValue != null) {
+					newStyle.append(returnValue);
+				} else {
+
+					// this padding should go to td and tr level of the
+					// table
+					if (attributeName.equals(CELLPADDING)) {
+						cellPadding = tableAttribute.getValue();
+					}
+				}
+
+			} else {
+
+				logger.debug("Rule key not found for key: " + ruleKey);
+				modifiedTag.append(tableAttribute);
+				modifiedTag.append(" ");
+				logger.debug(ruleKey + " appended as it is.");
+			}
+
+		}
+
+	}
 
 }

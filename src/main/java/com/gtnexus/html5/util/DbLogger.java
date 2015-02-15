@@ -1,13 +1,16 @@
 package com.gtnexus.html5.util;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-
+import java.lang.System.*;
 import javax.swing.JTextArea;
 
 import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
@@ -30,8 +33,11 @@ public class DbLogger {
 	private static final String ID = "ID";
 	private static final String PATH = "Path";
 	private static final String IS_INCLUDE = "IncludeFile";
-	private static final String CONVERTED_DATE = "ConvertedDate";
-	private static final String CONVERTED_STATUS = "Converted";
+	private static final String ACCESSED_DATE= "AccessedDate";
+	private static final String STATUS = "Status";
+	private static final String FILENAME = "Filename";
+	private static final String IS_ADMIN = "IsAdmin";
+	private static final String SCANNED = "Scanned";
 	
 	private static final String INCLUDE_FILE_TABLE = "IncludeFiles";
 	private static final String PARENT_ID = "ParentID";
@@ -46,7 +52,81 @@ public class DbLogger {
 	private static final String ERROR_MESSAGE="Error";
 	private static final String ERROR_TYPE = "ErrorType";
 	private static final String LAST_CONVERTED_LINE ="lastConvertedLine";
-	private PreparedStatement statement;
+	
+	private static final String CONFLICTING_PAGES = "ConflictingPages";
+	private static final String ADMIN_PAGE_COL = "AdminPage";
+	private static final String TRADE_PAGE_COL = "TradePage";
+	
+	public static final String STATUS_FAILED = "Failed";
+	public static final String STATUS_CONVERTED = "Converted";
+	public static final String STATUS_NOT_CONVERTED = "Not Converted";
+	public static final String STATUS_ROLLED_BACK = "Rolled Back";
+	
+	
+	
+	private volatile PreparedStatement insertPage;
+	private volatile PreparedStatement insertIncludeFile;
+	private volatile PreparedStatement queryId;
+	private volatile PreparedStatement logChange;
+	private volatile PreparedStatement logError;
+	private volatile PreparedStatement updateConvertedDate;
+	private volatile PreparedStatement deleteFromChangeLog; 
+	private volatile PreparedStatement getErrors;
+	private volatile PreparedStatement updateScannedState;
+	private volatile PreparedStatement insertConflict;
+	
+	private void makeStatements(){
+		String queryInsertPage = "INSERT INTO " + PAGE_TABLE + "(" + PATH + ","
+				+ IS_INCLUDE + "," + ACCESSED_DATE + ","+STATUS+","+FILENAME+","+IS_ADMIN+","+SCANNED+") VALUES(?,?,?,?,?,?,?);";
+		
+		String queryInsertIncludeFile ="INSERT INTO " + INCLUDE_FILE_TABLE + " (" + ID
+				+ "," + PARENT_ID + ") VALUES " + "(?,?) ;";
+		
+		String queryIdString = "SELECT " + ID + " FROM " + PAGE_TABLE + " WHERE "
+				+ PATH + "=? ;";
+		
+		String queryLogChange = "INSERT INTO " + CHANGE_LOG_TABLE + " (" + ID
+				+ "," + SOURCE + "," + FIX + "," + TAG + "," + LINE
+				+ ") VALUES (?,?,?,?,?);";
+
+				
+		String queryUpdateConvertedDate = "UPDATE " + PAGE_TABLE + " SET " + ACCESSED_DATE
+				+ "= ? ,"+STATUS+"=? WHERE " + ID + "= ?  ;"; 		
+		
+		String queryDeleteFromChangeLog = "DELETE FROM " + CHANGE_LOG_TABLE + " WHERE " + ID
+				+ "=? ;";
+		
+		String queryGetErrors = "SELECT "+PAGE_TABLE+"."+PATH+","+ERRORS_TABLE+".* FROM "+PAGE_TABLE+" INNER JOIN "+ERRORS_TABLE+" ON "+
+				 PAGE_TABLE+"."+ID+"="+ERRORS_TABLE+"."+ID+";";
+		
+		String queryUpdateScannedState = "UPDATE "+PAGE_TABLE+" SET "+SCANNED+"=? WHERE "+ID+"=? ;";
+		
+		String quertInsertConflict = "INSERT INTO "+CONFLICTING_PAGES+" VALUES(?,?);";
+		
+		try{
+			insertPage=con.prepareStatement(queryInsertPage,
+					Statement.RETURN_GENERATED_KEYS);
+			
+			insertIncludeFile = con.prepareStatement(queryInsertIncludeFile);
+			
+			queryId = con.prepareStatement(queryIdString);
+			
+			updateConvertedDate = con.prepareStatement(queryUpdateConvertedDate);
+			
+			logChange = con.prepareStatement(queryLogChange);
+			
+			deleteFromChangeLog = con.prepareStatement(queryDeleteFromChangeLog);
+			
+			getErrors = con.prepareStatement(queryGetErrors);
+			
+			updateScannedState = con.prepareStatement(queryUpdateScannedState);
+			
+			insertConflict = con.prepareStatement(quertInsertConflict);
+		}catch(SQLException e){
+			e.printStackTrace();
+		}
+	}
+	
 	public int getId() {
 		return id;
 	}
@@ -64,8 +144,8 @@ public class DbLogger {
 	}
 
 	private DbLogger() {
-		//initialize();
-		enabled=true;
+		initialize();
+
 	}
 
 	public static synchronized DbLogger getInstance() {
@@ -78,10 +158,9 @@ public class DbLogger {
 
 	// initialize db connection
 	public void initialize() {
-
+	
 		readCredentials();
 		setCon();
-
 
 	}
 
@@ -93,15 +172,18 @@ public class DbLogger {
 				Class.forName(JDBC_DRIVER).newInstance();
 
 				con = DriverManager.getConnection(DB_URL, USER, PASSWORD);
+				makeStatements();
+
 			} catch (SQLException e) {
 				System.out.println(e.getMessage());
+				enabled=false;
 			} catch (Exception e2) {
 				System.out.println(e2.getMessage());
 			}
 		}
 	}
 
-	private void readCredentials() {
+	private synchronized void readCredentials() {
 
 		StringBuilder str = new StringBuilder();
 		try{
@@ -122,7 +204,7 @@ public class DbLogger {
 
 	}
 
-	private void revokeCon() {
+	private synchronized void revokeCon() {
 		con = null;
 	}
 
@@ -132,29 +214,33 @@ public class DbLogger {
 		return dateFormat.format(cal.getTime());
 	}
 
-	public void insertPage(String filepath, boolean isIncludeFile) {
+	public synchronized void insertPage(String filepath, boolean isIncludeFile,String filename,boolean isConversion) {
 
 		if (isEnabled()) {
 
-			String query = "INSERT INTO " + PAGE_TABLE + "(" + PATH + ","
-					+ IS_INCLUDE + "," + CONVERTED_DATE + ","+CONVERTED_STATUS+") VALUES(?,?,?,?);";
+			System.out.println(filepath+":"+isIncludeFile);
 			//PreparedStatement statement = null;
 			try {
-
-				statement = con.prepareStatement(query,
-						Statement.RETURN_GENERATED_KEYS);
-
-				statement.setString(1, filepath);
-				statement.setBoolean(2, isIncludeFile);
-				statement.setString(3, getDate());
-				statement.setBoolean(4, false);
-				statement.executeUpdate();
-
-				ResultSet set = statement.getGeneratedKeys();
+				insertPage.setString(1, filepath);
+				insertPage.setBoolean(2, isIncludeFile);
+				insertPage.setString(3, getDate());
+				if(isConversion)
+					insertPage.setString(4, STATUS_CONVERTED);
+				else 
+					insertPage.setString(4, STATUS_NOT_CONVERTED);
+				insertPage.setString(5,filename.substring(filename.lastIndexOf('\\')+1));
+				if(filepath.contains("/administration/")||filepath.contains("\\administration\\"))
+					insertPage.setBoolean(6, true);
+				else
+					insertPage.setBoolean(6, false);
+				insertPage.setBoolean(7, false);
+				insertPage.executeUpdate();
+				
+				ResultSet set = insertPage.getGeneratedKeys();
 				if (set.next())
 					id = set.getInt(1);
-
-				statement.close();
+				System.out.println("ID="+id);
+				
 
 				if (isIncludeFile) {
 					insertIncludeFile();
@@ -163,109 +249,95 @@ public class DbLogger {
 
 			} catch (SQLException e) {
 
-				if (e.getMessage().contains("Duplicate entry ")) {
+				if (e.getMessage().contains("Duplicate entry ") && isConversion) {
 					id = queryID(filepath);
-					updateConvertedDate(id);
+					setStatus(id,STATUS_CONVERTED);
 				}
+				System.out.println("Duplicate entry "+filepath);
+				//e.printStackTrace();
 
-			} finally {
-
-				if (statement != null) {
-					try {
-						statement.close();
-
-					} catch (SQLException e) {
-
-						e.printStackTrace();
-					}
-				}
-
-			}
-		}
+			} 	
+		}	
 	}
+	
 
-	private void insertIncludeFile() {
+	private synchronized void insertIncludeFile() {
 		//PreparedStatement statement = null;
 		try {
-			String query = "INSERT INTO " + INCLUDE_FILE_TABLE + " (" + ID
-					+ "," + PARENT_ID + ") VALUES " + "(?,?) ;";
-			statement = con.prepareStatement(query);
-			statement.setInt(1, id);
-			statement.setInt(2, idMain);
-			writeQuery(statement.toString());
-			statement.execute();
+			
+			insertIncludeFile.setInt(1, id);
+			insertIncludeFile.setInt(2, idMain);
+			writeQuery(insertIncludeFile.toString());
+			insertIncludeFile.execute();
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 			e.printStackTrace();
 		} finally {
-			if (statement != null) {
+			/*
+			if (insertIncludeFile != null) {
 				try {
-					statement.close();
+					insertIncludeFile.close();
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
-			}
+			}*/
 		}
 	}
 
 	private int queryID(String path) {
 		int id = -1;
-		String query = "SELECT " + ID + " FROM " + PAGE_TABLE + " WHERE "
-				+ PATH + "=? ;";
-	//	PreparedStatement statement = null;
+		
+
 		try {
-
-			statement = con.prepareStatement(query);
-
-			statement.setString(1, path);
-			ResultSet set = statement.executeQuery();
-			set.next();
-			id = set.getInt(1);
-		} catch (Exception e) {
-			if (e.getMessage()
-					.contains("Illegal operation on empty result set"))
-				System.out.println("It's okay baby!");
+			 queryId.setString(1, path);
+			 
+			ResultSet set = queryId.executeQuery();
+			if(set.next()){
+				//set.next();
+				id = set.getInt(1);
+			}
+			
+		}/* catch(){
+			writeQuery(queryId.toString());
+			e.printStackTrace();
+		}*/catch (Exception e) {
+			e.printStackTrace();
+			//if (e.getMessage().contains("Illegal operation on empty result set"))
+			
 
 		} finally {
-			if (statement != null) {
-				try {
-					statement.close();
+			if (queryId != null) {
+		/*		try {
+					queryId.close();
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
-			}
+		*/	}
 		}
 		return id;
 	}
 
-	private void updateConvertedDate(int id) {
+	private synchronized void setStatus(int id,String status) {
 
 		//PreparedStatement statement = null;
 		try {
-			String query = "UPDATE " + PAGE_TABLE + " SET " + CONVERTED_DATE
-					+ "= ? ,"+CONVERTED_STATUS+"=? WHERE " + ID + "= ?  ;";
-			statement = con.prepareStatement(query);
 
-			statement.setString(1, getDate());
-			statement.setBoolean(2, true);
-			statement.setInt(3, id);
-			statement.executeUpdate();
+			updateConvertedDate.setString(1, getDate());
+			updateConvertedDate.setString(2, status);
+			updateConvertedDate.setInt(3, id);
+			updateConvertedDate.executeUpdate();
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			if (statement != null) {
-				try {
-					statement.close();
+			if (updateConvertedDate != null) {
+		/*		try {
+					updateConvertedDate.close();
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
-			}
+		*/	}
 		}
-	}
-
-	public void remove(String filepath) {
-
 	}
 
 	/*
@@ -277,38 +349,34 @@ public class DbLogger {
 	 * 
 	 * @param-debugInfo: contains line numbers etc.
 	 */
-	public void log(String baseTag, String startTag, String fix,
+	public synchronized void log(String baseTag, String startTag, String fix,
 			String debugInfo) {
 		if (isEnabled()) {
-			PreparedStatement statement = null;
+//			PreparedStatement statement = null;
 			try {
-				String query = "INSERT INTO " + CHANGE_LOG_TABLE + " (" + ID
-						+ "," + SOURCE + "," + FIX + "," + TAG + "," + LINE
-						+ ") VALUES (?,?,?,?,?);";
-				statement = con.prepareStatement(query);
-
-				statement.setInt(1, id);
-				statement.setString(2, startTag);
-				statement.setString(3, fix);
-				statement.setString(4, baseTag);
-				statement.setInt(5, extractLineNumber(debugInfo));
-				statement.executeUpdate();
+				
+				logChange.setInt(1, id);
+				logChange.setString(2, startTag);
+				logChange.setString(3, fix);
+				logChange.setString(4, baseTag);
+				logChange.setInt(5, extractLineNumber(debugInfo));
+				logChange.executeUpdate();
 
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
-				if (statement != null) {
-					try {
-						statement.close();
+				if (logChange != null) {
+				/*	try {
+						logChange.close();
 					} catch (SQLException e) {
 						e.printStackTrace();
 					}
-				}
+			*/	}
 			}
 		}
 	}
 
-	private void deleteFromPage() {
+	private  synchronized void deleteFromPage() {
 		String query = "DELETE FROM " + PAGE_TABLE + " WHERE " + ID + "=? ;";
 		PreparedStatement statement = null;
 		try {
@@ -325,7 +393,7 @@ public class DbLogger {
 		}
 	}
 
-	private void deleteFromIncludeFiles() {
+	private synchronized void deleteFromIncludeFiles() {
 		String query = "DELETE FROM " + INCLUDE_FILE_TABLE + " WHERE " + ID
 				+ "=? OR " + PARENT_ID + " = ? ;";
 		PreparedStatement statement = null;
@@ -345,17 +413,12 @@ public class DbLogger {
 
 	}
 
-	private void deleteFromChangeLog() {
+	private synchronized void deleteFromChangeLog() {
 
-		String query = "DELETE FROM " + CHANGE_LOG_TABLE + " WHERE " + ID
-				+ "=? ;";
-		PreparedStatement statement = null;
 		try {
 
-			statement = con.prepareStatement(query);
-
-			statement.setInt(1, id);
-			statement.execute();
+			deleteFromChangeLog.setInt(1, id);
+			deleteFromChangeLog.execute();
 
 		} catch (Exception e) {
 
@@ -375,7 +438,16 @@ public class DbLogger {
 		}
 
 	}
-
+	
+	public void rollback(String filepath){
+		if (isEnabled()) {
+			setId(queryID(filepath));
+			deleteFromChangeLog();
+			setStatus(id,STATUS_ROLLED_BACK);
+			
+		}
+	}
+	
 	private int extractLineNumber(String debugInfo) {
 		return Integer.parseInt(debugInfo.substring(
 				debugInfo.indexOf("((r") + 3, debugInfo.indexOf(",c")));
@@ -407,11 +479,11 @@ public class DbLogger {
 	}
 	
 	public ArrayList<Error> getErrors(){
-		String query = "SELECT * FROM " + ERRORS_TABLE+";";
-		PreparedStatement statement = null;
+	//	String query = "SELECT * FROM " + ERRORS_TABLE+";";
+	//	PreparedStatement statement = null;
 		try {
-			statement = con.prepareStatement(query);
-			ResultSet set = statement.executeQuery();
+			//getErrors = con.prepareStatement(query);
+			ResultSet set = getErrors.executeQuery();
 			ArrayList<Error> errorList = new ArrayList<Error>();
 			Error errorObject;
 			while(set.next()){
@@ -420,6 +492,8 @@ public class DbLogger {
 				errorObject.setLastConvertedLine(set.getInt(LAST_CONVERTED_LINE));
 				errorObject.setErrorType(set.getString(ERROR_TYPE));
 				errorObject.setErrorMessage(set.getString(ERROR_MESSAGE));
+				errorObject.setPath(set.getString(PATH));
+				
 				errorList.add(errorObject);
 			}
 			
@@ -431,7 +505,7 @@ public class DbLogger {
 			return null;
 		}
 	}
-	public String getPath(int id){
+	public synchronized String getPath(int id){
 		String query = "SELECT "+PATH+" FROM " + PAGE_TABLE+" WHERE "+ID+"=?;";
 		PreparedStatement statement = null;
 		try {
@@ -454,12 +528,15 @@ public class DbLogger {
 		if(isEnabled()){
 			PreparedStatement statement = null;
 			try {
-				String query = "UPDATE " + PAGE_TABLE + " SET " + CONVERTED_DATE
-						+ "= ?, "+CONVERTED_STATUS+"=? WHERE " + ID + "= ?  ;";
+				String query = "UPDATE " + PAGE_TABLE + " SET " + ACCESSED_DATE
+						+ "= ?, "+STATUS+"=? WHERE " + ID + "= ?  ;";
 				statement = con.prepareStatement(query);
 	
 				statement.setString(1, getDate());
-				statement.setBoolean(2, status);
+				if(status)
+					statement.setString(2, STATUS_CONVERTED);
+				else
+					statement.setString(2, STATUS_FAILED);
 				statement.setInt(3, id);
 				statement.executeUpdate();
 	
@@ -478,14 +555,9 @@ public class DbLogger {
 		}
 	}
 	
-	public void logError(String path,String errorType,String errorMessage,String debugInfo){
-		//enabled=true;
-		//if(isEnabled()) System.out.println("enabled");
+	public synchronized void logError(String path,String errorType,String errorMessage,String debugInfo){
+		
 		if(isEnabled()){
-			//delete any previous errors recoded.
-			
-			
-			
 			PreparedStatement statement = null;
 			try {
 				String query = "INSERT INTO " + ERRORS_TABLE + "(" + ID +","+ERROR_MESSAGE+","+ERROR_TYPE+","+LAST_CONVERTED_LINE
@@ -518,7 +590,7 @@ public class DbLogger {
 
 	}
 	
-	public void deleteFromErrorLog(String path){
+	public  synchronized void deleteFromErrorLog(String path){
 		int id = queryID(path);
 		if(isEnabled()){
 			
@@ -573,12 +645,74 @@ public class DbLogger {
 	
 	public void writeQuery(String query){
 		try{
-		java.io.PrintWriter writer = new java.io.PrintWriter("queries.txt", "UTF-8");
-		writer.append(query +"\n");
-		writer.close();
+			
+			 
+			File file = new File("queries.txt");
+			FileWriter fw = new FileWriter(file.getAbsoluteFile());			
+			fw.append(getDate()+" : "+query +"\n");
+			fw.close();
 	
 		}catch(IOException  e){
 			
 		}
 	}
+	
+	public void updateScannedState(String filename,boolean state){
+		try{
+			updateScannedState.setBoolean(1,state);
+			updateScannedState.setInt(2, queryID(filename));
+			updateScannedState.execute();
+		}catch(SQLException e){
+				e.printStackTrace();
+		}
+	}
+	
+	public ArrayList<String> getAllConflicts(){
+		ArrayList<String> paths = new ArrayList<String>();
+		
+		try{
+			String query = "SELECT * FROM "+CONFLICTING_PAGES;
+			PreparedStatement statement= con.prepareStatement(query);
+			ResultSet set = statement.executeQuery();
+			while(set.next()){
+				paths.add(set.getString(1));
+				paths.add(set.getString(2));
+			}
+		}catch(SQLException e){
+				e.printStackTrace();
+		}
+		return paths;
+	}
+	
+	public ArrayList<String> searchConflicts(String searchTag){
+		ArrayList<String> paths = new ArrayList<String>();
+		
+		try{
+			String query = "SELECT * FROM "+CONFLICTING_PAGES
+					+" WHERE "+ADMIN_PAGE_COL+" LIKE '%"+searchTag+"%' OR "+TRADE_PAGE_COL+" LIKE '%"+searchTag+"%';";
+			PreparedStatement statement= con.prepareStatement(query);
+			ResultSet set = statement.executeQuery();
+			while(set.next()){
+				paths.add(set.getString(1));
+				paths.add(set.getString(2));
+			}
+		}catch(SQLException e){
+				e.printStackTrace();
+		}
+		return paths;
+	}
+	
+	public void insertConflictingPages(String filename,ArrayList<String> list){
+		for(String file : list){
+			try{
+				
+				insertConflict.setString(1,filename);
+				insertConflict.setString(2,file);
+				insertConflict.execute();
+			}catch(SQLException e){
+					e.printStackTrace();
+			}
+		}
+	}
+
 }
