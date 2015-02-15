@@ -40,7 +40,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,7 +89,6 @@ import com.gtnexus.html5.rule.common.ColorRule;
 import com.gtnexus.html5.rule.header.HeaderElementFacade;
 import com.gtnexus.html5.util.DbLogger;
 import com.gtnexus.html5.util.HTML5Util;
-import com.gtnexus.html5.util.ProgramLauncher;
 
 /*
  * A JSP Parser class with static utility methods
@@ -122,7 +120,7 @@ public class JerichoJspParserUtil {
 		return consoleWriter.getBuffer().toString();
 	}
 
-	// Initialize rule map
+	// Initialize rules map
 	public static void initialize() {
 
 		// configure log4j to output logs to the UI
@@ -349,7 +347,7 @@ public class JerichoJspParserUtil {
 	}
 
 	/*
-	 * public method that convert given JSP file to HTML5 ready JSP file
+	 * public method that convert given JSP file to HTML5 compliant JSP file
 	 */
 	public static void convertToHTML5(String filePath, boolean isIncludeFile,
 			String textfileName)
@@ -363,7 +361,6 @@ public class JerichoJspParserUtil {
 		if (!isIncludeFile) {
 			logger.info("Input File: " + filePath);
 		} else {
-
 			logger.info("Include File: " + filePath);
 		}
 
@@ -375,33 +372,7 @@ public class JerichoJspParserUtil {
 		source.fullSequentialParse();
 
 		if (!HTML5Util.isHtml5Page(source)) {
-
-			//commented this to stop scanning trade folder
 			
-			/*logger.info("Dirty file check...");
-
-			// check if this file is already in the db. if true no need to scan trade site!
-			if (false) {
-
-				// nothing to do
-
-			}
-			// check this file links with trade site by scanning the trade
-			// folder
-/*			else {
-
-				List<String> tradePageList = HTML5Util
-						.getTradePagesLinkWithThisFile(filePath, new File(
-								ProgramLauncher.tradeBasePath),
-								new ArrayList<String>());
-
-				if (!tradePageList.isEmpty()) {
-					// insert trade page list to pages db
-					logger.info(filePath + " file links with the trade site!");
-				}
-
-			}
-			*/
 			int numOfConvertedIncludeFiles = 0;
 
 			// get include file paths
@@ -440,39 +411,31 @@ public class JerichoJspParserUtil {
 			}
 
 			// check if all the include files have converted successfully
-			// before saving
+			// before save
 			if (includeFilePathList.size() == numOfConvertedIncludeFiles) {
-
+				//check with source file to make sure that output document is not missing any original html tags in the conversion
 				if (HTML5Util.isCommonTagsCountMatch(source, outputDocument)) {
 					// overwrite source file with new output doc
 					saveOutputDoc(sourceFile, outputDocument);
-
 					logger.info(filePath + " converted successfully!");
 
 				} else {
-
 					logger.error(filePath
 							+ " has not been saved. Source and output elements not matched!");
-
 					throw new HTML5ParserException("Content Exception",
 							"File Formatting Error: Tags Missing", null);
-
 				}
 
 			} else {
-
 				logger.error(filePath
 						+ " has not been saved. Errors in include file(s).");
-
 				throw new HTML5ParserException("Content Exception",
 						"Include file conversion failed.", null);
 
 			}
 
 		} else {
-
-			logger.info("This page is already a HTML 5 page!");
-
+			logger.info("This page is already HTML 5!");
 		}
 
 	}

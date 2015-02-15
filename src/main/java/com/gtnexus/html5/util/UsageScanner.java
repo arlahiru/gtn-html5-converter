@@ -16,16 +16,16 @@ public class UsageScanner {
 	
 	public UsageScanner(){}
 	public UsageScanner(MainUI main){
-		launcher = main.getProgramLauncher();
+		//launcher = main.getProgramLauncher();
 		
 	}
-	public ArrayList<String> getTradePagesLinkWithThisFile(
+	public static ArrayList<String> getTradePagesLinkWithThisFile(
 			String targetFilePath, final File tradeFolder,
 			ArrayList<String> tradePageList) {
 
 		for (final File tradeFileEntry : tradeFolder.listFiles()) {
 			if (tradeFileEntry.isDirectory()) {
-				getTradePagesLinkWithThisFile(targetFilePath, tradeFileEntry,
+				tradePageList = getTradePagesLinkWithThisFile(targetFilePath, tradeFileEntry,
 						tradePageList);
 
 			} else {
@@ -56,7 +56,7 @@ public class UsageScanner {
 					}
 
 					catch (IOException e) {
-						// TODO Auto-generated catch block
+						
 						e.printStackTrace();
 					}
 				}
@@ -75,6 +75,16 @@ public class UsageScanner {
 		}
 		dbLogger.insertPage(filepath, true, textfileName, false);
 		dbLogger.updateScannedState(filepath, true);
+	}
+	
+	public static void main(String args[]){
+		
+		String inputFile="C://code//gtnexus//development//modules//main//tcard//web//tradecard//en//includes/common/sectionspacer.include.jsp";
+		String tradeFolder = "C://code//gtnexus//development//modules//main//tcard//web//tradecard//en//trade";
+		ArrayList<String> setOfConflicts = UsageScanner.getTradePagesLinkWithThisFile(inputFile,new File(tradeFolder),new ArrayList<String>());
+		for(String file:setOfConflicts){
+			System.out.println(file);
+		}		
 	}
 	
 }
