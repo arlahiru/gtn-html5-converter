@@ -45,6 +45,7 @@ import javax.swing.text.StyledDocument;
 import com.gtnexus.html5.exception.HTML5ParserException;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.main.RevertBackChanges;
+import com.gtnexus.html5.util.HTML5Util;
 import com.gtnexus.html5.util.ProgramLauncher;
 import com.gtnexus.html5.util.UsageScanner;
 
@@ -869,6 +870,17 @@ public class MainUI extends JFrame {
 	private void scan(String filename){
 		printOnConsole("Scanning "+filename,"info");
 		scanner.performScan(formatFilePath(filename),sourcePath);
+		// get include file paths
+		try {
+			java.util.List<String> includeFilePathList = HTML5Util.getIncludeFilePaths(formatFilePath(filename));
+			for(String includeFile:includeFilePathList){
+				scanner.performScan(includeFile,sourcePath);
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		printOnConsole(filename+ "Completed.","info");
 	}
 }

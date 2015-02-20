@@ -12,12 +12,10 @@ import static com.gtnexus.html5.main.JerichoJspParserUtil.dbLogger;
 
 
 public class UsageScanner {
-	private ProgramLauncher launcher;
 	
 	public UsageScanner(){}
 	public UsageScanner(MainUI main){
-		//launcher = main.getProgramLauncher();
-		
+			
 	}
 	public static ArrayList<String> getTradePagesLinkWithThisFile(
 			String targetFilePath, final File tradeFolder,
@@ -68,7 +66,7 @@ public class UsageScanner {
 
 	public void performScan(String filepath,String textfileName){
 		try{
-			ArrayList<String> setOfConflicts = getTradePagesLinkWithThisFile(filepath,new File(launcher.tradeBasePath),new ArrayList<String>());
+			ArrayList<String> setOfConflicts = getTradePagesLinkWithThisFile(filepath,new File(ProgramLauncher.tradeBasePath),new ArrayList<String>());
 			dbLogger.insertConflictingPages(filepath, setOfConflicts);
 		}catch(InvalidPathException e){
 			e.printStackTrace();

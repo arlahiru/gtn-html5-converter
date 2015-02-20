@@ -11,6 +11,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.lang.System.*;
+
 import javax.swing.JTextArea;
 
 import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
@@ -668,8 +669,7 @@ public class DbLogger {
 	}
 	
 	public ArrayList<String> getAllConflicts(){
-		ArrayList<String> paths = new ArrayList<String>();
-		
+		ArrayList<String> paths = new ArrayList<String>();		
 		try{
 			String query = "SELECT * FROM "+CONFLICTING_PAGES;
 			PreparedStatement statement= con.prepareStatement(query);
@@ -677,6 +677,21 @@ public class DbLogger {
 			while(set.next()){
 				paths.add(set.getString(1));
 				paths.add(set.getString(2));
+			}
+		}catch(SQLException e){
+				e.printStackTrace();
+		}
+		return paths;
+	}
+	
+	public ArrayList<String> getCommonAdminPageList(){
+		ArrayList<String> paths = new ArrayList<String>();		
+		try{
+			String query = "SELECT DISTINCT "+ADMIN_PAGE_COL+" FROM "+CONFLICTING_PAGES;
+			PreparedStatement statement= con.prepareStatement(query);
+			ResultSet set = statement.executeQuery();
+			while(set.next()){
+				paths.add(set.getString(1));
 			}
 		}catch(SQLException e){
 				e.printStackTrace();
@@ -705,12 +720,17 @@ public class DbLogger {
 	public void insertConflictingPages(String filename,ArrayList<String> list){
 		for(String file : list){
 			try{
-				
 				insertConflict.setString(1,filename);
 				insertConflict.setString(2,file);
 				insertConflict.execute();
 			}catch(SQLException e){
 					e.printStackTrace();
+			}finally{
+				try {
+					insertConflict.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	}

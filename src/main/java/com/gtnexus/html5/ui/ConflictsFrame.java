@@ -26,9 +26,11 @@ public class ConflictsFrame extends JFrame {
 	private JScrollPane scrollPane = new JScrollPane();
 	private JButton btnSearch = new JButton("Search Usage");
 	private JButton btnListAll;
+	private JButton btnListAdminPages= new JButton("Conflicting Admin Pages");
 	
 	public ConflictsFrame(MainUI parentFrame) {
 		this.mainUi = parentFrame;
+		this.setTitle("View Conflicts");
 		loadAll();
 		addContent();
 		setActionListeners();
@@ -40,25 +42,24 @@ public class ConflictsFrame extends JFrame {
 	private void addContent(){
 		setResizable(false);
 		getContentPane().setLayout(null);
-		table.setBounds(50, 150, 1100, 500);	
-		scrollPane.setBounds(50, 150, 1100, 500);
+		table.setBounds(50, 75, 1100, 500);	
+		scrollPane.setBounds(50, 75, 1100, 500);
 		refresh();		
 		searchTag = new JTextField();
 		searchTag.setBounds(50, 23, 318, 20);
 		getContentPane().add(searchTag);
-		searchTag.setColumns(10);
-		
-		
-		
+		searchTag.setColumns(10);		
 		btnSearch.setBounds(401, 22, 138, 23);
 		getContentPane().add(btnSearch);
 		{
 			btnListAll = new JButton("List All");
 			
-			btnListAll.setBounds(559, 22, 130, 23);
+			btnListAll.setBounds(559, 22, 138, 23);
 			getContentPane().add(btnListAll);
 		}
-		this.setBounds(0, 0, 1200, 700);
+		btnListAdminPages.setBounds(725, 22, 160, 23);
+		getContentPane().add(btnListAdminPages);
+		this.setBounds(0, 0, 1200, 650);
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		this.setLocation(dim.width / 2 - this.getSize().width / 2, dim.height
 				/ 2 - this.getSize().height / 2);
@@ -77,12 +78,20 @@ public class ConflictsFrame extends JFrame {
 				loadAll();
 			}
 		});
+		btnListAdminPages.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				loadCommonAdminPageList();
+			}
+		});
 	}
 	private void loadAll(){
 		loadData(dbLogger.getAllConflicts(),new String[]{"Admin Page","TradePage"});
 	}
 	private void search(){
 		loadData(dbLogger.searchConflicts(searchTag.getText().toString()),new String[]{"Usages"});
+	}
+	private void loadCommonAdminPageList(){
+		loadData(dbLogger.getCommonAdminPageList(),new String[]{"Common Admin Page List"});
 	}
 	private void loadData(ArrayList<String> list,String[] headers){
 		int iterations = list.size()/headers.length;
@@ -97,4 +106,5 @@ public class ConflictsFrame extends JFrame {
 		table = new JTable(tableData, headers);
 		refresh();
 	}
+
 }
