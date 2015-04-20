@@ -97,6 +97,9 @@ public class JerichoJspParserUtil {
 
 	// Create Rules Map
 	public static Map<String, Rule> RULES_MAP = new HashMap<String, Rule>();
+	
+	// Create Styles Map(in line style->class name)
+	public static Map<String, String> STYLES_MAP;
 
 	public static final Logger logger = Logger
 			.getLogger(JerichoJspParserUtil.class);
@@ -121,7 +124,13 @@ public class JerichoJspParserUtil {
 	}
 
 	// Initialize rules map
-	public static void initialize() {
+	public static void initialize(Boolean isAdminCss) {
+		initLogger();
+		initRulesMap();
+		initCssClassMap(isAdminCss);
+	}
+	
+	private static void initLogger(){		
 
 		// configure log4j to output logs to the UI
 		consoleWriter = new StringWriter();
@@ -129,10 +138,21 @@ public class JerichoJspParserUtil {
 				new PatternLayout("%d{ISO8601} %p - %m%n"), consoleWriter);
 		appender.setName("CONSOLE_APPENDER");
 		// appender.setThreshold(org.apache.log4j.Level.ERROR);
-		Logger.getRootLogger().addAppender(appender);
+		Logger.getRootLogger().addAppender(appender);			
 
+		// disable dblogger
+		dbLogger.enable(false);
+
+		if (dbLogger.isEnabled()) {
+			dbLogger.initialize();
+		}
+		
+	}
+	
+	private static void initRulesMap(){
+		
 		logger.debug("Initializing rules map...");
-
+		
 		/*
 		 * Note - Before you add a new rule class, please check if it is already
 		 * implemented.
@@ -336,16 +356,15 @@ public class JerichoJspParserUtil {
 				new IframeScrollRule());
 
 		logger.debug("Rules map initialized successfully.");
-
-		// disable dblogger
-		dbLogger.enable(false);
-
-		if (dbLogger.isEnabled()) {
-			dbLogger.initialize();
-		}
-
 	}
+	
+	private static void initCssClassMap(boolean isAdminCss){
 
+		STYLES_MAP = dbLogger.getCssClasses(isAdminCss);
+		
+	}
+	
+	
 	/*
 	 * public method that convert given JSP file to HTML5 compliant JSP file
 	 */
@@ -403,7 +422,7 @@ public class JerichoJspParserUtil {
 					numOfConvertedIncludeFiles = numOfConvertedIncludeFiles + 1;
 				} catch (HTML5ParserException e) {
 					e.printStackTrace();
-					dbLogger.logError(filePath, e.getType(), e.getMessage(),
+					dbLogger.logError(includeFilePath, e.getType(), e.getMessage(),
 							e.getTagInfo());
 
 				}
@@ -443,16 +462,13 @@ public class JerichoJspParserUtil {
 	public static void saveOutputDoc(File sourceFile, OutputDocument outputDoc)
 			throws IOException {
 
-		// File output = new File("tmp\\login_modified2.jsp");
-
-		// overwrite final output jsp on the disk
-		BufferedWriter jspWriter = new BufferedWriter(new OutputStreamWriter(
-				new FileOutputStream(sourceFile), "UTF-8"));
-
-		jspWriter.write(outputDoc.toString());
-
-		jspWriter.close();
-
+			// overwrite final output jsp on the disk
+			BufferedWriter jspWriter = new BufferedWriter(new OutputStreamWriter(
+					new FileOutputStream(sourceFile), "UTF-8"));
+	
+			jspWriter.write(outputDoc.toString());
+	
+			jspWriter.close();
 	}
 
 	public static void printIncludeFiles(List<String> includeFilePathList) {

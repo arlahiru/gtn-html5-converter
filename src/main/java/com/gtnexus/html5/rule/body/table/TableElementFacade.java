@@ -102,8 +102,7 @@ public class TableElementFacade extends Facade {
 			modifiedTableTag.append(STYLE + "=\"" + newTableStyleValue + "\">");
 
 			replace(table.getStartTag(), modifiedTableTag, outputDocument);
-			replace(table.getEndTag(), new StringBuilder("</" + TABLE + ">"),
-					outputDocument);
+			//replace(table.getEndTag(), new StringBuilder("</" + TABLE + ">"),outputDocument);
 
 			logger.debug(table.getDebugInfo() + " replace with "
 					+ modifiedTableTag);

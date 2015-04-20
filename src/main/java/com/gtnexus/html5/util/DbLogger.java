@@ -58,6 +58,16 @@ public class DbLogger {
 	private static final String ADMIN_PAGE_COL = "AdminPage";
 	private static final String TRADE_PAGE_COL = "TradePage";
 	
+	private static final String INLINESTYLE_TABLE = "inlinestyle";
+	private static final String FILE_NAME="fileName";
+	private static final String ELEMENT_NAME="elementName";
+	private static final String ELEMENT_LINE="line";
+	private static final String STYLETEXT = "style";
+	
+	private static final String CSSCLASS_TABLE="cssclass";
+	private static final String CLASS_NAME="classname";
+	private static final String STYLE="style";
+	
 	public static final String STATUS_FAILED = "Failed";
 	public static final String STATUS_CONVERTED = "Converted";
 	public static final String STATUS_NOT_CONVERTED = "Not Converted";
@@ -75,6 +85,15 @@ public class DbLogger {
 	private volatile PreparedStatement getErrors;
 	private volatile PreparedStatement updateScannedState;
 	private volatile PreparedStatement insertConflict;
+	private volatile PreparedStatement insertInlinestyle;;
+	
+	//delete queries
+	private String deleteError = "DELETE FROM " +ERRORS_TABLE;
+	private String deleteIncludePage = "DELETE FROM " + INCLUDE_FILE_TABLE;
+	private String deletePage = "DELETE FROM " + PAGE_TABLE;		
+	private String deleteChangelog = "DELETE FROM " + CHANGE_LOG_TABLE;
+	private String deleteConflictPage = "DELETE FROM " + CONFLICTING_PAGES;
+	private String deleteInlineStyle = "DELETE FROM " + INLINESTYLE_TABLE;
 	
 	private void makeStatements(){
 		String queryInsertPage = "INSERT INTO " + PAGE_TABLE + "(" + PATH + ","
@@ -104,6 +123,10 @@ public class DbLogger {
 		
 		String quertInsertConflict = "INSERT INTO "+CONFLICTING_PAGES+" VALUES(?,?);";
 		
+		String queryInlineStyle = "INSERT INTO " + INLINESTYLE_TABLE + " ("
+				+ FILE_NAME + "," + ELEMENT_NAME + "," +ELEMENT_LINE+","+ STYLETEXT +","+ IS_ADMIN 
+				+ ") VALUES (?,?,?,?,?);";
+		
 		try{
 			insertPage=con.prepareStatement(queryInsertPage,
 					Statement.RETURN_GENERATED_KEYS);
@@ -123,6 +146,9 @@ public class DbLogger {
 			updateScannedState = con.prepareStatement(queryUpdateScannedState);
 			
 			insertConflict = con.prepareStatement(quertInsertConflict);
+			
+			insertInlinestyle = con.prepareStatement(queryInlineStyle);
+			
 		}catch(SQLException e){
 			e.printStackTrace();
 		}
@@ -253,9 +279,11 @@ public class DbLogger {
 				if (e.getMessage().contains("Duplicate entry ") && isConversion) {
 					id = queryID(filepath);
 					setStatus(id,STATUS_CONVERTED);
+					System.out.println("Duplicate entry "+filepath);
+				}				
+				else{
+					e.printStackTrace();
 				}
-				System.out.println("Duplicate entry "+filepath);
-				//e.printStackTrace();
 
 			} 	
 		}	
@@ -733,6 +761,76 @@ public class DbLogger {
 				}
 			}
 		}
+	}
+	
+	public void insertInlineStyle(String filePath, String elementName, String style,
+			String debugInfo,Boolean isAdmin) {		
+		try {
+			insertInlinestyle.setString(1,filePath);
+			insertInlinestyle.setString(2, elementName);
+			insertInlinestyle.setInt(3,extractLineNumber(debugInfo));
+			insertInlinestyle.setString(4, style);
+			insertInlinestyle.setBoolean(5, isAdmin);
+			insertInlinestyle.execute();			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public Map<String,String> getCssClasses(Boolean isAdmin){
+		
+		String query = "SELECT * FROM "+CSSCLASS_TABLE+" WHERE "+IS_ADMIN+"="+isAdmin+";";
+		Map<String,String> classMap = new HashMap<String, String>();
+		
+		Statement statement = null;
+		try{
+			statement = con.createStatement();
+			ResultSet rs = statement.executeQuery(query);
+			
+			while(rs.next()){
+				
+				classMap.put(rs.getString(3), rs.getString(2));
+			}
+			
+		}catch(SQLException e){
+				e.printStackTrace();
+		}finally{
+			if(statement != null){
+				try {
+					statement.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		return classMap;
+	}
+	
+	//clear all data
+	public void clearAllData(){			
+		Statement deleteStatement = null;
+		try{
+			deleteStatement = con.createStatement();
+			deleteStatement.execute(deleteError);
+			deleteStatement.execute(deleteChangelog);
+			deleteStatement.execute(deleteIncludePage);
+			deleteStatement.execute(deletePage);
+			deleteStatement.execute(deleteConflictPage);
+			deleteStatement.execute(deleteInlineStyle);
+			
+		}catch(SQLException e){
+				e.printStackTrace();
+		}finally{
+			if(deleteStatement != null){
+				try {
+					deleteStatement.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+		}		
 	}
 
 }

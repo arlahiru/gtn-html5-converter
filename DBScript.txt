@@ -1,7 +1,7 @@
 CREATE DATABASE logs;
 
 CREATE TABLE Page(ID int AUTO_INCREMENT PRIMARY KEY, Path VARCHAR(767),
-			IncludeFile BOOL, AccessedDate DateTime, STATUS VARCHAR(20), FileName VARCHAR(50), UNIQUE(PATH), scanned bool);
+			IncludeFile BOOL, AccessedDate DateTime, STATUS VARCHAR(20), FileName VARCHAR(50), UNIQUE(PATH), scanned bool,isadmin bool);
 
 CREATE TABLE IncludeFiles(ID int NOT NULL, ParentID int NOT NULL, 
 			PRIMARY KEY (ID,ParentID), 
@@ -12,4 +12,10 @@ CREATE TABLE ChangeLog(ID int NOT NULL, Source TEXT, Fix TEXT, Tag VARCHAR(100),
 CREATE TABLE Errors(ID int NOT NULL, Error TEXT, lastConvertedLine int, errorType TEXT,FOREIGN KEY(ID) REFERENCES Page(ID), PRIMARY KEY(ID));
 
 CREATE TABLE ConflictingPages(AdminPage VARCHAR(767) NOT NULL, TradePage VARCHAR(767) NOT NULL, PRIMARY KEY(AdminPage,TradePage));
+
+CREATE TABLE inlinestyle(ID int AUTO_INCREMENT PRIMARY KEY, fileName VARCHAR(767),elementName VARCHAR(100),line int,style TEXT,isadmin bool);
+
+CREATE TABLE cssclass(ID int AUTO_INCREMENT PRIMARY KEY, className VARCHAR(500),style TEXT, isadmin bool);
+
+insert into cssclass(className,style) values('Html5TableStyle1',"width:84%;margin-left:auto;margin-right:auto;border:0px solid black;border-spacing:0px;",1);
 

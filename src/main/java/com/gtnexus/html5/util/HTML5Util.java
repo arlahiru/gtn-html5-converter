@@ -1,5 +1,7 @@
 package com.gtnexus.html5.util;
 
+import static com.gtnexus.html5.main.JerichoJspParserUtil.dbLogger;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -11,14 +13,18 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.htmlparser.jericho.Attribute;
 import net.htmlparser.jericho.Element;
 import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Segment;
 import net.htmlparser.jericho.Source;
 import net.htmlparser.jericho.StartTagType;
+import net.htmlparser.jericho.Tag;
 
 import org.apache.commons.lang3.StringUtils;
+
+import com.gtnexus.html5.main.JerichoJspParserUtil;
 
 public class HTML5Util {
 
@@ -133,6 +139,11 @@ public class HTML5Util {
 
 	// CSS colors
 	public final static String WHITE = "white";
+	
+	//converter running modes
+	public final static String DEFAULT = "default";
+	public final static String STYLEANALYZE = "styleanalyze";
+	public static String MODE = DEFAULT;
 
 	// HTML ELEMENT NAMES
 
@@ -537,6 +548,38 @@ public class HTML5Util {
 		}
 
 		return hasTable || hasServerElement;
+	}
+	
+	public static String replaceInlineStyleWithClass(String newElement, Element originalElement){
+		
+		String styleRegex = "style=\\s*\"(.*?)\"\\s*";
+		String classRegex = "class=\\s*\"(.*?)\"\\s*";
+		
+		Pattern stylepattern = Pattern.compile(styleRegex);
+		Matcher stylematcher = stylepattern.matcher(newElement);
+
+		String inlineStyleValue=null;
+		
+		if (stylematcher.find()) {			
+			inlineStyleValue = stylematcher.group(1);
+		}
+		
+		if(inlineStyleValue != null && !inlineStyleValue.isEmpty()){
+			
+			//get the relevant class name of the in line style from the class map
+			String newHTML5ClassName = JerichoJspParserUtil.STYLES_MAP.get(inlineStyleValue);
+			if(newHTML5ClassName != null){
+				//check if the element contains a class attribute already and append new class name next to existing class name(Multiple classes case)
+				String classAttributeValue = originalElement.getAttributeValue(HTML5Util.CLASS);
+				if(classAttributeValue != null){
+					classAttributeValue = classAttributeValue+" "+newHTML5ClassName;
+					newElement = newElement.replaceAll(classRegex, "class=\""+classAttributeValue+"\"");
+				}else{
+					newElement = newElement.replaceAll(styleRegex, "class=\""+newHTML5ClassName+"\"");
+				}
+			}
+		}
+		return newElement;
 	}
 
 	

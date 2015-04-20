@@ -30,7 +30,8 @@ public class HeaderElementFacade {
 	private static void changeDoctypeToHtml5(Source source,
 			OutputDocument outputDocument, boolean isIncludeFile) {
 
-		if (!isIncludeFile) {
+		//check the header element exist before add doctype
+		if (!isIncludeFile && !source.getAllElements(HTMLElementName.HTML).isEmpty()) {
 			List<Element> docTypeList = source
 					.getAllElements(StartTagType.DOCTYPE_DECLARATION);
 			if (docTypeList.size() > 0) {

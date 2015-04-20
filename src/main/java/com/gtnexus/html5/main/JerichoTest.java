@@ -16,7 +16,7 @@ public class JerichoTest {
 		else
 			sourceFile = args[0];
 		
-		JerichoJspParserUtil.initialize(); // load rules map
+		JerichoJspParserUtil.initialize(true); // load rules map
 
 	//	JerichoJspParserUtil.convertToHTML5(sourceFile,false);
 		

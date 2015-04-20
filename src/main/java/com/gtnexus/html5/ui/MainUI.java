@@ -105,7 +105,7 @@ public class MainUI extends JFrame {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		addContent();
 		addActionListners();
-		JerichoJspParserUtil.initialize();
+		JerichoJspParserUtil.initialize(true);
 		dbLogger.initialize();
 		printOnConsole(JerichoJspParserUtil.getDebuggerOutput(), "log");
 
@@ -711,6 +711,8 @@ public class MainUI extends JFrame {
 			printOnConsole(ex.getType(), "error");
 			printOnConsole(ex.getMessage(), "error");
 			printOnConsole(ex.getTagInfo(), "error");
+			dbLogger.logError(sourceFile, ex.getType(), ex.getMessage(),
+					ex.getTagInfo());
 
 		} catch (Exception e) {
 			e.printStackTrace();
