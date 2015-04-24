@@ -7,8 +7,11 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.nio.file.CopyOption;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 import net.htmlparser.jericho.Source;
@@ -16,6 +19,7 @@ import static com.gtnexus.html5.main.JerichoJspParserUtil.logger;
 
 import com.gtnexus.html5.util.DbLogger;
 import com.gtnexus.html5.util.HTML5Util;
+import com.gtnexus.html5.util.ProgramLauncher;
 
 public class RevertBackChanges {
 
@@ -34,12 +38,11 @@ public class RevertBackChanges {
 
 		String backupBasePath = "C:/TcardWebBackup";
 
-		revertChanges(convertedFilePath, backupBasePath);
+		revertChanges(convertedFilePath);
 
 	}
 
-	public static void revertChanges(String convertedFilePath,
-			String backupBasePath) throws FileNotFoundException, IOException {
+	public static void revertChanges(String convertedFilePath) throws FileNotFoundException, IOException {
 
 		File convertedFile = new File(convertedFilePath);
 
@@ -50,13 +53,10 @@ public class RevertBackChanges {
 		// recursively convert include files
 		for (String includeFilePath : includeFilePathList) {
 
-			revertChanges(includeFilePath, backupBasePath);
+			revertChanges(includeFilePath);
 
-		}
-
-		String[] filePathSplitArray = convertedFilePath.split("tcard");
- 
-		String backupFilePath = backupBasePath + filePathSplitArray[1];
+		} 
+		String backupFilePath = convertedFile.getAbsolutePath().replace("code", ProgramLauncher.HTML5_BACKUP_DIR+"\\code");	
 
 		Path originalBackupFilePath = Paths.get(backupFilePath);
 
@@ -80,5 +80,15 @@ public class RevertBackChanges {
 
 		logger.info("Backup file path:" + backupFilePath
 				+ " copied successfully!");
+	}
+	
+	public static void backupOriginalFileToLocalDisk(File originalFile) throws IOException{
+		
+		String backupDirectoryPath = originalFile.getParent().replace("code", ProgramLauncher.HTML5_BACKUP_DIR+"\\code");		
+		Path source = Paths.get(originalFile.getAbsolutePath());
+	    Path target = Paths.get(backupDirectoryPath);
+	    //create target dir structure if not exist
+	    target.toFile().mkdirs();
+	    Files.copy(source, target.resolve(source.getFileName()), StandardCopyOption.REPLACE_EXISTING);
 	}
 }

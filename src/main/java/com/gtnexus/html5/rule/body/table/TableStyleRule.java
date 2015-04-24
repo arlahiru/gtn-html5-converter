@@ -21,7 +21,7 @@ public class TableStyleRule implements Rule {
 
 		for (int i = 0; i < styleValues.length; i++) {
 
-			if (!styleValues[i].equals("")) {
+			if (styleValues[i] != null && !styleValues[i].isEmpty() && styleValues[i].split(":").length == 2) {
 
 				String attributeName = styleValues[i].trim().toLowerCase()
 						.split(":")[0];

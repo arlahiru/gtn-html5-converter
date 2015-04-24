@@ -45,7 +45,7 @@ public class ImageElementFacade extends Facade {
 				StringBuilder replaceTag = apixelImgRule.execute(
 						outputDocument, img, img);
 
-				outputDocument.replace(img.getStartTag(), replaceTag);
+				replace(img.getStartTag(), replaceTag,outputDocument);
 				// outputDocument.replace(img.getEndTag(), "</" + DIV + ">");
 
 			} else {

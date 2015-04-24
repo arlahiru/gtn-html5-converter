@@ -1,7 +1,5 @@
 package com.gtnexus.html5.util;
 
-import static com.gtnexus.html5.main.JerichoJspParserUtil.dbLogger;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -12,18 +10,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import net.htmlparser.jericho.Attribute;
 import net.htmlparser.jericho.Element;
 import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Segment;
 import net.htmlparser.jericho.Source;
 import net.htmlparser.jericho.StartTagType;
-import net.htmlparser.jericho.Tag;
-
 import org.apache.commons.lang3.StringUtils;
-
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 
 public class HTML5Util {
@@ -38,7 +31,7 @@ public class HTML5Util {
 	public final static String META_IS_HTML5 = "<meta isHtml5Page=\"true\">";
 
 	// HTML 5 converted comment tag
-	public final static String HTML5_CONVERTED_COMMENT = "<!-- HTML5 Converted Page:Phase1 -->";
+	public final static String HTML5_CONVERTED_COMMENT = "<!-- HTML5 Converted Page:Phase 2 -->";
 
 	// HTML AND CSS ATTRIBUTE NAMES
 	public final static String WIDTH = "width";
@@ -148,7 +141,7 @@ public class HTML5Util {
 	// HTML ELEMENT NAMES
 
 	// check this page already a html5 page by looking at the meta tag
-	public static boolean isHtml5Page(Source source) {
+	public static boolean isPhase2Html5ConvertedPage(Source source) {
 
 		// get all meta tags
 		List<Element> allCommentTags = source
@@ -555,6 +548,9 @@ public class HTML5Util {
 		String styleRegex = "style=\\s*\"(.*?)\"\\s*";
 		String classRegex = "class=\\s*\"(.*?)\"\\s*";
 		
+		//remove empty in line style attributes before proceed
+		newElement = removeEmptyInlineStyleAttribute(newElement);
+		
 		Pattern stylepattern = Pattern.compile(styleRegex);
 		Matcher stylematcher = stylepattern.matcher(newElement);
 
@@ -564,12 +560,13 @@ public class HTML5Util {
 			inlineStyleValue = stylematcher.group(1);
 		}
 		
-		if(inlineStyleValue != null && !inlineStyleValue.isEmpty()){
+		if(inlineStyleValue != null && inlineStyleValue.trim().length()>0){
 			
 			//get the relevant class name of the in line style from the class map
 			String newHTML5ClassName = JerichoJspParserUtil.STYLES_MAP.get(inlineStyleValue);
 			if(newHTML5ClassName != null){
-				//check if the element contains a class attribute already and append new class name next to existing class name(Multiple classes case)
+				//check if the element contains a class attribute already and append new class name next to existing class name(Multiple css classes supported in HTML5)
+				//e.g class="no-padding no-margin some-class some-other-class"
 				String classAttributeValue = originalElement.getAttributeValue(HTML5Util.CLASS);
 				if(classAttributeValue != null){
 					classAttributeValue = classAttributeValue+" "+newHTML5ClassName;
@@ -581,6 +578,10 @@ public class HTML5Util {
 		}
 		return newElement;
 	}
-
+	
+	public static String removeEmptyInlineStyleAttribute(String newElement){		
+		String emptyStyleRegex = "style=\"\"";
+		return newElement.replaceAll(emptyStyleRegex, "");		
+	}
 	
 }

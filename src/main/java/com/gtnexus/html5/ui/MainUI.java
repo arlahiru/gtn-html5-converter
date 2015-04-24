@@ -133,7 +133,7 @@ public class MainUI extends JFrame {
 
 	public void addContent() {
 
-		setTitle("HTML5 Converter");
+		setTitle("GT NEXUS HTML5 Converter");
 
 		textFieldlocationDirectory.setBounds(150, 18, 425, 22);
 
@@ -221,7 +221,7 @@ public class MainUI extends JFrame {
 		btnSetBackupLocation.setHorizontalAlignment(SwingConstants.LEFT);
 
 		btnSetBackupLocation.setBounds(581, 54, 179, 23);
-		getContentPane().add(btnSetBackupLocation);
+		//getContentPane().add(btnSetBackupLocation);
 
 		JLabel backupLocationLabel = new JLabel("Backup Directory ");
 		backupLocationLabel.setBounds(10, 58, 130, 14);
@@ -689,23 +689,11 @@ public class MainUI extends JFrame {
 
 	public void convertToHTML5(String sourceFile) {
 		try {
-
-			if (launcher.isBackupValid()
-					&& launcher.checkFile(sourceFile,
-							launcher.adminBasePath
-									.substring(0, launcher.adminBasePath
-											.indexOf("\\en\\") + 4))) {
-				JerichoJspParserUtil.clearConsoleWriter();
-				JerichoJspParserUtil.convertToHTML5(formatFilePath(sourceFile),
-						false, sourcePath);
-				printOnConsole(JerichoJspParserUtil.getDebuggerOutput(), "log");
-				html4ToHtml5(sourceFile);
-
-			} else {
-				printOnConsole("Backup path is not correct!", "error");
-				printOnConsole("Conversion aborted.", "error");
-			}
-
+			JerichoJspParserUtil.clearConsoleWriter();
+			JerichoJspParserUtil.convertToHTML5(formatFilePath(sourceFile),
+					false, sourcePath);
+			printOnConsole(JerichoJspParserUtil.getDebuggerOutput(), "log");
+			html4ToHtml5(sourceFile);
 		} catch (HTML5ParserException ex) {
 			ex.printStackTrace();
 			printOnConsole(ex.getType(), "error");
@@ -716,27 +704,16 @@ public class MainUI extends JFrame {
 
 		} catch (Exception e) {
 			e.printStackTrace();
-
 		}
-
 	}
 
 	public void revertBack(String convertedFilePath) {
-
 		try {
-			if (launcher.isBackupValid()
-					&& launcher.checkFile(convertedFilePath,
-							launcher.adminBasePath
-									.substring(0, launcher.adminBasePath
-											.indexOf("\\en\\") + 4))) { // ////
-				JerichoJspParserUtil.clearConsoleWriter();
-				RevertBackChanges.revertChanges(
-						formatFilePath(convertedFilePath),
-						launcher.getBackupPath());
-				printOnConsole(JerichoJspParserUtil.getDebuggerOutput(), "log");
-				html5ToHtml4(convertedFilePath);
+			JerichoJspParserUtil.clearConsoleWriter();
+			RevertBackChanges.revertChanges(formatFilePath(convertedFilePath));
+			printOnConsole(JerichoJspParserUtil.getDebuggerOutput(), "log");
+			html5ToHtml4(convertedFilePath);
 
-			}
 		} catch (Exception e) {
 			printOnConsole(e.getMessage(), "error");
 			printOnConsole(printStacktrace(e), "error");
@@ -745,7 +722,6 @@ public class MainUI extends JFrame {
 	}
 
 	public void html4ToHtml5(String entry) {
-
 		preHTML5List.remove(entry);
 		html5List.add(entry);
 	}

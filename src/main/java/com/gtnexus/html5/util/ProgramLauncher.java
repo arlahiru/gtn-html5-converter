@@ -22,8 +22,7 @@ public class ProgramLauncher {
 	private String firefox_path = "C:/Program Files (x86)/Mozilla Firefox/firefox.exe";
 	private String internetExplorer_path = "C:/Program Files (x86)/Internet Explorer/iexplorer.exe";
 	private String notepadPath = "";
-	//public final String DEFAULT_BACKUP_PATH = "C:/TcardWebBackup";
-	public final String DEFAULT_BACKUP_PATH = "C:/Alpha-HTML5-Backup/development/modules/main/tcard";
+	public final String DEFAULT_BACKUP_PATH = "C:/Html5BackupDir";
 	public static String adminBasePath = "C:/code/gtnexus/development/modules/main/tcard";
 	public static String tradeBasePath = "";
 	public final String CONFIG_FILE = "config.ini";
@@ -33,10 +32,11 @@ public class ProgramLauncher {
 	public String otherHost ="";
 	private MainUI mainUI;
 	private boolean isBackupValid = false;
+	public static final String HTML5_BACKUP_DIR = "Html5BackupDir";
 
 	public ProgramLauncher(MainUI main){
 		mainUI=main;
-		setBackupPath(backupPath);
+		//setBackupPath(backupPath);
 		setBasePaths();
 	}
 	public boolean isBackupValid(){
@@ -409,8 +409,6 @@ public class ProgramLauncher {
 	public String getBackupPath() {
 		return backupPath;
 	}
-
-
 	
 	public boolean checkFile(String fileName,String basePath) {
 

@@ -1,35 +1,6 @@
 package com.gtnexus.html5.main;
 
-import static com.gtnexus.html5.util.HTML5Util.ALIGN;
-import static com.gtnexus.html5.util.HTML5Util.ALINK;
-import static com.gtnexus.html5.util.HTML5Util.BACKGROUND;
-import static com.gtnexus.html5.util.HTML5Util.BGCOLOR;
-import static com.gtnexus.html5.util.HTML5Util.BORDER;
-import static com.gtnexus.html5.util.HTML5Util.CELLPADDING;
-import static com.gtnexus.html5.util.HTML5Util.CELLSPACING;
-import static com.gtnexus.html5.util.HTML5Util.CLEAR;
-import static com.gtnexus.html5.util.HTML5Util.COLOR;
-import static com.gtnexus.html5.util.HTML5Util.COMPACT;
-import static com.gtnexus.html5.util.HTML5Util.FACE;
-import static com.gtnexus.html5.util.HTML5Util.FONT_SIZE;
-import static com.gtnexus.html5.util.HTML5Util.FRAME_BORDER;
-import static com.gtnexus.html5.util.HTML5Util.HEIGHT;
-import static com.gtnexus.html5.util.HTML5Util.HSPACE;
-import static com.gtnexus.html5.util.HTML5Util.LEFT_MARGIN;
-import static com.gtnexus.html5.util.HTML5Util.LINK;
-import static com.gtnexus.html5.util.HTML5Util.MARGIN_HEIGHT;
-import static com.gtnexus.html5.util.HTML5Util.MARGIN_WIDTH;
-import static com.gtnexus.html5.util.HTML5Util.NOSHADE;
-import static com.gtnexus.html5.util.HTML5Util.NO_WRAP;
-import static com.gtnexus.html5.util.HTML5Util.SCROLLING;
-import static com.gtnexus.html5.util.HTML5Util.SIZE;
-import static com.gtnexus.html5.util.HTML5Util.STYLE;
-import static com.gtnexus.html5.util.HTML5Util.TOP_MARGIN;
-import static com.gtnexus.html5.util.HTML5Util.TYPE;
-import static com.gtnexus.html5.util.HTML5Util.VALIGN;
-import static com.gtnexus.html5.util.HTML5Util.VLINK;
-import static com.gtnexus.html5.util.HTML5Util.VSPACE;
-import static com.gtnexus.html5.util.HTML5Util.WIDTH;
+import static com.gtnexus.html5.util.HTML5Util.*;
 import static com.gtnexus.html5.util.HTML5Util.formatKey;
 
 import java.io.BufferedWriter;
@@ -41,8 +12,10 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.OutputDocument;
@@ -99,7 +72,10 @@ public class JerichoJspParserUtil {
 	public static Map<String, Rule> RULES_MAP = new HashMap<String, Rule>();
 	
 	// Create Styles Map(in line style->class name)
-	public static Map<String, String> STYLES_MAP;
+	public static Map<String, String> STYLES_MAP;	
+	
+	public static Set<String> POSITIONAL_STYLES_SET = new HashSet<String>();
+	//public static Set<String> INLINE_STYLES = new HashSet<String>();
 
 	public static final Logger logger = Logger
 			.getLogger(JerichoJspParserUtil.class);
@@ -128,6 +104,7 @@ public class JerichoJspParserUtil {
 		initLogger();
 		initRulesMap();
 		initCssClassMap(isAdminCss);
+		initPositionalStyleSet();
 	}
 	
 	private static void initLogger(){		
@@ -364,13 +341,49 @@ public class JerichoJspParserUtil {
 		
 	}
 	
+	private static void initPositionalStyleSet(){
+		
+		POSITIONAL_STYLES_SET.add(WIDTH);
+		POSITIONAL_STYLES_SET.add(HEIGHT);
+		POSITIONAL_STYLES_SET.add(CELLSPACING);
+		POSITIONAL_STYLES_SET.add(BORDER);
+		POSITIONAL_STYLES_SET.add(BORDER_SPACING);
+		POSITIONAL_STYLES_SET.add(CELLPADDING);
+		POSITIONAL_STYLES_SET.add(PADDING);
+		POSITIONAL_STYLES_SET.add(PADDING_BOTTOM);
+		POSITIONAL_STYLES_SET.add(PADDING_TOP);
+		POSITIONAL_STYLES_SET.add(MARGIN_LEFT);
+		POSITIONAL_STYLES_SET.add(MARGIN_RIGHT);
+		POSITIONAL_STYLES_SET.add(MARGIN);
+		POSITIONAL_STYLES_SET.add(ALIGN);
+		POSITIONAL_STYLES_SET.add(TEXT_ALIGN);
+		POSITIONAL_STYLES_SET.add(VALIGN);
+		POSITIONAL_STYLES_SET.add(VERTICAL_ALIGN);
+		POSITIONAL_STYLES_SET.add(BORDER_COLLAPSE);
+		POSITIONAL_STYLES_SET.add(LINE_HEIGHT);
+		POSITIONAL_STYLES_SET.add(FLOAT);
+		POSITIONAL_STYLES_SET.add(CLEAR);
+		POSITIONAL_STYLES_SET.add(TOP_MARGIN);
+		POSITIONAL_STYLES_SET.add(MARGIN_HEIGHT);
+		POSITIONAL_STYLES_SET.add(MARGIN_WIDTH);
+		POSITIONAL_STYLES_SET.add(LEFT_MARGIN);
+		POSITIONAL_STYLES_SET.add(MARGIN_TOP);
+		POSITIONAL_STYLES_SET.add(VSPACE);
+		POSITIONAL_STYLES_SET.add(HSPACE);
+		POSITIONAL_STYLES_SET.add(NO_WRAP);
+		POSITIONAL_STYLES_SET.add(OVERFLOW);
+		
+
+		//TODO add all the positional styles here
+		
+		//rest of the css styles consider as inline styles
+	}	
 	
 	/*
 	 * public method that convert given JSP file to HTML5 compliant JSP file
 	 */
 	public static void convertToHTML5(String filePath, boolean isIncludeFile,
 			String textfileName)
-
 	throws FileNotFoundException, IOException, HTML5ParserException {
 
 		// Parse JSP file and remove obsolete html5 tags and apply relevant
@@ -384,16 +397,16 @@ public class JerichoJspParserUtil {
 		}
 
 		File sourceFile = new File(filePath);
-
 		Source source = new Source(new FileInputStream(sourceFile));
 
-		// this should be called in order to use getParentElement() method
+		// this should be called in order to call getParentElement() method
 		source.fullSequentialParse();
 
-		if (!HTML5Util.isHtml5Page(source)) {
+		if (!HTML5Util.isPhase2Html5ConvertedPage(source)) {
+			//backup the original file before convert
+			RevertBackChanges.backupOriginalFileToLocalDisk(sourceFile);
 			
 			int numOfConvertedIncludeFiles = 0;
-
 			// get include file paths
 			List<String> includeFilePathList = HTML5Util
 					.getIncludeFilePaths(filePath);

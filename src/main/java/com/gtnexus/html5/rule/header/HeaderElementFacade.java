@@ -75,13 +75,24 @@ public class HeaderElementFacade {
 			OutputDocument outputDocument) {
 
 		List<Element> allHeadTag = source.getAllElements(HTMLElementName.HEAD);
+		boolean utfMetaTagAdded = false;
 
 		if (!allHeadTag.isEmpty()) {
-
-			Element headTag = allHeadTag.get(0);
-
-			outputDocument.insert(headTag.getBegin() + 6, META_CHARSET_UTF8
-					+ "\n");
+			//check charset meta tag already exist. if true do a replacement
+			List<Element> allMetaTags = source.getAllElements(HTMLElementName.META);
+			String charsetValue = null;
+			for(Element metaTag: allMetaTags){
+				charsetValue = metaTag.getAttributeValue("charset");
+				if(charsetValue != null){
+					outputDocument.replace(metaTag,META_CHARSET_UTF8+ "\n");
+					utfMetaTagAdded = true;
+					break;
+				}
+			}
+			if(!utfMetaTagAdded){
+				Element headTag = allHeadTag.get(0);	
+				outputDocument.insert(headTag.getBegin() + 6, META_CHARSET_UTF8	+ "\n");
+			}
 
 		}
 

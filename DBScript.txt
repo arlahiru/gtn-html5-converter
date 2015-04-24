@@ -13,7 +13,7 @@ CREATE TABLE Errors(ID int NOT NULL, Error TEXT, lastConvertedLine int, errorTyp
 
 CREATE TABLE ConflictingPages(AdminPage VARCHAR(767) NOT NULL, TradePage VARCHAR(767) NOT NULL, PRIMARY KEY(AdminPage,TradePage));
 
-CREATE TABLE inlinestyle(ID int AUTO_INCREMENT PRIMARY KEY, fileName VARCHAR(767),elementName VARCHAR(100),line int,style TEXT,isadmin bool);
+CREATE TABLE inlinestyle(ID int AUTO_INCREMENT PRIMARY KEY, fileName VARCHAR(767),elementName VARCHAR(100),line int,style TEXT,ispositional bool,isadmin bool);
 
 CREATE TABLE cssclass(ID int AUTO_INCREMENT PRIMARY KEY, className VARCHAR(500),style TEXT, isadmin bool);
 

@@ -63,6 +63,7 @@ public class DbLogger {
 	private static final String ELEMENT_NAME="elementName";
 	private static final String ELEMENT_LINE="line";
 	private static final String STYLETEXT = "style";
+	private static final String IS_POSITIONAL = "ispositional";
 	
 	private static final String CSSCLASS_TABLE="cssclass";
 	private static final String CLASS_NAME="classname";
@@ -124,8 +125,8 @@ public class DbLogger {
 		String quertInsertConflict = "INSERT INTO "+CONFLICTING_PAGES+" VALUES(?,?);";
 		
 		String queryInlineStyle = "INSERT INTO " + INLINESTYLE_TABLE + " ("
-				+ FILE_NAME + "," + ELEMENT_NAME + "," +ELEMENT_LINE+","+ STYLETEXT +","+ IS_ADMIN 
-				+ ") VALUES (?,?,?,?,?);";
+				+ FILE_NAME + "," + ELEMENT_NAME + "," +ELEMENT_LINE+","+ STYLETEXT +","+IS_POSITIONAL+","+ IS_ADMIN 
+				+ ") VALUES (?,?,?,?,?,?);";
 		
 		try{
 			insertPage=con.prepareStatement(queryInsertPage,
@@ -764,13 +765,14 @@ public class DbLogger {
 	}
 	
 	public void insertInlineStyle(String filePath, String elementName, String style,
-			String debugInfo,Boolean isAdmin) {		
+			String debugInfo,Boolean isPositional,Boolean isAdmin) {		
 		try {
 			insertInlinestyle.setString(1,filePath);
 			insertInlinestyle.setString(2, elementName);
 			insertInlinestyle.setInt(3,extractLineNumber(debugInfo));
 			insertInlinestyle.setString(4, style);
-			insertInlinestyle.setBoolean(5, isAdmin);
+			insertInlinestyle.setBoolean(5, isPositional);
+			insertInlinestyle.setBoolean(6, isAdmin);
 			insertInlinestyle.execute();			
 		} catch (SQLException e) {
 			e.printStackTrace();

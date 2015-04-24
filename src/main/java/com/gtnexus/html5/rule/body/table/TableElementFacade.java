@@ -54,7 +54,7 @@ public class TableElementFacade extends Facade {
 				.getAllElements(HTMLElementName.TABLE);
 
 		for (Element table : tableElementList) {
-			resetGlovalValues();
+			resetGlobalValues();
 			loadChildElements(table);
 			removeAndReplaceTableElementObsoleteFeatures(table, outputDocument);
 		}		
@@ -67,7 +67,7 @@ public class TableElementFacade extends Facade {
 
 	}
 
-	private static void resetGlovalValues() {
+	private static void resetGlobalValues() {
 		trElements = new ArrayList<Element>(0);
 		thead = tfoot = tbody = null;
 		cellPadding=null;
@@ -149,7 +149,7 @@ public class TableElementFacade extends Facade {
 			// close tr start tag
 			modifiedTRTag.append(STYLE + "=\"" + newTrStyleValue + "\">");
 
-			outputDocument.replace(tr.getStartTag(), modifiedTRTag);
+			replace(tr.getStartTag(), modifiedTRTag,outputDocument);
 
 			// outputDocument.replace(tr.getEndTag(), "</" + TR + ">");
 
@@ -245,13 +245,11 @@ public class TableElementFacade extends Facade {
 
 				StringBuilder newTheadStyleValue = new StringBuilder();
 
-				// initialize default values. have to test this!
 				modifiedTheadTag.append("<" + THEAD + " ");
 
 				applyRules(thead, outputDocument, newTheadStyleValue,
 						modifiedTheadTag);
 
-				// close tr start tag
 				modifiedTheadTag.append(STYLE + "=\"" + newTheadStyleValue
 						+ "\">");
 
@@ -447,6 +445,7 @@ public class TableElementFacade extends Facade {
 			// fix each parentless td tag
 			if (td.getParentElement() == null) {				
 				fixTdTag(td, outputDocument);
+			}
 			// fix each non-well formed td tag
 			/*
 			 * But ignore this kind of scenario:
@@ -458,7 +457,7 @@ public class TableElementFacade extends Facade {
 	  				</tr>	              
             </table>
 			 */
-			} else if (!td.getParentElement().getName().equals(HTML5Util.TR)
+			else if (!td.getParentElement().getName().equals(HTML5Util.TR)
 					&& !(td.getParentElement().getName().equals(HTML5Util.FORM) && td.getParentElement().getParentElement() !=null && td.getParentElement().getParentElement().getName().equals(HTML5Util.TR))) {
 				fixTdTag(td, outputDocument);
 			}
@@ -475,10 +474,10 @@ public class TableElementFacade extends Facade {
 		List<Element> allTrTags = source.getAllElements(HTML5Util.TR);
 
 		for (Element tr : allTrTags) {
-
 			// fix each parentless tr tag
 			if (tr.getParentElement() == null) {				
 				fixTrTag(tr, outputDocument);
+			} 
 			// fix not-well formed each tr tag
 			/*
 			 * But ignore this kind of scenario:
@@ -490,7 +489,7 @@ public class TableElementFacade extends Facade {
 	              </form>
             </table>
 			 */
-			} else if (!tr.getParentElement().getName().equals(HTML5Util.TABLE)
+			else if (!tr.getParentElement().getName().equals(HTML5Util.TABLE)
 					&& !(tr.getParentElement().getName().equals(HTML5Util.FORM) && tr.getParentElement().getParentElement() !=null && tr.getParentElement().getParentElement().getName().equals(HTML5Util.TABLE))) {				
 				fixTrTag(tr, outputDocument);
 			}
