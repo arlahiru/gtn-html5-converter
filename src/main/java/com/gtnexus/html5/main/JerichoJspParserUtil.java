@@ -1,7 +1,6 @@
 package com.gtnexus.html5.main;
 
 import static com.gtnexus.html5.util.HTML5Util.*;
-import static com.gtnexus.html5.util.HTML5Util.formatKey;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -24,6 +23,7 @@ import net.htmlparser.jericho.Source;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
+import org.apache.log4j.PropertyConfigurator;
 import org.apache.log4j.WriterAppender;
 
 import com.gtnexus.html5.exception.HTML5ParserException;
@@ -86,7 +86,8 @@ public class JerichoJspParserUtil {
 	static {
 
 		// Configure logger
-		BasicConfigurator.configure();
+		//BasicConfigurator.configure();
+		PropertyConfigurator.configure("log4j.properties");
 		logger.debug("Logger configured.");
 
 	}
@@ -416,12 +417,18 @@ public class JerichoJspParserUtil {
 			logger.debug("Conversion started...");
 
 			OutputDocument outputDocument = new OutputDocument(source);
-
-			HeaderElementFacade.fixHeaderElementObsoleteFeatures(source,
-					outputDocument, isIncludeFile);
-
-			BodyElementFacade.fixAllBodyElementObsoleteFeatures(source,
-					outputDocument);
+			
+			if(!HTML5Util.isPhase1Html5ConvertedPage(source)){
+				//do full html5 conversion
+				HeaderElementFacade.fixHeaderElementObsoleteFeatures(source,
+						outputDocument, isIncludeFile);
+	
+				BodyElementFacade.fixAllBodyElementObsoleteFeatures(source,
+						outputDocument);
+			}else{
+				//convert inline styles to CSS classes only
+				BodyElementFacade.fixPhase1ConvertedPagesWithCssClass(source, outputDocument);
+			}
 
 			// recursively convert include files
 			for (String includeFilePath : includeFilePathList) {
@@ -435,6 +442,7 @@ public class JerichoJspParserUtil {
 					numOfConvertedIncludeFiles = numOfConvertedIncludeFiles + 1;
 				} catch (HTML5ParserException e) {
 					e.printStackTrace();
+					logger.error(e.getMessage());
 					dbLogger.logError(includeFilePath, e.getType(), e.getMessage(),
 							e.getTagInfo());
 
@@ -445,7 +453,7 @@ public class JerichoJspParserUtil {
 			// check if all the include files have converted successfully
 			// before save
 			if (includeFilePathList.size() == numOfConvertedIncludeFiles) {
-				//check with source file to make sure that output document is not missing any original html tags in the conversion
+				//check with source file to make sure that output document is not missing any original html/jsp tags after the conversion
 				if (HTML5Util.isCommonTagsCountMatch(source, outputDocument)) {
 					// overwrite source file with new output doc
 					saveOutputDoc(sourceFile, outputDocument);

@@ -56,7 +56,7 @@ public class RevertBackChanges {
 			revertChanges(includeFilePath);
 
 		} 
-		String backupFilePath = convertedFile.getAbsolutePath().replace("code", ProgramLauncher.HTML5_BACKUP_DIR+"\\code");	
+		String backupFilePath = convertedFile.getAbsolutePath().replaceFirst("code", ProgramLauncher.HTML5_BACKUP_DIR+"/code");	
 
 		Path originalBackupFilePath = Paths.get(backupFilePath);
 

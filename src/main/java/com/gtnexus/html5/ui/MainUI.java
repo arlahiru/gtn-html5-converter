@@ -21,7 +21,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.concurrent.Executor;
-
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -41,7 +40,6 @@ import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
-
 import com.gtnexus.html5.exception.HTML5ParserException;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.main.RevertBackChanges;
@@ -72,6 +70,7 @@ public class MainUI extends JFrame {
 	private final JButton btnConvertSelected = new JButton("Convert Selected");
 	private final JButton btnRollbackSelected = new JButton("Rollback Selected");
 	private final JButton btnClearConsole = new JButton("Clear Console");
+	private final JButton btnClearlogFile = new JButton("Clear Logfile");
 	private final JButton btnBrowseSourceLocation = new JButton(
 			"Browse URL Source");
 	private final JButton btnSetBackupLocation = new JButton(
@@ -96,21 +95,16 @@ public class MainUI extends JFrame {
 	
 	public ProgramLauncher getProgramLauncher() {
 		return this.launcher;
-	}
-
-	
+	}	
 
 	public MainUI() {
-
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		addContent();
 		addActionListners();
 		JerichoJspParserUtil.initialize(true);
 		dbLogger.initialize();
 		printOnConsole(JerichoJspParserUtil.getDebuggerOutput(), "log");
-
 		checkForPreviousErrors();
-
 	}
 
 	public static void main(String[] args) {
@@ -186,7 +180,7 @@ public class MainUI extends JFrame {
 		btnOpenWithAraxis.setBounds(872, 423, 138, 23);
 		getContentPane().add(btnOpenWithAraxis);
 
-		progressBar.setBounds(10, 474, 956, 20);
+		progressBar.setBounds(10, 474, 906, 20);
 		getContentPane().add(progressBar);
 
 		scrollPane.setBounds(10, 505, 1174, 160);
@@ -197,7 +191,7 @@ public class MainUI extends JFrame {
 		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
 		percentageTextArea.setEditable(false);
-		percentageTextArea.setBounds(976, 474, 53, 20);
+		percentageTextArea.setBounds(926, 474, 53, 20);
 		getContentPane().add(percentageTextArea);
 		percentageTextArea.setColumns(10);
 		btnConvertSelected.setHorizontalAlignment(SwingConstants.LEFT);
@@ -211,9 +205,11 @@ public class MainUI extends JFrame {
 
 		getContentPane().add(btnRollbackSelected);
 
-		btnClearConsole.setBounds(1054, 472, 132, 22);
+		btnClearConsole.setBounds(985, 472, 98, 22);
+		btnClearlogFile.setBounds(1086, 472, 95, 22);
 
 		getContentPane().add(btnClearConsole);
+		getContentPane().add(btnClearlogFile);
 		btnBrowseSourceLocation.setHorizontalAlignment(SwingConstants.LEFT);
 
 		btnBrowseSourceLocation.setBounds(581, 17, 179, 23);
@@ -243,26 +239,19 @@ public class MainUI extends JFrame {
 
 		btnOpenWithFireFox.setBounds(820, 17, 154, 23);
 		getContentPane().add(btnOpenWithFireFox);
-
 		
 		btnRemove.setBounds(376, 423, 89, 23);
 		getContentPane().add(btnRemove);
 
 		btnOpenWithIE.setBounds(820, 54, 154, 23);
-		getContentPane().add(btnOpenWithIE);
-		
-		
+		getContentPane().add(btnOpenWithIE);	
 		
 		btnStop.setEnabled(true);
 		btnStop.setBounds(475, 423, 89, 23);
-		getContentPane().add(btnStop);
-		
+		getContentPane().add(btnStop);		
 		
 		btnScan.setBounds(277, 423, 89, 23);
-		getContentPane().add(btnScan);
-		
-		
-		
+		getContentPane().add(btnScan);		
 		btnOpenScannedPages.setBounds(1030, 54, 154, 23);
 		getContentPane().add(btnOpenScannedPages);
 
@@ -316,8 +305,8 @@ public class MainUI extends JFrame {
 
 			while ((sCurrentLine = br.readLine()) != null) {
 				try {
-					list.add(sCurrentLine.substring(sCurrentLine
-							.lastIndexOf("/en/") + 3));
+					//list.add(sCurrentLine.substring(sCurrentLine.lastIndexOf("/en/") + 3));
+					list.add(sCurrentLine);
 				} catch (StringIndexOutOfBoundsException e) {
 					try {
 						list.add(sCurrentLine.substring(sCurrentLine
@@ -352,6 +341,8 @@ public class MainUI extends JFrame {
 					@Override
 					protected Integer doInBackground() {
 
+						//clear conversion error table
+						dbLogger.clearAllErrors();
 						String[] files = preHTML5List.getItems();
 						
 							disableButtons();
@@ -387,8 +378,9 @@ public class MainUI extends JFrame {
 
 				currentThread = new SwingWorker<Integer, Integer>() {
 					@Override
-					protected Integer doInBackground() throws Exception {
-						
+					protected Integer doInBackground() throws Exception {						
+						//clear conversion error table
+						dbLogger.clearAllErrors();
 						String[] selectedItems = preHTML5List
 								.getSelectedItems();
 						disableButtons();
@@ -470,6 +462,14 @@ public class MainUI extends JFrame {
 			}
 		});
 		/*
+		 * Clears log file
+		 */
+		btnClearlogFile.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				dbLogger.clearLog4JLogfile();
+			}
+		});
+		/*
 		 * Stops the current working thread
 		 */
 		btnStop.addActionListener(new ActionListener() {
@@ -489,18 +489,27 @@ public class MainUI extends JFrame {
 					JFileChooser chooser = new JFileChooser();
 
 					chooser.addChoosableFileFilter(new FileNameExtensionFilter(
-							"Text files", "txt", "csv", "ini"));
+							"Text files", "txt", "csv", "ini","jsp"));
 					chooser.setAcceptAllFileFilterUsed(false);
+					chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 					int returnVal = chooser.showOpenDialog(new Frame());
-					if (returnVal == JFileChooser.FILES_ONLY) {
-
-						sourcePath = chooser.getSelectedFile()
-								.getAbsolutePath();
+					sourcePath = chooser.getSelectedFile().getAbsolutePath();
+					if (!chooser.getSelectedFile().isDirectory()) {						
 						loadToListFromFile();
 						textFieldlocationDirectory.setText(sourcePath);
+					}else{
+						textFieldlocationDirectory.setText(sourcePath);
+						File[] filesInDirectory = chooser.getSelectedFile().listFiles();
+						// clear lists
+						preHTML5List.removeAll();
+						html5List.removeAll();
+						showProgressBar();
+						loadToListFromDirectory(filesInDirectory);
+						printOnConsole("Input Directory: "+sourcePath, "info");
+						printPreHtml5Count();
 					}
 				} catch (Exception ex) {
-
+					ex.printStackTrace();
 				}
 
 			}
@@ -550,11 +559,9 @@ public class MainUI extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 
 				if (html5List.getSelectedIndex() != -1)
-					launcher.openDreamweaver(formatFilePath(html5List
-							.getSelectedItem()));
+					launcher.openDreamweaver(html5List.getSelectedItem());
 				else if (preHTML5List.getSelectedIndex() != -1)
-					launcher.openDreamweaver(formatFilePath(preHTML5List
-							.getSelectedItem()));
+					launcher.openDreamweaver(preHTML5List.getSelectedItem());
 				else
 					printOnConsole("Please select a specific file to open!",
 							"warning");
@@ -660,11 +667,8 @@ public class MainUI extends JFrame {
 		showProgressBar();
 		int fileCount = 0;
 		for (int i = 0; i < fileList.size(); i++) {
-			if (launcher.checkFile(
-					fileList.get(i),
-					launcher.adminBasePath.substring(0,
-							launcher.adminBasePath.indexOf("\\en\\") + 3))) {
-				preHTML5List.add(fileList.get(i));
+			if (launcher.checkFile(fileList.get(i),ProgramLauncher.adminBasePath)) {
+				preHTML5List.add(ProgramLauncher.adminBasePath+fileList.get(i));
 				fileCount++;
 			} else
 				printOnConsole(fileList.get(i) + " File Doesn't exist.",
@@ -672,9 +676,22 @@ public class MainUI extends JFrame {
 			setProgressBarValue(fileList.size(), i);
 
 		}
-
 		printOnConsole(fileCount + " new files Loaded.", "info");
 		printPreHtml5Count();
+	}
+	
+	public void loadToListFromDirectory(File[] files) {
+		int fileCount = 0;
+		for (File file: files) {
+			fileCount++;
+			if(file.isFile() && file.getName().endsWith(".jsp")){
+				preHTML5List.add(file.getAbsolutePath());				
+			}else if(file.isDirectory()){
+				//go recursively to all the sub directories inside the current directory and add to the list
+				loadToListFromDirectory(file.listFiles());
+			}
+			setProgressBarValue(files.length, fileCount);
+		}		
 	}
 
 	public void printPreHtml5Count() {
@@ -690,7 +707,7 @@ public class MainUI extends JFrame {
 	public void convertToHTML5(String sourceFile) {
 		try {
 			JerichoJspParserUtil.clearConsoleWriter();
-			JerichoJspParserUtil.convertToHTML5(formatFilePath(sourceFile),
+			JerichoJspParserUtil.convertToHTML5(sourceFile,
 					false, sourcePath);
 			printOnConsole(JerichoJspParserUtil.getDebuggerOutput(), "log");
 			html4ToHtml5(sourceFile);
@@ -710,7 +727,7 @@ public class MainUI extends JFrame {
 	public void revertBack(String convertedFilePath) {
 		try {
 			JerichoJspParserUtil.clearConsoleWriter();
-			RevertBackChanges.revertChanges(formatFilePath(convertedFilePath));
+			RevertBackChanges.revertChanges(convertedFilePath);
 			printOnConsole(JerichoJspParserUtil.getDebuggerOutput(), "log");
 			html5ToHtml4(convertedFilePath);
 
@@ -733,7 +750,7 @@ public class MainUI extends JFrame {
 
 	public void hideProgressBar() {
 		progressBar.setVisible(false);
-		percentageTextArea.setText("");
+		percentageTextArea.setText("0%");
 	}
 
 	public void showProgressBar() {
@@ -756,6 +773,8 @@ public class MainUI extends JFrame {
 		} catch (BadLocationException e) {
 			e.printStackTrace();
 		}
+		
+		JerichoJspParserUtil.logger.debug(message);
 
 	}
 

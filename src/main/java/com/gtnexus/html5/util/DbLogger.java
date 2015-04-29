@@ -3,9 +3,14 @@ package com.gtnexus.html5.util;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -13,6 +18,7 @@ import java.util.*;
 import java.lang.System.*;
 
 import javax.swing.JTextArea;
+import javax.swing.filechooser.FileSystemView;
 
 import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
 
@@ -810,12 +816,12 @@ public class DbLogger {
 		return classMap;
 	}
 	
-	//clear all data
+	//clear all data except conversion errors
 	public void clearAllData(){			
 		Statement deleteStatement = null;
 		try{
 			deleteStatement = con.createStatement();
-			deleteStatement.execute(deleteError);
+			//deleteStatement.execute(deleteError);
 			deleteStatement.execute(deleteChangelog);
 			deleteStatement.execute(deleteIncludePage);
 			deleteStatement.execute(deletePage);
@@ -834,5 +840,85 @@ public class DbLogger {
 			}
 		}		
 	}
+	//clear all data
+	public void clearAllErrors(){			
+		Statement deleteStatement = null;
+		try{
+			deleteStatement = con.createStatement();
+			deleteStatement.execute(deleteError);			
+		}catch(SQLException e){
+				e.printStackTrace();
+		}finally{
+			if(deleteStatement != null){
+				try {
+					deleteStatement.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+		}		
+	}
+	
+	public void clearLog4JLogfile(){
+		try {
+			BufferedWriter logWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("html5.log"), "UTF-8"));
+			logWriter.write("");
+			logWriter.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public FileLogger getFileLoggerInstance(){
+		return new DbLogger.FileLogger();
+	}
+	
+	//This file logger is obsolete! Log4j used instead.
+	public class FileLogger{
+
+		private File logFile;
+		private File log4jFile;
+		private BufferedWriter logWriter;
+		
+		FileLogger(){
+			logFile = new File(FileSystemView.getFileSystemView().getRoots()[0]+File.separator+"html5log.txt");
+			log4jFile = new File("C:\\html5.log");
+			try {
+				if(!logFile.exists()){
+					//logFile.createNewFile();	
+				}
+				if(!logFile.exists()){
+					log4jFile.createNewFile();	
+				}
+			}catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		public void log(String log){
+			try {
+				logWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(logFile), "UTF-8"));
+				PrintWriter out = new PrintWriter(logWriter);
+				out.println(log);
+				logWriter.close();
+				out.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		public void clearLogfile(){
+			try {
+				logWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(logFile), "UTF-8"));
+				logWriter.write("");
+				logWriter.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+		}
+	}
 
 }
+
+

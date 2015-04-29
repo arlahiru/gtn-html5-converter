@@ -37,7 +37,7 @@ public class ProgramLauncher {
 	public ProgramLauncher(MainUI main){
 		mainUI=main;
 		//setBackupPath(backupPath);
-		setBasePaths();
+		//setBasePaths();
 	}
 	public boolean isBackupValid(){
 		return isBackupValid;
@@ -364,8 +364,7 @@ public class ProgramLauncher {
 
 	public void openAraxis(String filename){
 
-		ProcessBuilder pb = new ProcessBuilder(araxis_path, formatBackupFilePath(filename),
-				formatFilePath(filename));
+		ProcessBuilder pb = new ProcessBuilder(araxis_path, formatBackupFilePath(filename),filename);
 		try {
 			pb.start();
 		} catch (IOException ex) {
@@ -399,8 +398,7 @@ public class ProgramLauncher {
 	}
 
 	public String formatBackupFilePath(String fileName) {
-		String base = "C:\\code\\gtnexus\\development\\modules\\main\\tcard";
-		return getBackupPath()+formatFilePath(fileName).substring(formatFilePath(fileName).indexOf(base)+base.length());
+		return fileName.replaceFirst("code", ProgramLauncher.HTML5_BACKUP_DIR+"/code");	
 	}
 
 	/**
@@ -411,10 +409,7 @@ public class ProgramLauncher {
 	}
 	
 	public boolean checkFile(String fileName,String basePath) {
-
-		File f = new File(basePath + fileName);
-		System.out.println(basePath +"+"+ fileName);
-		
+		File f = new File(basePath + fileName);		
 		return (f.exists() && !f.isDirectory());
 	}
  
@@ -448,7 +443,7 @@ public class ProgramLauncher {
 	}
 	public void setBasePaths(){
 		
-		if(extractValue("<adminBasePath>","</adminBasePath>")!=null && !checkFile("login.jsp",adminBasePath)){
+		if(extractValue("<adminBasePath>","</adminBasePath>")!=null && checkFile("/web/tradecard/en/administration/login.jsp",adminBasePath)){
 			adminBasePath = extractValue("<adminBasePath>","</adminBasePath>");
 			
 		}else{
@@ -457,7 +452,7 @@ public class ProgramLauncher {
 				appendPathToConfigFile(adminBasePath,"<adminBasePath>");
 			else setBasePaths();
 		}
-		if(extractValue("<tradeBasePath>","</tradeBasePath>")!=null && !checkFile("Login.jsp",tradeBasePath) ){
+		if(extractValue("<tradeBasePath>","</tradeBasePath>")!=null && checkFile("/web/tradecard/en/trade/login.jsp",adminBasePath) ){
 			tradeBasePath = extractValue("<tradeBasePath>","</tradeBasePath>");
 		}else{
 			tradeBasePath = readDirectories("Set Trade Site Path")+"/";

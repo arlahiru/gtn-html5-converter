@@ -25,7 +25,7 @@ public class OlFacade extends Facade{
 		logger.debug("Fixing <ol> elements started...");
 
 		// get all the <table> tags from the source JSP file
-		List<Element> olElementList = source.getAllElements(HTMLElementName.UL);
+		List<Element> olElementList = source.getAllElements(HTMLElementName.OL);
 
 		for (Element ol : olElementList) {
 

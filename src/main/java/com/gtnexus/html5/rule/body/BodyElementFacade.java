@@ -35,6 +35,7 @@ import com.gtnexus.html5.rule.body.pre.PreFacade;
 import com.gtnexus.html5.rule.body.spacer.SpacerElementFacade;
 import com.gtnexus.html5.rule.body.table.TableElementFacade;
 import com.gtnexus.html5.rule.body.ul.UlFacade;
+import com.gtnexus.html5.rule.header.HeaderElementFacade;
 import com.gtnexus.html5.util.HTML5Util;
 
 public class BodyElementFacade extends Facade {
@@ -133,5 +134,21 @@ public class BodyElementFacade extends Facade {
 			logger.debug("Fixing body tag finished.");
 
 		}
+	}
+	
+	public static void fixPhase1ConvertedPagesWithCssClass(Source source,
+			OutputDocument outputDocument) throws HTML5ParserException {
+
+		logger.debug("Fixing phase1 pages started...");
+		HeaderElementFacade.addHtml5ConvertedCommentTag(source, outputDocument);
+		// get all tags and re-replace all the starting tags in order to replace in line styles with CSS classes
+		List<Element> allElements = source.getAllElements();
+		for(Element e: allElements){
+			
+			if (HTML5Util.hasAttributes((e))) {
+				replace(e.getStartTag(), new StringBuilder(e.getStartTag().toString()), outputDocument);
+			}			
+		}
+		logger.debug("Fixing phase1 pages finished");
 	}
 }

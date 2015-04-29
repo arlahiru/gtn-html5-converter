@@ -34,14 +34,18 @@ public class TableStyleRule implements Rule {
 				if (attributeName.equals("width")) {
 					if (!HTML5Util.hasUnit(attributeValue)) {
 						modifiedStyle.append(attributeName+":"+ attributeValue + HTML5Util.PX+";");
+					}else{
+						//append style as it is
+						modifiedStyle.append(styleValues[i]+";");
 					}
 
 				} else {
+					//append style as it is
 					modifiedStyle.append(styleValues[i]+";");
 				}
 			}
 		}
-		outputDoc.remove(originalAttribute);
+		//outputDoc.remove(originalAttribute);
 
 		return modifiedStyle;
 

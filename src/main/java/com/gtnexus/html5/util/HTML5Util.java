@@ -31,7 +31,8 @@ public class HTML5Util {
 	public final static String META_IS_HTML5 = "<meta isHtml5Page=\"true\">";
 
 	// HTML 5 converted comment tag
-	public final static String HTML5_CONVERTED_COMMENT = "<!-- HTML5 Converted Page:Phase 2 -->";
+	public final static String HTML5_CONVERTED_COMMENT_PHASE1 = "<!-- HTML5 Converted Page:Phase1 -->";
+	public final static String HTML5_CONVERTED_COMMENT_PHASE2 = "<!-- HTML5 Converted Page:Phase 2 -->";
 
 	// HTML AND CSS ATTRIBUTE NAMES
 	public final static String WIDTH = "width";
@@ -139,6 +140,25 @@ public class HTML5Util {
 	public static String MODE = DEFAULT;
 
 	// HTML ELEMENT NAMES
+	
+	// check this page already a html5 page by looking at the meta tag
+		public static boolean isPhase1Html5ConvertedPage(Source source) {
+
+			// get all meta tags
+			List<Element> allCommentTags = source
+					.getAllElements(StartTagType.COMMENT);
+
+			for (Element commentTag : allCommentTags) {
+
+				if (commentTag.toString().equals(HTML5_CONVERTED_COMMENT_PHASE1)) {
+
+					return true;
+				}
+			}
+
+			return false;
+
+		}
 
 	// check this page already a html5 page by looking at the meta tag
 	public static boolean isPhase2Html5ConvertedPage(Source source) {
@@ -149,7 +169,7 @@ public class HTML5Util {
 
 		for (Element commentTag : allCommentTags) {
 
-			if (commentTag.toString().equals(HTML5_CONVERTED_COMMENT)) {
+			if (commentTag.toString().equals(HTML5_CONVERTED_COMMENT_PHASE2)) {
 
 				return true;
 			}
@@ -337,8 +357,10 @@ public class HTML5Util {
 
 					String includeFilePath = includeFileFolderPath
 							+ File.separator + includeFileName;
-
-					includeFilePaths.add(includeFilePath);
+					//add to list only if include file is a jsp
+					if(includeFilePath.endsWith(".jsp")){
+						includeFilePaths.add(includeFilePath);
+					}
 
 				} else {
 
@@ -486,7 +508,7 @@ public class HTML5Util {
 		else if (source.getAllElements(HTMLElementName.UL).size() != output
 				.getAllElements(HTMLElementName.UL).size())
 			return false;
-		else if ((source.getAllElements(HTMLElementName.SPAN).size() + source.getAllElements(HTMLElementName.FONT).size())!= output
+		else if ((source.getAllElements(HTMLElementName.SPAN).size() + source.getAllElements(HTMLElementName.FONT).size() + source.getAllElements(HTML5Util.NO_BR).size())!= output
 				.getAllElements(HTMLElementName.SPAN).size())
 			return false;
 		

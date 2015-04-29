@@ -2,7 +2,7 @@ package com.gtnexus.html5.rule.header;
 
 import static com.gtnexus.html5.main.JerichoJspParserUtil.logger;
 import static com.gtnexus.html5.util.HTML5Util.DOCTYPE_HTML5;
-import static com.gtnexus.html5.util.HTML5Util.HTML5_CONVERTED_COMMENT;
+import static com.gtnexus.html5.util.HTML5Util.HTML5_CONVERTED_COMMENT_PHASE2;
 import static com.gtnexus.html5.util.HTML5Util.META_CHARSET_UTF8;
 
 import java.util.Date;
@@ -51,7 +51,7 @@ public class HeaderElementFacade {
 
 	}
 
-	private static void addHtml5ConvertedCommentTag(Source source,
+	public static void addHtml5ConvertedCommentTag(Source source,
 			OutputDocument outputDocument) {
 
 		List<Element> allHtmlTag = source.getAllElements(HTMLElementName.HTML);
@@ -60,11 +60,11 @@ public class HeaderElementFacade {
 
 			Element htmlTag = allHtmlTag.get(0);
 
-			outputDocument.insert(htmlTag.getBegin() + 6,"\n"+ HTML5_CONVERTED_COMMENT + "\n<!-- Converted Date:"+new Date()+" -->\n");
+			outputDocument.insert(htmlTag.getBegin() + 6,"\n"+ HTML5_CONVERTED_COMMENT_PHASE2+ "\n<!-- Converted Date:"+new Date()+" -->\n");
 
 		} else {
 
-			outputDocument.insert(source.getBegin(),"\n"+ HTML5_CONVERTED_COMMENT + "\n<!-- Converted Date:"+new Date()+" -->\n");
+			outputDocument.insert(source.getBegin(),"\n"+ HTML5_CONVERTED_COMMENT_PHASE2 + "\n<!-- Converted Date:"+new Date()+" -->\n");
 		}
 
 		logger.debug("HTML5 comment tag added successfully!");
