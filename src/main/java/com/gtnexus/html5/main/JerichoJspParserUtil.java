@@ -1,6 +1,50 @@
 package com.gtnexus.html5.main;
 
-import static com.gtnexus.html5.util.HTML5Util.*;
+import static com.gtnexus.html5.util.HTML5Util.ALIGN;
+import static com.gtnexus.html5.util.HTML5Util.ALINK;
+import static com.gtnexus.html5.util.HTML5Util.BACKGROUND;
+import static com.gtnexus.html5.util.HTML5Util.BGCOLOR;
+import static com.gtnexus.html5.util.HTML5Util.BORDER;
+import static com.gtnexus.html5.util.HTML5Util.BORDER_COLLAPSE;
+import static com.gtnexus.html5.util.HTML5Util.BORDER_SPACING;
+import static com.gtnexus.html5.util.HTML5Util.CELLPADDING;
+import static com.gtnexus.html5.util.HTML5Util.CELLSPACING;
+import static com.gtnexus.html5.util.HTML5Util.CLEAR;
+import static com.gtnexus.html5.util.HTML5Util.COLOR;
+import static com.gtnexus.html5.util.HTML5Util.COMPACT;
+import static com.gtnexus.html5.util.HTML5Util.FACE;
+import static com.gtnexus.html5.util.HTML5Util.FLOAT;
+import static com.gtnexus.html5.util.HTML5Util.FONT_SIZE;
+import static com.gtnexus.html5.util.HTML5Util.FRAME_BORDER;
+import static com.gtnexus.html5.util.HTML5Util.HEIGHT;
+import static com.gtnexus.html5.util.HTML5Util.HSPACE;
+import static com.gtnexus.html5.util.HTML5Util.LEFT_MARGIN;
+import static com.gtnexus.html5.util.HTML5Util.LINE_HEIGHT;
+import static com.gtnexus.html5.util.HTML5Util.LINK;
+import static com.gtnexus.html5.util.HTML5Util.MARGIN;
+import static com.gtnexus.html5.util.HTML5Util.MARGIN_HEIGHT;
+import static com.gtnexus.html5.util.HTML5Util.MARGIN_LEFT;
+import static com.gtnexus.html5.util.HTML5Util.MARGIN_RIGHT;
+import static com.gtnexus.html5.util.HTML5Util.MARGIN_TOP;
+import static com.gtnexus.html5.util.HTML5Util.MARGIN_WIDTH;
+import static com.gtnexus.html5.util.HTML5Util.NOSHADE;
+import static com.gtnexus.html5.util.HTML5Util.NO_WRAP;
+import static com.gtnexus.html5.util.HTML5Util.OVERFLOW;
+import static com.gtnexus.html5.util.HTML5Util.PADDING;
+import static com.gtnexus.html5.util.HTML5Util.PADDING_BOTTOM;
+import static com.gtnexus.html5.util.HTML5Util.PADDING_TOP;
+import static com.gtnexus.html5.util.HTML5Util.SCROLLING;
+import static com.gtnexus.html5.util.HTML5Util.SIZE;
+import static com.gtnexus.html5.util.HTML5Util.STYLE;
+import static com.gtnexus.html5.util.HTML5Util.TEXT_ALIGN;
+import static com.gtnexus.html5.util.HTML5Util.TOP_MARGIN;
+import static com.gtnexus.html5.util.HTML5Util.TYPE;
+import static com.gtnexus.html5.util.HTML5Util.VALIGN;
+import static com.gtnexus.html5.util.HTML5Util.VERTICAL_ALIGN;
+import static com.gtnexus.html5.util.HTML5Util.VLINK;
+import static com.gtnexus.html5.util.HTML5Util.VSPACE;
+import static com.gtnexus.html5.util.HTML5Util.WIDTH;
+import static com.gtnexus.html5.util.HTML5Util.formatKey;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -20,7 +64,6 @@ import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Source;
 
-import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.PropertyConfigurator;
@@ -51,7 +94,6 @@ import com.gtnexus.html5.rule.body.table.td.TableDataAlignRule;
 import com.gtnexus.html5.rule.body.table.td.TableDataBgColorRule;
 import com.gtnexus.html5.rule.body.table.td.TableDataHeightRule;
 import com.gtnexus.html5.rule.body.table.td.TableDataNoWrapRule;
-import com.gtnexus.html5.rule.body.table.td.TableDataStyleRule;
 import com.gtnexus.html5.rule.body.table.td.TableDataValignRule;
 import com.gtnexus.html5.rule.body.table.td.TableDataWidthRule;
 import com.gtnexus.html5.rule.body.table.tr.TableRowAlignRule;
@@ -62,6 +104,7 @@ import com.gtnexus.html5.rule.common.ColorRule;
 import com.gtnexus.html5.rule.header.HeaderElementFacade;
 import com.gtnexus.html5.util.DbLogger;
 import com.gtnexus.html5.util.HTML5Util;
+import com.gtnexus.html5.util.StyleAnalyzer;
 
 /*
  * A JSP Parser class with static utility methods
@@ -172,7 +215,7 @@ public class JerichoJspParserUtil {
 		RULES_MAP.put(formatKey(HTMLElementName.TD, HEIGHT),
 				new TableDataHeightRule());
 		RULES_MAP.put(formatKey(HTMLElementName.TD, STYLE),
-				new TableDataStyleRule());
+				new TableStyleRule());
 		RULES_MAP.put(formatKey(HTMLElementName.TD, WIDTH),
 				new TableDataWidthRule());
 		RULES_MAP.put(formatKey(HTMLElementName.TD, VALIGN),
@@ -399,7 +442,9 @@ public class JerichoJspParserUtil {
 
 		File sourceFile = new File(filePath);
 		Source source = new Source(new FileInputStream(sourceFile));
-
+		//set current parsing file to style analyzer
+		StyleAnalyzer.currentFile = sourceFile;
+		
 		// this should be called in order to call getParentElement() method
 		source.fullSequentialParse();
 
@@ -420,11 +465,9 @@ public class JerichoJspParserUtil {
 			
 			if(!HTML5Util.isPhase1Html5ConvertedPage(source)){
 				//do full html5 conversion
-				HeaderElementFacade.fixHeaderElementObsoleteFeatures(source,
-						outputDocument, isIncludeFile);
+				HeaderElementFacade.fixHeaderElementObsoleteFeatures(source,outputDocument);
 	
-				BodyElementFacade.fixAllBodyElementObsoleteFeatures(source,
-						outputDocument);
+				BodyElementFacade.fixAllBodyElementObsoleteFeatures(source,	outputDocument);
 			}else{
 				//convert inline styles to CSS classes only
 				BodyElementFacade.fixPhase1ConvertedPagesWithCssClass(source, outputDocument);

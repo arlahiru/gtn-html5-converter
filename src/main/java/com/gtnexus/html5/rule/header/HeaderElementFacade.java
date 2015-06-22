@@ -16,10 +16,9 @@ import net.htmlparser.jericho.StartTagType;
 
 public class HeaderElementFacade {
 
-	public static void fixHeaderElementObsoleteFeatures(Source source,
-			OutputDocument outputDocument, boolean isIncludeFile) {
+	public static void fixHeaderElementObsoleteFeatures(Source source,OutputDocument outputDocument) {
 
-		changeDoctypeToHtml5(source, outputDocument, isIncludeFile);
+		changeDoctypeToHtml5(source, outputDocument);
 
 		addHtml5ConvertedCommentTag(source, outputDocument);
 
@@ -27,21 +26,16 @@ public class HeaderElementFacade {
 
 	}
 
-	private static void changeDoctypeToHtml5(Source source,
-			OutputDocument outputDocument, boolean isIncludeFile) {
-
-		//check the header element exist before add doctype
-		if (!isIncludeFile && !source.getAllElements(HTMLElementName.HTML).isEmpty()) {
-			List<Element> docTypeList = source
-					.getAllElements(StartTagType.DOCTYPE_DECLARATION);
+	private static void changeDoctypeToHtml5(Source source,OutputDocument outputDocument) {
+		
+		if (!source.getAllElements(HTMLElementName.HTML).isEmpty()) {
+			//check the header element exist before add doctype
+			List<Element> docTypeList = source.getAllElements(StartTagType.DOCTYPE_DECLARATION);
 			if (docTypeList.size() > 0) {
-
 				Element docTypeElement = docTypeList.get(0);
-
 				// remove existing doctype and add html5 doctype
 				outputDocument.replace(docTypeElement, DOCTYPE_HTML5);
 			} else {
-
 				// add html5 doc type
 				outputDocument.insert(0, DOCTYPE_HTML5 + "\n");
 			}
@@ -91,7 +85,7 @@ public class HeaderElementFacade {
 			}
 			if(!utfMetaTagAdded){
 				Element headTag = allHeadTag.get(0);	
-				outputDocument.insert(headTag.getBegin() + 6, META_CHARSET_UTF8	+ "\n");
+				outputDocument.insert(headTag.getBegin() + 6, "\n"+META_CHARSET_UTF8	+ "\n");
 			}
 
 		}

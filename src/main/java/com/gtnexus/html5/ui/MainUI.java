@@ -21,7 +21,11 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.concurrent.Executor;
+
+import javax.swing.AbstractButton;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -40,6 +44,7 @@ import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
+
 import com.gtnexus.html5.exception.HTML5ParserException;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.main.RevertBackChanges;
@@ -73,8 +78,7 @@ public class MainUI extends JFrame {
 	private final JButton btnClearlogFile = new JButton("Clear Logfile");
 	private final JButton btnBrowseSourceLocation = new JButton(
 			"Browse URL Source");
-	private final JButton btnSetBackupLocation = new JButton(
-			"Change Backup Location");
+	//private final JButton btnSetBackupLocation = new JButton("Change Backup Location");
 	private TextField textFieldlocationDirectory = new TextField();
 	private final JButton btnOpenWithDreamweaver = new JButton(
 			"Open with Dreamweaver");
@@ -85,6 +89,7 @@ public class MainUI extends JFrame {
 	private final JButton btnScan = new JButton("Scan");
 	private final JButton btnStop = new JButton("Stop");
 	private final JButton btnOpenScannedPages = new JButton("View Conflicts");
+	private final JCheckBox chkBoxAnalyzeStyle = new JCheckBox("Enable Inline Style Analyzer");
 	
 	private String sourcePath;
 	private SwingWorker currentThread;
@@ -99,6 +104,8 @@ public class MainUI extends JFrame {
 
 	public MainUI() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		ImageIcon img = new ImageIcon("retailerLogo.gif");
+		this.setIconImage(img.getImage());
 		addContent();
 		addActionListners();
 		JerichoJspParserUtil.initialize(true);
@@ -214,10 +221,10 @@ public class MainUI extends JFrame {
 
 		btnBrowseSourceLocation.setBounds(581, 17, 179, 23);
 		getContentPane().add(btnBrowseSourceLocation);
-		btnSetBackupLocation.setHorizontalAlignment(SwingConstants.LEFT);
+		chkBoxAnalyzeStyle.setHorizontalAlignment(SwingConstants.LEFT);
 
-		btnSetBackupLocation.setBounds(581, 54, 179, 23);
-		//getContentPane().add(btnSetBackupLocation);
+		chkBoxAnalyzeStyle.setBounds(581, 54, 179, 23);
+		getContentPane().add(chkBoxAnalyzeStyle);
 
 		JLabel backupLocationLabel = new JLabel("Backup Directory ");
 		backupLocationLabel.setBounds(10, 58, 130, 14);
@@ -251,7 +258,8 @@ public class MainUI extends JFrame {
 		getContentPane().add(btnStop);		
 		
 		btnScan.setBounds(277, 423, 89, 23);
-		getContentPane().add(btnScan);		
+		getContentPane().add(btnScan);
+		btnScan.setEnabled(false);
 		btnOpenScannedPages.setBounds(1030, 54, 154, 23);
 		getContentPane().add(btnOpenScannedPages);
 
@@ -340,21 +348,16 @@ public class MainUI extends JFrame {
 				currentThread = new SwingWorker<Integer, Integer>() {
 					@Override
 					protected Integer doInBackground() {
-
-						//clear conversion error table
+						//clear db logs
+						dbLogger.clearAllData();
 						dbLogger.clearAllErrors();
-						String[] files = preHTML5List.getItems();
-						
-							disableButtons();
-						
+						String[] files = preHTML5List.getItems();						
+						disableButtons();						
 						for (int i = 0; i < files.length; i++) {
 							if(!this.isCancelled()){
-								progressBar.setIndeterminate(true);
-	
-								convertToHTML5(files[i]);
-	
-								progressBar.setIndeterminate(false);
-	
+								progressBar.setIndeterminate(true);	
+								convertToHTML5(files[i]);	
+								progressBar.setIndeterminate(false);	
 								setProgressBarValue(files.length, i);
 							}
 						}
@@ -379,10 +382,10 @@ public class MainUI extends JFrame {
 				currentThread = new SwingWorker<Integer, Integer>() {
 					@Override
 					protected Integer doInBackground() throws Exception {						
-						//clear conversion error table
+						//clear db logs
+						dbLogger.clearAllData();
 						dbLogger.clearAllErrors();
-						String[] selectedItems = preHTML5List
-								.getSelectedItems();
+						String[] selectedItems = preHTML5List.getSelectedItems();
 						disableButtons();
 						for (int i = 0; i < selectedItems.length; i++) {
 							if(!isCancelled()){
@@ -390,7 +393,6 @@ public class MainUI extends JFrame {
 								convertToHTML5(selectedItems[i]);
 								progressBar.setIndeterminate(false);
 								setProgressBarValue(selectedItems.length, i);
-
 						}
 						
 					}
@@ -486,27 +488,40 @@ public class MainUI extends JFrame {
 		btnBrowseSourceLocation.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
-					JFileChooser chooser = new JFileChooser();
+					final JFileChooser chooser = new JFileChooser();
 
 					chooser.addChoosableFileFilter(new FileNameExtensionFilter(
 							"Text files", "txt", "csv", "ini","jsp"));
 					chooser.setAcceptAllFileFilterUsed(false);
 					chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-					int returnVal = chooser.showOpenDialog(new Frame());
-					sourcePath = chooser.getSelectedFile().getAbsolutePath();
-					if (!chooser.getSelectedFile().isDirectory()) {						
+					int returnVal = chooser.showOpenDialog(new Frame());					
+					if (returnVal == JFileChooser.APPROVE_OPTION && !chooser.getSelectedFile().isDirectory()) {
+						sourcePath = chooser.getSelectedFile().getAbsolutePath();
 						loadToListFromFile();
 						textFieldlocationDirectory.setText(sourcePath);
-					}else{
-						textFieldlocationDirectory.setText(sourcePath);
-						File[] filesInDirectory = chooser.getSelectedFile().listFiles();
-						// clear lists
-						preHTML5List.removeAll();
-						html5List.removeAll();
-						showProgressBar();
-						loadToListFromDirectory(filesInDirectory);
-						printOnConsole("Input Directory: "+sourcePath, "info");
-						printPreHtml5Count();
+					}else if(returnVal == JFileChooser.APPROVE_OPTION){
+						SwingWorker<Integer, Integer> loadFilesFromDir = new SwingWorker<Integer, Integer>() {
+							@Override
+							protected Integer doInBackground() throws Exception {
+								showProgressBar();
+								progressBar.setIndeterminate(true);		
+								sourcePath = chooser.getSelectedFile().getAbsolutePath();
+								textFieldlocationDirectory.setText(sourcePath);
+								File[] filesInDirectory = chooser.getSelectedFile().listFiles();
+								// clear lists
+								preHTML5List.removeAll();
+								html5List.removeAll();				
+								loadToListFromDirectory(filesInDirectory);
+								return 0;
+							}
+							protected void done() {
+								progressBar.setIndeterminate(false);
+								setProgressBarValue(1, 100);
+								printOnConsole("Input Directory: "+sourcePath, "info");
+								printPreHtml5Count();
+							};
+						};
+						loadFilesFromDir.execute();
 					}
 				} catch (Exception ex) {
 					ex.printStackTrace();
@@ -514,9 +529,24 @@ public class MainUI extends JFrame {
 
 			}
 		});
+		
+		chkBoxAnalyzeStyle.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				AbstractButton abstractButton = (AbstractButton) e.getSource();
+		        boolean selected = abstractButton.getModel().isSelected();
+		        if(selected){
+		        	HTML5Util.MODE = HTML5Util.STYLEANALYZE;
+		        }else{
+		        	HTML5Util.MODE = HTML5Util.DEFAULT;
+		        }
+				
+			}
+		});
 		/*
 		 * Sets the backup location.
-		 */
+		 
 		btnSetBackupLocation.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 
@@ -537,6 +567,7 @@ public class MainUI extends JFrame {
 
 			}
 		});
+		*/
 		/*
 		 * Opens the selected converted file and its preHTML5 version(taken from
 		 * the corresponding directory in back) in Araxis Merge
@@ -658,11 +689,9 @@ public class MainUI extends JFrame {
 	}
 
 	public void loadToListFromFile() {
-
 		// clear list
 		preHTML5List.removeAll();
 		html5List.removeAll();
-
 		ArrayList<String> fileList = readCSV();
 		showProgressBar();
 		int fileCount = 0;
@@ -680,17 +709,14 @@ public class MainUI extends JFrame {
 		printPreHtml5Count();
 	}
 	
-	public void loadToListFromDirectory(File[] files) {
-		int fileCount = 0;
+	public void loadToListFromDirectory(final File[] files) {
 		for (File file: files) {
-			fileCount++;
 			if(file.isFile() && file.getName().endsWith(".jsp")){
 				preHTML5List.add(file.getAbsolutePath());				
 			}else if(file.isDirectory()){
 				//go recursively to all the sub directories inside the current directory and add to the list
 				loadToListFromDirectory(file.listFiles());
 			}
-			setProgressBarValue(files.length, fileCount);
 		}		
 	}
 
@@ -844,7 +870,7 @@ public class MainUI extends JFrame {
 		this.btnRollbackSelected.setEnabled(true);
 		this.btnRollbackAll.setEnabled(true);
 		this.btnBrowseSourceLocation.setEnabled(true);
-		this.btnSetBackupLocation.setEnabled(true);
+		//this.btnSetBackupLocation.setEnabled(true);
 		this.btnRemove.setEnabled(true);
 		this.btnScan.setEnabled(true);
 	}
@@ -854,7 +880,7 @@ public class MainUI extends JFrame {
 		this.btnRollbackSelected.setEnabled(false);
 		this.btnRollbackAll.setEnabled(false);
 		this.btnBrowseSourceLocation.setEnabled(false);
-		this.btnSetBackupLocation.setEnabled(false);
+		//this.btnSetBackupLocation.setEnabled(false);
 		this.btnRemove.setEnabled(false);
 		this.btnScan.setEnabled(false);
 	}

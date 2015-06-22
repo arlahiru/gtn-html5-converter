@@ -10,13 +10,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import net.htmlparser.jericho.Element;
 import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Segment;
 import net.htmlparser.jericho.Source;
 import net.htmlparser.jericho.StartTagType;
+
 import org.apache.commons.lang3.StringUtils;
+
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 
 public class HTML5Util {
@@ -134,7 +137,7 @@ public class HTML5Util {
 	// CSS colors
 	public final static String WHITE = "white";
 	
-	//converter running modes
+	//converter running mode flags
 	public final static String DEFAULT = "default";
 	public final static String STYLEANALYZE = "styleanalyze";
 	public static String MODE = DEFAULT;
@@ -443,8 +446,14 @@ public class HTML5Util {
 		// Be careful when comparing newly added tags and removed tags
 		Source output = new Source(outputDocument.toString());
 		output.fullSequentialParse();
+		
+		//check the html5 doctype and verify it's there
+		if(!isHTML5DocTypeAddedToMainJsp(outputDocument)){
+			System.out.println("HTML5 doctype missing => "+output.getAllElements(HTMLElementName.TITLE));
+			return false;
+		}
 
-		if (source.getAllElements(HTMLElementName.BODY).size() != output
+		else if (source.getAllElements(HTMLElementName.BODY).size() != output
 				.getAllElements(HTMLElementName.BODY).size())
 			return false;
 		else if (source.getAllElements(HTMLElementName.HEAD).size() != output
@@ -514,6 +523,32 @@ public class HTML5Util {
 		
 		return true;
 
+	}
+	
+	public static boolean isHTML5DocTypeAddedToMainJsp(OutputDocument outputDocument) {
+		
+		Source output = new Source(outputDocument.toString());
+		
+		if(!isPhase1Html5ConvertedPage(output)){
+		
+			if(!output.getAllElements(HTMLElementName.HTML).isEmpty()){
+				List<Element> docTypeList = output.getAllElements(StartTagType.DOCTYPE_DECLARATION);
+				if (docTypeList.size() > 0) {
+					Element docTypeElement = docTypeList.get(0);
+					return docTypeElement.getStartTag().toString().equals(DOCTYPE_HTML5);
+				}else{
+					return false;
+				}
+				
+			}else{
+				//not a main jsp file
+				return true;
+			}
+		}else{
+			//phase 1 converted page
+			return true;
+		}
+		
 	}
 	
 	public static boolean containsLinkInTd(Segment td,String cssClass){

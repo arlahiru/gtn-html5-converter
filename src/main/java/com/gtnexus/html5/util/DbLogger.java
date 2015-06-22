@@ -752,7 +752,7 @@ public class DbLogger {
 		return paths;
 	}
 	
-	public void insertConflictingPages(String filename,ArrayList<String> list){
+	public void insertConflictingPages(String filename,List<String> list){
 		for(String file : list){
 			try{
 				insertConflict.setString(1,filename);
