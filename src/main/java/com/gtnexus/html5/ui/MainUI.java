@@ -491,7 +491,7 @@ public class MainUI extends JFrame {
 					final JFileChooser chooser = new JFileChooser();
 
 					chooser.addChoosableFileFilter(new FileNameExtensionFilter(
-							"Text files", "txt", "csv", "ini","jsp"));
+							"Text files", "txt", "csv", "ini","jsp","html","htm"));
 					chooser.setAcceptAllFileFilterUsed(false);
 					chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 					int returnVal = chooser.showOpenDialog(new Frame());					
@@ -711,7 +711,7 @@ public class MainUI extends JFrame {
 	
 	public void loadToListFromDirectory(final File[] files) {
 		for (File file: files) {
-			if(file.isFile() && file.getName().endsWith(".jsp")){
+			if(file.isFile() && (file.getName().endsWith(".jsp") || file.getName().endsWith(".html") || file.getName().endsWith(".htm"))){
 				preHTML5List.add(file.getAbsolutePath());				
 			}else if(file.isDirectory()){
 				//go recursively to all the sub directories inside the current directory and add to the list

@@ -620,6 +620,9 @@ public class HTML5Util {
 		if(inlineStyleValue != null && inlineStyleValue.trim().length()>0){
 			
 			//get the relevant class name of the in line style from the class map
+			
+			//TODO break inline styles into two types and get class names
+			
 			String newHTML5ClassName = JerichoJspParserUtil.STYLES_MAP.get(inlineStyleValue);
 			if(newHTML5ClassName != null){
 				//check if the element contains a class attribute already and append new class name next to existing class name(Multiple css classes supported in HTML5)

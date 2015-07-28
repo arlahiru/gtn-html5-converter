@@ -1,9 +1,12 @@
 package com.gtnexus.html5.util;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.InvalidPathException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -110,6 +113,48 @@ public class UsageScanner {
 		}
 	}
 	
+public static void getAdminPagesWithCommonFileList(File directory,List<String> effectedAdminPageList){
+	
+	String txtFile = "EffectedAdminPagesWithDetails.txt";
+	try {
+	
+	//populate common file list to a set
+	Set<String> commonFileSet = populateTextFileLinesToSet("CommonIncludeFileList.txt");
+		
+		for (final File file : directory.listFiles()) {
+			if (file.isDirectory()) {
+				getAdminPagesWithCommonFileList(file,effectedAdminPageList);
+
+			} else {
+				//scan admin site and find effected pages with include files
+				if ((file.getName().toLowerCase().endsWith(".jsp") || file.getName().toLowerCase().endsWith(".html"))) {					
+							
+							System.out.println("Scanning ->"+file.getName());							
+							// get include file paths
+							List<String> adminIncludeFilePathList = HTML5Util.getIncludeFilePaths(file.getAbsolutePath());	
+							Set<String> commonIncludesFileSet = new HashSet<String>();
+							for (String includeFilePath : adminIncludeFilePathList) {
+								if(commonFileSet.contains(includeFilePath)){
+									commonIncludesFileSet.add(includeFilePath);
+								}
+							}
+							if(!commonIncludesFileSet.isEmpty()){								
+								effectedAdminPageList.add(file.getAbsolutePath());
+								effectedAdminPageList.add("<========================================================================>");
+								effectedAdminPageList.addAll(commonIncludesFileSet);
+								effectedAdminPageList.add(".");
+							}
+					
+				}
+			}
+		}
+		writeListToFile(effectedAdminPageList,txtFile);
+	}
+	 catch (Exception e) {
+			e.printStackTrace();
+	}
+}
+	
 	public static void writeResultToFile(Set<String> conflictedPageList,String fileName){
 		
 		File txtFile = new File(fileName);
@@ -130,8 +175,101 @@ public class UsageScanner {
 		}
 	}
 	
+public static void writeListToFile(List<String> list,String fileName){
+		
+		File txtFile = new File(fileName);
+		FileWriter fileWriter = null;
+		try {
+			fileWriter = new FileWriter(txtFile);			
+			for(String page : list){
+				if(page.equals(".")){
+					fileWriter.write("\n");		
+				}else{
+					fileWriter.write(page+"\n");
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}finally{
+			try {
+				fileWriter.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public static void analyzeTradeConflictPages(){
+		
+		String fileName="TradeConflictedPageList.txt";
+		File txtFile = new File(fileName);
+		FileReader fileReader = null;
+		BufferedReader br = null;
+		try {
+			fileReader = new FileReader(txtFile);			
+			br = new BufferedReader(fileReader);
+		    String line;
+		    while ((line = br.readLine()) != null) {
+		    	System.out.println();
+		    	System.out.println(line);
+		    	System.out.println("=====================================================================");
+		       List<String> includeList =  HTML5Util.getIncludeFilePaths(line);
+		       Set<String> filteredList =  new HashSet();
+		       for(String path:includeList){
+		    	   if(path.contains("\\en\\includes/") || path.contains("\\en\\style") || path.contains("\\en\\common")){
+		    		   filteredList.add(path);
+		    	   } 
+		       }
+		       for(String path:filteredList){
+		    	   System.out.println(path);
+		       }
+		       
+		    }
+		} catch (IOException e) {
+			e.printStackTrace();
+		}finally{
+			try {
+				fileReader.close();
+				br.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		
+	}
+	
+	public static Set<String> populateTextFileLinesToSet(String fileName){
+		
+		Set<String> fileSet = new HashSet<String>();
+		File txtFile = new File(fileName);
+		FileReader fileReader = null;
+		BufferedReader br = null;
+		try {
+			fileReader = new FileReader(txtFile);			
+			br = new BufferedReader(fileReader);
+		    String line;
+		    while ((line = br.readLine()) != null) {
+		    	fileSet.add(line);		       
+		    }
+		} catch (IOException e) {
+			e.printStackTrace();
+		}finally{
+			try {
+				fileReader.close();
+				br.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return fileSet;
+		
+	}
+	
 	
 	public static void main(String args[]){
+		
+		/*
 		
 		//String inputFile="C://code//gtnexus//development//modules//main//tcard//web//tradecard//en//includes/common/sectionspacer.include.jsp";
 		String tradeFolder = "C://code//gtnexus//development//modules//main//tcard//web//tradecard//en//trade";
@@ -147,7 +285,13 @@ public class UsageScanner {
 		writeResultToFile(setOfConflictedTradeFiles,"trade.txt");
 		System.out.println("Start at:"+startTime+" End at:"+endTime);
 		System.out.println("Scan Finished!");
-
+		*/
+		
+		//analyzeTradeConflictPages();
+		String directoryPathToAnalyzeConflicts = "C:\\code\\gtnexus\\development\\modules\\main\\tcard\\web\\tradecard\\en\\administration";
+		File directory = new File(directoryPathToAnalyzeConflicts);
+		List<String> effectedAdminFileList = new ArrayList<String>();
+		getAdminPagesWithCommonFileList(directory,effectedAdminFileList);
 		
 	}
 	

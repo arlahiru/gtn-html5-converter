@@ -89,12 +89,9 @@ public class StyleAnalyzer {
 						currentFile = file;
 						JerichoJspParserUtil.convertToHTML5(file.getPath(),
 								false, "Style Analyzer");
-					} catch (HTML5ParserException e) {
+					} catch (Exception e) {
 						e.printStackTrace();
 					}
-					 catch (IOException e) {
-							e.printStackTrace();
-						}
 				}
 			}
 		}

@@ -817,46 +817,50 @@ public class DbLogger {
 	}
 	
 	//clear all data except conversion errors
-	public void clearAllData(){			
-		Statement deleteStatement = null;
-		try{
-			deleteStatement = con.createStatement();
-			//deleteStatement.execute(deleteError);
-			deleteStatement.execute(deleteChangelog);
-			deleteStatement.execute(deleteIncludePage);
-			deleteStatement.execute(deletePage);
-			deleteStatement.execute(deleteConflictPage);
-			deleteStatement.execute(deleteInlineStyle);
-			
-		}catch(SQLException e){
-				e.printStackTrace();
-		}finally{
-			if(deleteStatement != null){
-				try {
-					deleteStatement.close();
-				} catch (SQLException e) {
+	public void clearAllData(){
+		if (isEnabled()) {
+			Statement deleteStatement = null;
+			try{
+				deleteStatement = con.createStatement();
+				//deleteStatement.execute(deleteError);
+				deleteStatement.execute(deleteChangelog);
+				deleteStatement.execute(deleteIncludePage);
+				deleteStatement.execute(deletePage);
+				deleteStatement.execute(deleteConflictPage);
+				deleteStatement.execute(deleteInlineStyle);
+				
+			}catch(SQLException e){
 					e.printStackTrace();
+			}finally{
+				if(deleteStatement != null){
+					try {
+						deleteStatement.close();
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
 				}
 			}
-		}		
+		}
 	}
 	//clear all data
-	public void clearAllErrors(){			
-		Statement deleteStatement = null;
-		try{
-			deleteStatement = con.createStatement();
-			deleteStatement.execute(deleteError);			
-		}catch(SQLException e){
-				e.printStackTrace();
-		}finally{
-			if(deleteStatement != null){
-				try {
-					deleteStatement.close();
-				} catch (SQLException e) {
+	public void clearAllErrors(){	
+		if (isEnabled()) {
+			Statement deleteStatement = null;
+			try{
+				deleteStatement = con.createStatement();
+				deleteStatement.execute(deleteError);			
+			}catch(SQLException e){
 					e.printStackTrace();
+			}finally{
+				if(deleteStatement != null){
+					try {
+						deleteStatement.close();
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
 				}
-			}
-		}		
+			}		
+		}
 	}
 	
 	public void clearLog4JLogfile(){
