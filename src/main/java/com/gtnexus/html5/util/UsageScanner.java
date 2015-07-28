@@ -7,14 +7,17 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.InvalidPathException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import com.gtnexus.html5.ui.MainUI;
 
-
+/**
+ * @author lruhunage
+ *This is a utility scan wrote to scan admin and trade folders to find common page list, affected trade/admin pages with details/
+ *This class seems messy as it modified frequently to scan different folders to get different results in detail :)
+ */
 public class UsageScanner {
 	
 	private static Set<String> scannedPagesSet = new HashSet<String>();
@@ -214,7 +217,7 @@ public static void writeListToFile(List<String> list,String fileName){
 		    	System.out.println(line);
 		    	System.out.println("=====================================================================");
 		       List<String> includeList =  HTML5Util.getIncludeFilePaths(line);
-		       Set<String> filteredList =  new HashSet();
+		       Set<String> filteredList =  new HashSet<String>();
 		       for(String path:includeList){
 		    	   if(path.contains("\\en\\includes/") || path.contains("\\en\\style") || path.contains("\\en\\common")){
 		    		   filteredList.add(path);

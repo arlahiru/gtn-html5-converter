@@ -3,13 +3,12 @@ package com.gtnexus.html5.rule.body.input;
 import static com.gtnexus.html5.main.JerichoJspParserUtil.RULES_MAP;
 import static com.gtnexus.html5.main.JerichoJspParserUtil.dbLogger;
 import static com.gtnexus.html5.main.JerichoJspParserUtil.logger;
-import static com.gtnexus.html5.util.HTML5Util.*;
+import static com.gtnexus.html5.util.HTML5Util.formatKey;
+import static com.gtnexus.html5.util.HTML5Util.makeStartTag;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import net.htmlparser.jericho.Attribute;
-import net.htmlparser.jericho.Attributes;
 import net.htmlparser.jericho.Element;
 import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.OutputDocument;
@@ -17,7 +16,6 @@ import net.htmlparser.jericho.Source;
 
 import com.gtnexus.html5.facade.Facade;
 import com.gtnexus.html5.rule.Rule;
-import com.gtnexus.html5.rule.body.font.FontFaceRule;
 import com.gtnexus.html5.util.HTML5Util;
 
 public class InputElementFacade extends Facade{

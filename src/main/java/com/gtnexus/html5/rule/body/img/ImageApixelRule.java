@@ -1,14 +1,12 @@
 package com.gtnexus.html5.rule.body.img;
 
 import static com.gtnexus.html5.main.JerichoJspParserUtil.logger;
-import static com.gtnexus.html5.util.HTML5Util.BACKGROUND_COLOR;
 import static com.gtnexus.html5.util.HTML5Util.BORDER;
 import static com.gtnexus.html5.util.HTML5Util.DIV;
 import static com.gtnexus.html5.util.HTML5Util.HEIGHT;
 import static com.gtnexus.html5.util.HTML5Util.LINE_HEIGHT;
 import static com.gtnexus.html5.util.HTML5Util.PX;
 import static com.gtnexus.html5.util.HTML5Util.STYLE;
-import static com.gtnexus.html5.util.HTML5Util.WHITE;
 import static com.gtnexus.html5.util.HTML5Util.WIDTH;
 import net.htmlparser.jericho.Element;
 import net.htmlparser.jericho.OutputDocument;

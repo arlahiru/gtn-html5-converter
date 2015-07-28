@@ -1,21 +1,21 @@
 package com.gtnexus.html5.facade;
 
+import static com.gtnexus.html5.main.JerichoJspParserUtil.dbLogger;
+import static com.gtnexus.html5.main.JerichoJspParserUtil.logger;
+
 import java.util.Iterator;
+
+import net.htmlparser.jericho.Attribute;
+import net.htmlparser.jericho.Element;
+import net.htmlparser.jericho.OutputDocument;
+import net.htmlparser.jericho.Segment;
+import net.htmlparser.jericho.Tag;
 
 import com.gtnexus.html5.exception.HTML5ParserException;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.util.HTML5Util;
 import com.gtnexus.html5.util.StyleAnalyzer;
-
-import net.htmlparser.jericho.Attribute;
-import net.htmlparser.jericho.Element;
-import net.htmlparser.jericho.OutputDocument;
-import net.htmlparser.jericho.Segment;
-import net.htmlparser.jericho.StartTag;
-import net.htmlparser.jericho.Tag;
-import static com.gtnexus.html5.main.JerichoJspParserUtil.dbLogger;
-import static com.gtnexus.html5.main.JerichoJspParserUtil.logger;
 
 public abstract class Facade {
 

@@ -2,11 +2,9 @@ package com.gtnexus.html5.rule.body.table.td;
 
 import static com.gtnexus.html5.util.HTML5Util.TEXT_ALIGN;
 import net.htmlparser.jericho.Attribute;
-import net.htmlparser.jericho.HTMLElementName;
+import net.htmlparser.jericho.Element;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Segment;
-import net.htmlparser.jericho.Element;
-import net.htmlparser.jericho.StartTagType;
 
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.util.HTML5Util;

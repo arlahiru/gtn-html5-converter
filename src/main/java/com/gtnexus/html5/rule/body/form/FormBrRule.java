@@ -1,10 +1,10 @@
 package com.gtnexus.html5.rule.body.form;
 
+import static com.gtnexus.html5.util.HTML5Util.PADDING_BOTTOM;
+import static com.gtnexus.html5.util.HTML5Util.STYLE;
 import net.htmlparser.jericho.Element;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Segment;
-import static com.gtnexus.html5.util.HTML5Util.PADDING_BOTTOM;
-import static com.gtnexus.html5.util.HTML5Util.STYLE;
 
 import com.gtnexus.html5.rule.Rule;
 import com.gtnexus.html5.util.HTML5Util;

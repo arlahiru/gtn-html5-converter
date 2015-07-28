@@ -2,7 +2,6 @@ package com.gtnexus.html5.rule.body.table;
 
 import static com.gtnexus.html5.util.HTML5Util.BORDER_COLLAPSE;
 import static com.gtnexus.html5.util.HTML5Util.BORDER_SPACING;
-import static com.gtnexus.html5.util.HTML5Util.COLLAPSE;
 import static com.gtnexus.html5.util.HTML5Util.PX;
 import static com.gtnexus.html5.util.HTML5Util.SEPERATE;
 import net.htmlparser.jericho.Attribute;

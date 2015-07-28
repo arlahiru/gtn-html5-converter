@@ -4,7 +4,6 @@ import static com.gtnexus.html5.util.HTML5Util.BACKGROUND_COLOR;
 import static com.gtnexus.html5.util.HTML5Util.BORDER_WIDTH;
 import static com.gtnexus.html5.util.HTML5Util.COLOR;
 import static com.gtnexus.html5.util.HTML5Util.HEIGHT;
-import net.htmlparser.jericho.Attribute;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Segment;
 

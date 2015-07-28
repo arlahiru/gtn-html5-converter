@@ -3,7 +3,6 @@ package com.gtnexus.html5.rule.body.table;
 import static com.gtnexus.html5.util.HTML5Util.BORDER;
 import static com.gtnexus.html5.util.HTML5Util.PX;
 import net.htmlparser.jericho.Attribute;
-import net.htmlparser.jericho.Element;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Segment;
 

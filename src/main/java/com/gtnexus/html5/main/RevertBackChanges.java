@@ -1,5 +1,7 @@
 package com.gtnexus.html5.main;
 
+import static com.gtnexus.html5.main.JerichoJspParserUtil.logger;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
@@ -7,7 +9,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -15,7 +16,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 import net.htmlparser.jericho.Source;
-import static com.gtnexus.html5.main.JerichoJspParserUtil.logger;
 
 import com.gtnexus.html5.util.DbLogger;
 import com.gtnexus.html5.util.HTML5Util;

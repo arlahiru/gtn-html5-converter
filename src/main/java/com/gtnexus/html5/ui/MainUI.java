@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.concurrent.Executor;
 
 import javax.swing.AbstractButton;
 import javax.swing.ImageIcon;
@@ -92,9 +91,7 @@ public class MainUI extends JFrame {
 	private final JCheckBox chkBoxAnalyzeStyle = new JCheckBox("Enable Inline Style Analyzer");
 	
 	private String sourcePath;
-	private SwingWorker currentThread;
-	private Executor current;
-	
+	private SwingWorker<Integer, Integer> currentThread;
 	private ProgramLauncher launcher = new ProgramLauncher(this);
 	private UsageScanner scanner = new UsageScanner(this);
 	

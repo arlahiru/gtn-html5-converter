@@ -1,17 +1,13 @@
 package com.gtnexus.html5.util;
 
+import static com.gtnexus.html5.main.JerichoJspParserUtil.dbLogger;
+
 import java.io.File;
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.gtnexus.html5.main.JerichoJspParserUtil.dbLogger;
-import net.htmlparser.jericho.Element;
 import net.htmlparser.jericho.Tag;
 
-import com.gtnexus.html5.exception.HTML5ParserException;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 
 public class StyleAnalyzer {

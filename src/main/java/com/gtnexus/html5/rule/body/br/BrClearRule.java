@@ -2,7 +2,6 @@ package com.gtnexus.html5.rule.body.br;
 
 import static com.gtnexus.html5.util.HTML5Util.BOTH;
 import static com.gtnexus.html5.util.HTML5Util.CLEAR;
-import net.htmlparser.jericho.Attribute;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Segment;
 

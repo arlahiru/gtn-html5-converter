@@ -6,7 +6,10 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Scanner;
 
 
 public class LinkGrabber {
@@ -128,7 +131,7 @@ public class LinkGrabber {
 				fileContent = deletePart(fileContent,linksTagEnd);
 			}
 			
-			 Iterator it = urls.entrySet().iterator();
+			 Iterator<?> it = urls.entrySet().iterator();
 			    while (it.hasNext()) {
 			        Map.Entry pairs = (Map.Entry)it.next();
 			        String currentJsp = (String)pairs.getValue();

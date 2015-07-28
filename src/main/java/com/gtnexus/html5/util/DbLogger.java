@@ -3,21 +3,26 @@ package com.gtnexus.html5.util;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
-import java.lang.System.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import javax.swing.JTextArea;
 import javax.swing.filechooser.FileSystemView;
 
 import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
@@ -220,8 +225,9 @@ public class DbLogger {
 	private synchronized void readCredentials() {
 
 		StringBuilder str = new StringBuilder();
+		BufferedReader br = null;
 		try{
-			BufferedReader br = new BufferedReader(new FileReader(CONFIG_FILE));
+			br = new BufferedReader(new FileReader(CONFIG_FILE));
 			String sCurrentLine;
 
 			while ((sCurrentLine = br.readLine()) != null) {
@@ -230,6 +236,12 @@ public class DbLogger {
 
 		} catch (IOException e) {
 			e.printStackTrace();
+		}finally{
+			try {
+				br.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 		USER = str.substring(str.indexOf("<USERNAME>") + 10,
 				str.indexOf("</USERNAME>"));

@@ -5,11 +5,11 @@ import static com.gtnexus.html5.util.HTML5Util.FORM;
 
 import java.util.List;
 
-import com.gtnexus.html5.rule.Rule;
-
 import net.htmlparser.jericho.Element;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Source;
+
+import com.gtnexus.html5.rule.Rule;
 
 public class FormElementFacade {
 
