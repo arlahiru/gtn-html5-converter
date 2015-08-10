@@ -15,7 +15,7 @@ import com.gtnexus.html5.ui.MainUI;
 
 /**
  * @author lruhunage
- *This is a utility scan wrote to scan admin and trade folders to find common page list, affected trade/admin pages with details/
+ *This is a utility scan wrote to scan admin and trade folders to find common page list, victim trade/admin pages with details.
  *This class seems messy as it modified frequently to scan different folders to get different results in detail :)
  */
 public class UsageScanner {
@@ -41,7 +41,7 @@ public class UsageScanner {
 								System.out.println("Scanning -> "+tradeFileEntry.getAbsolutePath());
 	
 								// get include file paths
-								List<String> includeFilePathList = HTML5Util.getIncludeFilePaths(tradeFileEntry.getAbsolutePath());
+								List<String> includeFilePathList = HTML5Util.getIncludeFilePathsAndReplaceWithH5ExtensionInOutputDoc(tradeFileEntry.getAbsolutePath(),null);
 	
 								for (String includeFilePath : includeFilePathList) {
 									if(!setOfConflictedTradeFiles.contains(tradeFileEntry.getAbsolutePath())){	
@@ -100,7 +100,7 @@ public class UsageScanner {
 					
 					try {						
 							// get include file paths
-							List<String> adminIncludeFilePathList = HTML5Util.getIncludeFilePaths(file.getAbsolutePath());	
+							List<String> adminIncludeFilePathList = HTML5Util.getIncludeFilePathsAndReplaceWithH5ExtensionInOutputDoc(file.getAbsolutePath(),null);	
 							
 							for (String includeFilePath : adminIncludeFilePathList) {
 								if(scannedPagesSet.add(includeFilePath)){
@@ -134,7 +134,7 @@ public static void getAdminPagesWithCommonFileList(File directory,List<String> e
 							
 							System.out.println("Scanning ->"+file.getName());							
 							// get include file paths
-							List<String> adminIncludeFilePathList = HTML5Util.getIncludeFilePaths(file.getAbsolutePath());	
+							List<String> adminIncludeFilePathList = HTML5Util.getIncludeFilePathsAndReplaceWithH5ExtensionInOutputDoc(file.getAbsolutePath(),null);	
 							Set<String> commonIncludesFileSet = new HashSet<String>();
 							for (String includeFilePath : adminIncludeFilePathList) {
 								if(commonFileSet.contains(includeFilePath)){
@@ -216,7 +216,7 @@ public static void writeListToFile(List<String> list,String fileName){
 		    	System.out.println();
 		    	System.out.println(line);
 		    	System.out.println("=====================================================================");
-		       List<String> includeList =  HTML5Util.getIncludeFilePaths(line);
+		       List<String> includeList =  HTML5Util.getIncludeFilePathsAndReplaceWithH5ExtensionInOutputDoc(line,null);
 		       Set<String> filteredList =  new HashSet<String>();
 		       for(String path:includeList){
 		    	   if(path.contains("\\en\\includes/") || path.contains("\\en\\style") || path.contains("\\en\\common")){
@@ -253,7 +253,9 @@ public static void writeListToFile(List<String> list,String fileName){
 			br = new BufferedReader(fileReader);
 		    String line;
 		    while ((line = br.readLine()) != null) {
-		    	fileSet.add(line);		       
+		    	//replace \development\ with \devl\ => unified code base
+		    	line = line.replace("\\development\\", "\\devl\\");
+		    	fileSet.add(HTML5Util.formatToWindowsPath(line));		       
 		    }
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -267,8 +269,7 @@ public static void writeListToFile(List<String> list,String fileName){
 		}
 		return fileSet;
 		
-	}
-	
+	}	
 	
 	public static void main(String args[]){
 		

@@ -22,7 +22,7 @@ public class ProgramLauncher {
 	private String internetExplorer_path = "C:/Program Files (x86)/Internet Explorer/iexplorer.exe";
 	private String notepadPath = "";
 	public final String DEFAULT_BACKUP_PATH = "C:/Html5BackupDir";
-	public static String adminBasePath = "C:/code/gtnexus/development/modules/main/tcard";
+	public static String adminBasePath = "C:/code/gtnexus/devl/modules/main/tcard";
 	public static String tradeBasePath = "";
 	public final String CONFIG_FILE = "config.ini";
 	public final String LOCALHOST = "http://localhost:8080/";

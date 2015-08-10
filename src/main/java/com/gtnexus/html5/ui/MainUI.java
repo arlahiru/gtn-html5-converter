@@ -888,11 +888,12 @@ public class MainUI extends JFrame {
 	}
 	
 	private void scan(String filename){
+		/*
 		printOnConsole("Scanning "+filename,"info");
 		scanner.performScan(formatFilePath(filename),sourcePath);
 		// get include file paths
 		try {
-			java.util.List<String> includeFilePathList = HTML5Util.getIncludeFilePaths(formatFilePath(filename));
+			java.util.List<String> includeFilePathList = HTML5Util.getIncludeFilePathsAndReplaceWithH5ExtensionInOutputDoc(formatFilePath(filename));
 			for(String includeFile:includeFilePathList){
 				scanner.performScan(includeFile,sourcePath);
 			}
@@ -902,5 +903,6 @@ public class MainUI extends JFrame {
 			e.printStackTrace();
 		}
 		printOnConsole(filename+ "Completed.","info");
+		*/
 	}
 }

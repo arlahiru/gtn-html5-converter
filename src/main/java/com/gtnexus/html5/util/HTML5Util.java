@@ -20,6 +20,8 @@ import net.htmlparser.jericho.StartTagType;
 
 import org.apache.commons.lang3.StringUtils;
 
+import sun.font.EAttribute;
+
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 
 public class HTML5Util {
@@ -307,7 +309,15 @@ public class HTML5Util {
 		return "<" + type + " style=\"";
 	}
 
-	public static List<String> getIncludeFilePaths(String mainFilePath)
+	/**
+	 * 
+	 * @param mainFilePath
+	 * @param outputDoc - pass null for output document to get only the include file list
+	 * @return
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	public static List<String> getIncludeFilePathsAndReplaceWithH5ExtensionInOutputDoc(String mainFilePath, OutputDocument outputDoc)
 			throws FileNotFoundException, IOException {
 
 		File sourceFile = new File(mainFilePath);
@@ -332,37 +342,56 @@ public class HTML5Util {
 				Pattern pattern = Pattern.compile("\"(.*?)\"");
 				Matcher matcher = pattern.matcher(tagContent);
 				if (matcher.find()) {
-
+					
+					//this file name may contains ../ or ./ at the begin
 					String includeFileName = matcher.group(1);
+					
+					//check if the include file is a jsp
+					if(includeFileName.endsWith(".jsp")){
 
-					int numOfDirectoriesBack = StringUtils.countMatches(
-							includeFileName, "../");
-
-					// remove ../ from the path
-					includeFileName = includeFileName.replace("../", "");
-
-					String parentJspAbsolutePath = sourceFile.getAbsolutePath();
-
-					Path parentFolderPath = Paths.get(parentJspAbsolutePath)
-							.getParent();
-
-					Path includeFileFolderPath = parentFolderPath;
-
-					// construct include file parent directory
-					for (int i = 0; i < numOfDirectoriesBack; i++) {
-
-						includeFileFolderPath = includeFileFolderPath
+						int numOfDirectoriesBack = StringUtils.countMatches(
+								includeFileName, "../");
+	
+						String parentJspAbsolutePath = sourceFile.getAbsolutePath();
+	
+						Path parentFolderPath = Paths.get(parentJspAbsolutePath)
 								.getParent();
-					}
-
-					// remove ./ from the path
-					includeFileName = includeFileName.replace("./", "");
-
-					String includeFilePath = includeFileFolderPath
-							+ File.separator + includeFileName;
-					//add to list only if include file is a jsp
-					if(includeFilePath.endsWith(".jsp")){
+	
+						Path includeFileFolderPath = parentFolderPath;
+	
+						// construct include file parent directory
+						for (int i = 0; i < numOfDirectoriesBack; i++) {
+	
+							includeFileFolderPath = includeFileFolderPath
+									.getParent();
+						}				
+						
+						// remove ../ from the path and assign to onlyTheIncludeFileName
+						String onlyTheIncludeFileName = includeFileName.replace("../", "");
+	
+						// remove ./ from the onlyTheIncludeFileName
+						onlyTheIncludeFileName = onlyTheIncludeFileName.replace("./", "");
+	
+						String includeFilePath = includeFileFolderPath + File.separator + onlyTheIncludeFileName;
+						
+						//add this file to include file list
 						includeFilePaths.add(includeFilePath);
+						
+						//check if the common include file list which link with both admin and trade stacks loaded into the list at startup and its not empty
+						if(outputDoc != null && JerichoJspParserUtil.COMMON_INCLUDE_FILE_SET != null && !JerichoJspParserUtil.COMMON_INCLUDE_FILE_SET.isEmpty()){
+							//if this include file is a common file in admin and trade then change the extension to h5.jsp
+							//replace \\ with \ in C:\\code\\gtnexus like paths before check with set
+							//includeFilePath = includeFilePath.replaceAll("\\\\", "\\");
+							if(JerichoJspParserUtil.COMMON_INCLUDE_FILE_SET.contains(formatToWindowsPath(includeFilePath))){								
+								//replace include file name with fileName.h5.jsp extension in the output document - This should only applied when Admin stack conversion.
+								//TODO This should be ROLLBACK after the trade stack conversion
+								String newIncludeFileName = includeFileName.replace(".jsp", ".h5.jsp");
+								String newIncludeTagWithModifiedExtension = "<%@ include file=\""+newIncludeFileName+"\" >";
+								//replace include tag in the output doc with modified file extension
+								outputDoc.replace(e, newIncludeTagWithModifiedExtension);
+							}
+						}
+						
 					}
 
 				} else {
@@ -378,7 +407,7 @@ public class HTML5Util {
 
 		return includeFilePaths;
 	}
-
+	
 	public static boolean hasAttributes(Element e) {
 
 		return e.getAttributes() == null ? false : true;
@@ -388,25 +417,26 @@ public class HTML5Util {
 	// e.g <td <%=containerPlugIn.getCellStyle(rowIndex, columnIndex)%> > </td>
 	public static String getInnerServerTagContent(Element e) {
 
-		List<String> quotedContentList = new ArrayList<String>(0);
+		//TODO jsp java code bug e.g id="<%= "fieldListRow_" + substitutionNamer.name() %>"
+		List<String> quotedDynamicJavaCodeList = new ArrayList<String>(0);
 
 		String startTagContent = e.getStartTag().toString();
 
-		Pattern quotePattern = Pattern.compile("['\"](.*?)['\"]");
-		Matcher quoteMatcher = quotePattern.matcher(startTagContent);
+		Pattern serverCodeQuotePattern = Pattern.compile("['\"]\\s*<%=\\s*(.*?)\\s*%>\\s*['\"]");
+		Matcher quoteMatcher = serverCodeQuotePattern.matcher(startTagContent);
 
 		while (!quoteMatcher.hitEnd()) {
 
 			if (quoteMatcher.find()) {
-				// populate quoted content array
-				quotedContentList.add(quoteMatcher.group(1));
+				//populate quoted dynamic jsp code content list
+				quotedDynamicJavaCodeList.add(quoteMatcher.group(1));
 			}
 
 		}
 
 		String serverCode = "";
 
-		Pattern pattern = Pattern.compile("<%(.*?)%>");
+		Pattern pattern = Pattern.compile("<%=\\s*(.*?)\\s*%>");
 		Matcher matcher = pattern.matcher(startTagContent);
 		while (!matcher.hitEnd()) {
 
@@ -414,9 +444,9 @@ public class HTML5Util {
 
 				// ignore onclick="<%=actionButtonLink%>" like patterns by
 				// checking is this code inside quotes.
-				if (!isInsideQuotes(quotedContentList, matcher.group(1))) {
+				if (!isInsideQuotes(quotedDynamicJavaCodeList, matcher.group(1))) {
 					// enclose with matching scriptlet tags
-					serverCode = serverCode + "<%" + matcher.group(1) + "%>";
+					serverCode = serverCode + "<%=" + matcher.group(1) + "%>";
 				}
 			}
 		}
@@ -468,6 +498,7 @@ public class HTML5Util {
 		else if (source.getAllElements(HTMLElementName.TD).size() != output
 				.getAllElements(HTMLElementName.TD).size())
 			return false;
+		//jsp java code bug e.g id="<%= "fieldListRow_" + substitutionNamer.name() %>" returns incorrect tr count in output
 		else if (source.getAllElements(HTMLElementName.TR).size() != output
 				.getAllElements(HTMLElementName.TR).size())
 			return false;
@@ -602,11 +633,13 @@ public class HTML5Util {
 	
 	public static String replaceInlineStyleWithClass(String newElement, Element originalElement){
 		
-		String styleRegex = "style=\\s*\"(.*?)\"\\s*";
-		String classRegex = "class=\\s*\"(.*?)\"\\s*";
+		String styleRegex = "style\\s*=\\s*\"(.*?)\"";
+		String classRegex = "class\\s*=\\s*\"(.*?)\"";
 		
 		//remove empty in line style attributes before proceed
 		newElement = removeEmptyInlineStyleAttribute(newElement);
+		//to lower case to avoid missing STYLE, CLASS cases
+		newElement = newElement.toLowerCase();
 		
 		Pattern stylepattern = Pattern.compile(styleRegex);
 		Matcher stylematcher = stylepattern.matcher(newElement);
@@ -619,21 +652,70 @@ public class HTML5Util {
 		
 		if(inlineStyleValue != null && inlineStyleValue.trim().length()>0){
 			
-			//get the relevant class name of the in line style from the class map
+			//replace in line style with relevant class name from the class map in given new element
 			
-			//TODO break inline styles into two types and get class names
+			StringBuilder ignoreStylesOutputParam = new StringBuilder();
+			String cleanedInlineStyleValue = removeIgnoreStyleAttributes(inlineStyleValue, ignoreStylesOutputParam);
+			StringBuffer inlineStyles = new StringBuffer();
+			StringBuffer positionalStyles = new StringBuffer();
+			String positionalClassName = null;
+			String inlineClassName = null;
 			
-			String newHTML5ClassName = JerichoJspParserUtil.STYLES_MAP.get(inlineStyleValue);
-			if(newHTML5ClassName != null){
-				//check if the element contains a class attribute already and append new class name next to existing class name(Multiple css classes supported in HTML5)
-				//e.g class="no-padding no-margin some-class some-other-class"
-				String classAttributeValue = originalElement.getAttributeValue(HTML5Util.CLASS);
-				if(classAttributeValue != null){
-					classAttributeValue = classAttributeValue+" "+newHTML5ClassName;
-					newElement = newElement.replaceAll(classRegex, "class=\""+classAttributeValue+"\"");
-				}else{
-					newElement = newElement.replaceAll(styleRegex, "class=\""+newHTML5ClassName+"\"");
+			/*break the inline style into positional and inline two categories. It helps in two ways:
+			 * 
+			 * 1. Style analyzer to log styles to db and analayze them according to the category
+			 * 2. Find the relevant css class name from the map
+			 * 
+			 */
+			StyleAnalyzer.breakdownToInlineAndPositionalCssStyles(cleanedInlineStyleValue, inlineStyles, positionalStyles);
+			
+			//log styles to db if style analyzer flag is enable
+			if(HTML5Util.MODE.equals(HTML5Util.STYLEANALYZE)){
+				//record in line styles to the db to analyze common styles
+				StyleAnalyzer.recordInlineStyle(originalElement.getName(),originalElement.getDebugInfo(),inlineStyles,positionalStyles);
+			}
+			
+			if(!inlineStyles.toString().isEmpty()){
+				inlineClassName = JerichoJspParserUtil.STYLES_MAP.get(inlineStyles);
+			}
+			if(!positionalStyles.toString().isEmpty()){
+				positionalClassName = JerichoJspParserUtil.STYLES_MAP.get(positionalStyles);
+			}
+			
+			//build string with new class names into one string including existing class names
+			StringBuilder finalClassPropertyValue = new StringBuilder();
+			if(inlineClassName != null){
+				finalClassPropertyValue.append(inlineClassName).append(" ");
+			}
+			if(positionalClassName != null){
+				finalClassPropertyValue.append(inlineClassName).append(" ");
+			}
+			//get the existing class value
+			String existingClassAttributeValue = originalElement.getAttributeValue(HTML5Util.CLASS);
+			//check if the element contains a class attribute already and append new class name next to existing class name(Multiple css classes supported in HTML5)
+			//e.g class="no-padding no-margin some-class some-other-class"
+			if(existingClassAttributeValue != null){
+				finalClassPropertyValue.append(existingClassAttributeValue);
+			}
+			if(finalClassPropertyValue != null){
+				//replace existing class attribute with new value
+				if(originalElement.getAttributeValue(HTML5Util.CLASS) != null)
+				{
+					newElement = newElement.replaceAll(classRegex, "class=\""+finalClassPropertyValue+"\"");
 				}
+				//add new class attribute to at the end of the replacing element tag
+				else{
+					newElement = newElement.substring(0, newElement.length()-1); // remove last closing > from the new tag
+					//add class value at the end of the tag
+					newElement = newElement + " class=\""+finalClassPropertyValue+"\" >";
+				}
+			}
+			//replace in line style with ignore style set when mapping to css classes(e.g width)
+			if(!ignoreStylesOutputParam.toString().isEmpty()){
+				newElement = newElement.replaceAll(styleRegex, "style=\""+ignoreStylesOutputParam.toString()+"\"");
+			}else{
+				//remove in line style attribute from the new tag
+				newElement = newElement.replaceAll(styleRegex, "");
 			}
 		}
 		return newElement;
@@ -642,6 +724,56 @@ public class HTML5Util {
 	public static String removeEmptyInlineStyleAttribute(String newElement){		
 		String emptyStyleRegex = "style=\"\"";
 		return newElement.replaceAll(emptyStyleRegex, "");		
+	}
+	
+	public static String removeIgnoreStyleAttributes(String inlinestyle, StringBuilder ignoreStylesOutputParam){
+		List<String> styleList = inlineStyleToList(inlinestyle);
+		StringBuilder cleanedInlineSyle = new StringBuilder();
+		for(String style:styleList){
+			//System.out.println(style);
+			String name = style.split(":")[0];
+			String value = style.split(":")[1];
+			//ignore width style and keep in line as it is - Gil suggested this to improve CSS re-usability
+			if(name.trim().equals(WIDTH)){
+				ignoreStylesOutputParam.append(style).append(";");
+				continue;
+			}
+			//ignore runtime jsp expression values
+			if(value.contains("<%=")){
+				ignoreStylesOutputParam.append(style).append(";");
+				continue;
+			}
+			cleanedInlineSyle.append(style).append(";");
+		}
+		return cleanedInlineSyle.toString();		
+	}
+	
+	public static List<String> inlineStyleToList(String style){		
+		List<String> styleList = new ArrayList<String>();
+		//check if the in line style contains more than one property and add them all to list via ; split
+		if(style.contains(";")){
+			String[] values = style.split(";");
+			for(int i=0;i<values.length;i++){
+				//check if the style contains name and value pair separate with a colon before add
+				if(values[i].split(":").length == 2){
+					styleList.add(values[i]);
+				}
+			}
+		}else{
+			//check if the style contains name and value pair separate with a colon before add
+			if(style.split(":").length == 2){
+				styleList.add(style);
+			}
+		}
+		return styleList;
+	}
+	
+	public static String formatToWindowsPath(String path){
+		return path.replace("/", "\\");
+	}
+	
+	public static boolean isCommonJspFile(String fileName){
+		return JerichoJspParserUtil.COMMON_INCLUDE_FILE_SET.contains(fileName);
 	}
 	
 }

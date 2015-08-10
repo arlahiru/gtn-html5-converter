@@ -105,6 +105,7 @@ import com.gtnexus.html5.rule.header.HeaderElementFacade;
 import com.gtnexus.html5.util.DbLogger;
 import com.gtnexus.html5.util.HTML5Util;
 import com.gtnexus.html5.util.StyleAnalyzer;
+import com.gtnexus.html5.util.UsageScanner;
 
 /*
  * A JSP Parser class with static utility methods
@@ -119,6 +120,8 @@ public class JerichoJspParserUtil {
 	
 	public static Set<String> POSITIONAL_STYLES_SET = new HashSet<String>();
 	//public static Set<String> INLINE_STYLES = new HashSet<String>();
+	
+	public static Set<String> COMMON_INCLUDE_FILE_SET = null;
 
 	public static final Logger logger = Logger
 			.getLogger(JerichoJspParserUtil.class);
@@ -149,6 +152,8 @@ public class JerichoJspParserUtil {
 		initRulesMap();
 		initCssClassMap(isAdminCss);
 		initPositionalStyleSet();
+		//load common include file set to a String list
+		COMMON_INCLUDE_FILE_SET = UsageScanner.populateTextFileLinesToSet("CommonIncludeFileList.txt");
 	}
 	
 	private static void initLogger(){		
@@ -162,7 +167,7 @@ public class JerichoJspParserUtil {
 		Logger.getRootLogger().addAppender(appender);			
 
 		// disable dblogger
-		dbLogger.enable(false);
+		//dbLogger.enable(false);
 
 		if (dbLogger.isEnabled()) {
 			dbLogger.initialize();
@@ -415,8 +420,23 @@ public class JerichoJspParserUtil {
 		POSITIONAL_STYLES_SET.add(VSPACE);
 		POSITIONAL_STYLES_SET.add(HSPACE);
 		POSITIONAL_STYLES_SET.add(NO_WRAP);
-		POSITIONAL_STYLES_SET.add(OVERFLOW);
-		
+		POSITIONAL_STYLES_SET.add("padding-right");
+		POSITIONAL_STYLES_SET.add("padding-left");
+		POSITIONAL_STYLES_SET.add("display");
+		POSITIONAL_STYLES_SET.add("max-width");
+		POSITIONAL_STYLES_SET.add("word-wrap");
+		POSITIONAL_STYLES_SET.add("word-break");
+		POSITIONAL_STYLES_SET.add("position");
+		POSITIONAL_STYLES_SET.add("right");
+		POSITIONAL_STYLES_SET.add("left");
+		POSITIONAL_STYLES_SET.add("top");
+		POSITIONAL_STYLES_SET.add("bottom");
+		POSITIONAL_STYLES_SET.add("z-index");
+		POSITIONAL_STYLES_SET.add("min-width");
+		POSITIONAL_STYLES_SET.add("white-space");
+		POSITIONAL_STYLES_SET.add("table-layout");
+		POSITIONAL_STYLES_SET.add("margin-bottom");
+		POSITIONAL_STYLES_SET.add("visibility");
 
 		//TODO add all the positional styles here
 		
@@ -426,8 +446,7 @@ public class JerichoJspParserUtil {
 	/*
 	 * public method that convert given JSP file to HTML5 compliant JSP file
 	 */
-	public static void convertToHTML5(String filePath, boolean isIncludeFile,
-			String textfileName)
+	public static void convertToHTML5(String filePath, boolean isIncludeFile, String textfileName)
 	throws FileNotFoundException, IOException, HTML5ParserException {
 
 		// Parse JSP file and remove obsolete html5 tags and apply relevant
@@ -442,6 +461,8 @@ public class JerichoJspParserUtil {
 
 		File sourceFile = new File(filePath);
 		Source source = new Source(new FileInputStream(sourceFile));
+		//new output document generated from the source document
+		OutputDocument outputDocument = new OutputDocument(source);
 		//set current parsing file to style analyzer
 		StyleAnalyzer.currentFile = sourceFile;
 		
@@ -452,16 +473,14 @@ public class JerichoJspParserUtil {
 			//backup the original file before convert
 			RevertBackChanges.backupOriginalFileToLocalDisk(sourceFile);
 			
-			int numOfConvertedIncludeFiles = 0;
-			// get include file paths
-			List<String> includeFilePathList = HTML5Util
-					.getIncludeFilePaths(filePath);
-
-			printIncludeFiles(includeFilePathList);
+			int numOfConvertedIncludeFiles = 0;		
 
 			logger.debug("Conversion started...");
+			
+			// get include file paths and replace extension if they are common - only in admin conversion:phase 2
+			List<String> includeFilePathList = HTML5Util.getIncludeFilePathsAndReplaceWithH5ExtensionInOutputDoc(filePath,outputDocument);
 
-			OutputDocument outputDocument = new OutputDocument(source);
+			printIncludeFiles(includeFilePathList);
 			
 			if(!HTML5Util.isPhase1Html5ConvertedPage(source)){
 				//do full html5 conversion
@@ -503,10 +522,21 @@ public class JerichoJspParserUtil {
 					logger.info(filePath + " converted successfully!");
 
 				} else {
-					logger.error(filePath
-							+ " has not been saved. Source and output elements not matched!");
-					throw new HTML5ParserException("Content Exception",
-							"File Formatting Error: Tags Missing", null);
+					logger.error(filePath+ " has not been saved. Source and output elements not matched!");
+					
+					//remove exception throw code and allow to save the page even with tag missing error.
+					//throw new HTML5ParserException("Content Exception","File Formatting Error: Tags Missing", null);
+					
+					/*Following pages throws the exception. Please check them in browser after conversion  
+					 *  labeldefinitionedit.include.jsp
+						ProofOfDeliveryEditStep.include.jsp
+						factorlist.include.jsp
+						securityprofilepermissionlist.include.jsp
+						TestDocumentMatching.jsp
+					 */				 
+					
+					saveOutputDoc(sourceFile, outputDocument);
+					logger.info(filePath + " converted successfully with tag count mismatch errors!");
 				}
 
 			} else {
@@ -517,21 +547,36 @@ public class JerichoJspParserUtil {
 
 			}
 
-		} else {
+		} else if(HTML5Util.isCommonJspFile(sourceFile.getName())){
+			// save this common jsp file again to check if extension replacement needed (.h5.jsp) even if the file is html5 converted in earlier round
+			saveOutputDoc(sourceFile, outputDocument);
+			logger.info("This page is already HTML 5! But need to check extension replacement.");
+		}else{
 			logger.info("This page is already HTML 5!");
 		}
 
 	}
 
 	public static void saveOutputDoc(File sourceFile, OutputDocument outputDoc)
-			throws IOException {
+			throws IOException {		    
 
-			// overwrite final output jsp on the disk
+			String newFileName = sourceFile.getAbsolutePath();
+			//check if the file is in the common include file list then set h5.jsp extension
+			//TODO This should be ROLLBACK after the trade stack conversion
+			if(HTML5Util.isCommonJspFile(newFileName)){
+				//set the new h5.jsp extension
+				newFileName = newFileName.replace(".jsp",".h5.jsp");
+				sourceFile = new File(newFileName);
+				//check if the file exist with the new extension and stop save it again
+				if(sourceFile.exists()){
+					return;
+				}
+			}
+			
+			//save converted jsp output to the disk
 			BufferedWriter jspWriter = new BufferedWriter(new OutputStreamWriter(
-					new FileOutputStream(sourceFile), "UTF-8"));
-	
-			jspWriter.write(outputDoc.toString());
-	
+					new FileOutputStream(sourceFile), "UTF-8"));	
+			jspWriter.write(outputDoc.toString());	
 			jspWriter.close();
 	}
 
@@ -545,6 +590,18 @@ public class JerichoJspParserUtil {
 			logger.info(includeFilePath);
 		}
 
+	}
+	
+	public static void main(String args[]){
+		
+		try {
+			JerichoJspParserUtil.initialize(true);
+			JerichoJspParserUtil.convertToHTML5("C:\\code\\gtnexus\\devl\\modules\\main\\tcard\\web\\tradecard\\en\\includes\\administration\\businessRuleDetail.include.jsp",false, "Style Analyzer");
+		} catch (HTML5ParserException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 
 }

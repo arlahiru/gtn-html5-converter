@@ -20,7 +20,7 @@ public class ErrorsFrame extends JFrame {
 	/**
 	 * 
 	 */
-	private static final String BASE_PATH = "C:/code/gtnexus/development/modules/main/tcard/web/tradecard/en/";
+	private static final String BASE_PATH = "C:/code/gtnexus/devl/modules/main/tcard/web/tradecard/en/";
 	private static final long serialVersionUID = 1L;
 	
 	private static ErrorsFrame instance = null;

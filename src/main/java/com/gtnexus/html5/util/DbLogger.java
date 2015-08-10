@@ -100,12 +100,12 @@ public class DbLogger {
 	private volatile PreparedStatement insertInlinestyle;;
 	
 	//delete queries
-	private String deleteError = "DELETE FROM " +ERRORS_TABLE;
-	private String deleteIncludePage = "DELETE FROM " + INCLUDE_FILE_TABLE;
-	private String deletePage = "DELETE FROM " + PAGE_TABLE;		
-	private String deleteChangelog = "DELETE FROM " + CHANGE_LOG_TABLE;
-	private String deleteConflictPage = "DELETE FROM " + CONFLICTING_PAGES;
-	private String deleteInlineStyle = "DELETE FROM " + INLINESTYLE_TABLE;
+	private String deleteError = "truncate " +ERRORS_TABLE;
+	private String deleteIncludePage = "truncate " + INCLUDE_FILE_TABLE;
+	private String deletePage = "truncate " + PAGE_TABLE;		
+	private String deleteChangelog = "truncate " + CHANGE_LOG_TABLE;
+	private String deleteConflictPage = "truncate " + CONFLICTING_PAGES;
+	private String deleteInlineStyle = "truncate " + INLINESTYLE_TABLE;
 	
 	private void makeStatements(){
 		String queryInsertPage = "INSERT INTO " + PAGE_TABLE + "(" + PATH + ","
