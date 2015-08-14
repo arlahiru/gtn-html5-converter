@@ -2,11 +2,13 @@ package com.gtnexus.html5.util;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.InvalidPathException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -41,7 +43,7 @@ public class UsageScanner {
 								System.out.println("Scanning -> "+tradeFileEntry.getAbsolutePath());
 	
 								// get include file paths
-								List<String> includeFilePathList = HTML5Util.getIncludeFilePathsAndReplaceWithH5ExtensionInOutputDoc(tradeFileEntry.getAbsolutePath(),null);
+								Set<String> includeFilePathList = HTML5Util.getIncludeFilePathsAndReplaceWithH5ExtensionInOutputDoc(tradeFileEntry.getAbsolutePath(),null);
 	
 								for (String includeFilePath : includeFilePathList) {
 									if(!setOfConflictedTradeFiles.contains(tradeFileEntry.getAbsolutePath())){	
@@ -100,7 +102,7 @@ public class UsageScanner {
 					
 					try {						
 							// get include file paths
-							List<String> adminIncludeFilePathList = HTML5Util.getIncludeFilePathsAndReplaceWithH5ExtensionInOutputDoc(file.getAbsolutePath(),null);	
+							Set<String> adminIncludeFilePathList = HTML5Util.getIncludeFilePathsAndReplaceWithH5ExtensionInOutputDoc(file.getAbsolutePath(),null);	
 							
 							for (String includeFilePath : adminIncludeFilePathList) {
 								if(scannedPagesSet.add(includeFilePath)){
@@ -134,7 +136,7 @@ public static void getAdminPagesWithCommonFileList(File directory,List<String> e
 							
 							System.out.println("Scanning ->"+file.getName());							
 							// get include file paths
-							List<String> adminIncludeFilePathList = HTML5Util.getIncludeFilePathsAndReplaceWithH5ExtensionInOutputDoc(file.getAbsolutePath(),null);	
+							Set<String> adminIncludeFilePathList = HTML5Util.getIncludeFilePathsAndReplaceWithH5ExtensionInOutputDoc(file.getAbsolutePath(),null);	
 							Set<String> commonIncludesFileSet = new HashSet<String>();
 							for (String includeFilePath : adminIncludeFilePathList) {
 								if(commonFileSet.contains(includeFilePath)){
@@ -216,7 +218,7 @@ public static void writeListToFile(List<String> list,String fileName){
 		    	System.out.println();
 		    	System.out.println(line);
 		    	System.out.println("=====================================================================");
-		       List<String> includeList =  HTML5Util.getIncludeFilePathsAndReplaceWithH5ExtensionInOutputDoc(line,null);
+		    	Set<String> includeList =  HTML5Util.getIncludeFilePathsAndReplaceWithH5ExtensionInOutputDoc(line,null);
 		       Set<String> filteredList =  new HashSet<String>();
 		       for(String path:includeList){
 		    	   if(path.contains("\\en\\includes/") || path.contains("\\en\\style") || path.contains("\\en\\common")){
@@ -269,7 +271,37 @@ public static void writeListToFile(List<String> list,String fileName){
 		}
 		return fileSet;
 		
-	}	
+	}
+	
+	public static void printIncludesInsideCommonIncludes(Set<String> commonFileList){
+		
+		for(String file: commonFileList){
+			try {
+				Set<String> includeFileList = HTML5Util.getIncludeFilePathsAndReplaceWithH5ExtensionInOutputDoc(file, null);
+				printStringCollectionToConsole(includeFileList);
+				printIncludesInsideCommonIncludes(includeFileList);
+				
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+	}
+	
+	public static void printStringCollectionToConsole(Collection<String> list){
+		for(String item : list){
+			System.out.println(item);
+		}
+	}
+	
+	public static Set<String> substractFromSet(Set<String> mainSet, Set<String> substractSet){		
+		mainSet.removeAll(substractSet);
+		return mainSet;
+	}
 	
 	public static void main(String args[]){
 		
@@ -292,10 +324,27 @@ public static void writeListToFile(List<String> list,String fileName){
 		*/
 		
 		//analyzeTradeConflictPages();
-		String directoryPathToAnalyzeConflicts = "C:\\code\\gtnexus\\development\\modules\\main\\tcard\\web\\tradecard\\en\\administration";
+	/*	String directoryPathToAnalyzeConflicts = "C:\\code\\gtnexus\\development\\modules\\main\\tcard\\web\\tradecard\\en\\administration";
 		File directory = new File(directoryPathToAnalyzeConflicts);
 		List<String> effectedAdminFileList = new ArrayList<String>();
 		getAdminPagesWithCommonFileList(directory,effectedAdminFileList);
+		*/
+		
+		//Set<String> commonFileSet = UsageScanner.populateTextFileLinesToSet("CommonIncludeFileList.txt");
+		//UsageScanner.printIncludesInsideCommonIncludes(commonFileSet);
+		
+		//substract two string files
+/*		Set<String> mainSet = populateTextFileLinesToSet("IncludesInsideCommonIncludeList.txt");
+		Set<String> substractSet = populateTextFileLinesToSet("canConvertList.txt");
+		
+		Set<String> finalSet = substractFromSet(mainSet,substractSet);
+		printStringCollectionToConsole(finalSet);*/
+		
+		//add two string file name texts
+		Set<String> mainSet = populateTextFileLinesToSet("IncludesInsideCommonIncludeList.txt");
+		Set<String> tobeAddSet = populateTextFileLinesToSet("CommonIncludeFileList.txt");
+		mainSet.addAll(tobeAddSet);
+		printStringCollectionToConsole(mainSet);
 		
 	}
 	

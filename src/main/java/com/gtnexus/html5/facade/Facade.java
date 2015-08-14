@@ -26,9 +26,9 @@ public abstract class Facade {
 		try {			
 			Tag original_Element = (Tag) originalElement;
 			//in line style replacement
-			//output.replace(originalElement, replacement.toString());
+			output.replace(originalElement, replacement.toString());
 			//apply css class by replacing in line style  before replace output doc element
-			output.replace(originalElement, HTML5Util.replaceInlineStyleWithClass(replacement.toString(),original_Element.getElement()));
+			//output.replace(originalElement, HTML5Util.replaceInlineStyleWithClass(replacement.toString(),original_Element.getElement()));
 
 			//log this replacement
 			dbLogger.log(original_Element.getName(),

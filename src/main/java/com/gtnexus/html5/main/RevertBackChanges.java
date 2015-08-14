@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Set;
 
 import net.htmlparser.jericho.Source;
 
@@ -47,7 +48,7 @@ public class RevertBackChanges {
 		File convertedFile = new File(convertedFilePath);
 
 		// get include file paths. 
-		List<String> includeFilePathList = HTML5Util.getIncludeFilePathsAndReplaceWithH5ExtensionInOutputDoc(convertedFilePath,null);
+		Set<String> includeFilePathList = HTML5Util.getIncludeFilePathsAndReplaceWithH5ExtensionInOutputDoc(convertedFilePath,null);
 
 		// recursively revert include files
 		for (String includeFilePath : includeFilePathList) {			

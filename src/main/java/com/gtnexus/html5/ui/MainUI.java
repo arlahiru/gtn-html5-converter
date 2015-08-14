@@ -358,10 +358,11 @@ public class MainUI extends JFrame {
 								setProgressBarValue(files.length, i);
 							}
 						}
-						enableButtons();
-		
+						enableButtons();						
+						JerichoJspParserUtil.printIncludeFiles(JerichoJspParserUtil.tag_missing_file_set);
 						return 0;
 					}
+					
 
 				};
 
@@ -394,6 +395,7 @@ public class MainUI extends JFrame {
 						
 					}
 						enableButtons();	
+						JerichoJspParserUtil.printIncludeFiles(JerichoJspParserUtil.tag_missing_file_set);
 						return 0;
 					}
 
@@ -485,7 +487,7 @@ public class MainUI extends JFrame {
 		btnBrowseSourceLocation.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
-					final JFileChooser chooser = new JFileChooser();
+					final JFileChooser chooser = new JFileChooser(ProgramLauncher.adminBasePath);
 
 					chooser.addChoosableFileFilter(new FileNameExtensionFilter(
 							"Text files", "txt", "csv", "ini","jsp","html","htm"));

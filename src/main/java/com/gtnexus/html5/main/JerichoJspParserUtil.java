@@ -54,10 +54,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import net.htmlparser.jericho.HTMLElementName;
@@ -128,6 +131,8 @@ public class JerichoJspParserUtil {
 	public static final DbLogger dbLogger = DbLogger.getInstance();
 	private static StringWriter consoleWriter;
 	private static WriterAppender appender;
+	
+	public static Set<String> tag_missing_file_set = new HashSet<String>();
 
 	static {
 
@@ -386,8 +391,38 @@ public class JerichoJspParserUtil {
 	
 	private static void initCssClassMap(boolean isAdminCss){
 
-		STYLES_MAP = dbLogger.getCssClasses(isAdminCss);
+		//load from db
+		//STYLES_MAP = dbLogger.getCssClasses(isAdminCss);
 		
+		//load class names dynamically
+		STYLES_MAP = new HashMap<String,String>(0);
+		String HTML5_POSITIONAL_CLASS = "html5-pos-";
+		String HTML5_INLINE_CLASS = "html5-inline-";
+		int i,j;
+		i=j=0;
+		//load positional class names
+		Set<String> positional_style_set = UsageScanner.populateTextFileLinesToSet("positional.txt");
+		for(String style:positional_style_set){
+			STYLES_MAP.put(style, HTML5_POSITIONAL_CLASS+(i++));
+		}
+		
+		//load in line class names
+		Set<String> inline_style_set = UsageScanner.populateTextFileLinesToSet("inline.txt");
+		for(String style:inline_style_set){
+			STYLES_MAP.put(style, HTML5_INLINE_CLASS+(j++));
+		}
+		
+		//dbLogger.writeDynamicStyleMapToDB(true);
+		
+		//generate css file from the map
+		Set<String> cssEntrySet = new HashSet<String>();
+		Set<Entry<String,String>> entrySet = STYLES_MAP.entrySet();
+		for(Entry<String,String> entry:entrySet){
+			//remove escape chars from style e.g font-family: \'helvetica neue\',helvetica,arial,sans-serif;
+			String style = entry.getKey().replaceAll("\\\\'", "'");
+			cssEntrySet.add("."+entry.getValue()+" { "+style+" }\n");
+		}
+		UsageScanner.writeResultToFile(cssEntrySet,"html5-style.css");
 	}
 	
 	private static void initPositionalStyleSet(){
@@ -478,10 +513,10 @@ public class JerichoJspParserUtil {
 			logger.debug("Conversion started...");
 			
 			// get include file paths and replace extension if they are common - only in admin conversion:phase 2
-			List<String> includeFilePathList = HTML5Util.getIncludeFilePathsAndReplaceWithH5ExtensionInOutputDoc(filePath,outputDocument);
-
-			printIncludeFiles(includeFilePathList);
+			Set<String> includeFilePathSet = HTML5Util.getIncludeFilePathsAndReplaceWithH5ExtensionInOutputDoc(filePath,outputDocument);
 			
+			printIncludeFiles(includeFilePathSet);
+			//if not a phase 1 converted jsp page
 			if(!HTML5Util.isPhase1Html5ConvertedPage(source)){
 				//do full html5 conversion
 				HeaderElementFacade.fixHeaderElementObsoleteFeatures(source,outputDocument);
@@ -493,7 +528,7 @@ public class JerichoJspParserUtil {
 			}
 
 			// recursively convert include files
-			for (String includeFilePath : includeFilePathList) {
+			for (String includeFilePath : includeFilePathSet) {
 
 				// Catch if any exception occurred and proceed with the other
 				// include files.
@@ -514,18 +549,24 @@ public class JerichoJspParserUtil {
 
 			// check if all the include files have converted successfully
 			// before save
-			if (includeFilePathList.size() == numOfConvertedIncludeFiles) {
+			if (includeFilePathSet.size() == numOfConvertedIncludeFiles) {
 				//check with source file to make sure that output document is not missing any original html/jsp tags after the conversion
-				if (HTML5Util.isCommonTagsCountMatch(source, outputDocument)) {
-					// overwrite source file with new output doc
-					saveOutputDoc(sourceFile, outputDocument);
-					logger.info(filePath + " converted successfully!");
-
-				} else {
-					logger.error(filePath+ " has not been saved. Source and output elements not matched!");
+				try{
+					if (HTML5Util.isCommonTagsCountMatch(source, outputDocument)) {
+						// overwrite source file with new output doc
+						saveOutputDoc(sourceFile, outputDocument);
+						logger.info(filePath + " converted successfully!");
+	
+					} else {
 					
+					}
+				//catch exception if tag missing
+				}catch(HTML5ParserException e){
+					logger.error("Tag Error:"+e.getMessage()+" - "+filePath);
+					tag_missing_file_set.add(e.getTagInfo()+":"+filePath);
+					//System.out.println("Tag missing error: "+filePath);
 					//remove exception throw code and allow to save the page even with tag missing error.
-					//throw new HTML5ParserException("Content Exception","File Formatting Error: Tags Missing", null);
+					throw e;
 					
 					/*Following pages throws the exception. Please check them in browser after conversion  
 					 *  labeldefinitionedit.include.jsp
@@ -535,8 +576,8 @@ public class JerichoJspParserUtil {
 						TestDocumentMatching.jsp
 					 */				 
 					
-					saveOutputDoc(sourceFile, outputDocument);
-					logger.info(filePath + " converted successfully with tag count mismatch errors!");
+					//saveOutputDoc(sourceFile, outputDocument);
+					//logger.info(filePath + " converted successfully with tag count mismatch errors!");
 				}
 
 			} else {
@@ -554,7 +595,6 @@ public class JerichoJspParserUtil {
 		}else{
 			logger.info("This page is already HTML 5!");
 		}
-
 	}
 
 	public static void saveOutputDoc(File sourceFile, OutputDocument outputDoc)
@@ -580,14 +620,12 @@ public class JerichoJspParserUtil {
 			jspWriter.close();
 	}
 
-	public static void printIncludeFiles(List<String> includeFilePathList) {
+	public static void printIncludeFiles(Collection<String> includeFilePathList) {
 
-		logger.info("Include File list:");
-
-		// recursively convert include files
 		for (String includeFilePath : includeFilePathList) {
 
 			logger.info(includeFilePath);
+			System.out.println(includeFilePath);
 		}
 
 	}

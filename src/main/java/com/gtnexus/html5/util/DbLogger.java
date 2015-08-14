@@ -22,9 +22,12 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.swing.filechooser.FileSystemView;
 
+import com.gtnexus.html5.main.JerichoJspParserUtil;
 import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
 
 
@@ -97,7 +100,8 @@ public class DbLogger {
 	private volatile PreparedStatement getErrors;
 	private volatile PreparedStatement updateScannedState;
 	private volatile PreparedStatement insertConflict;
-	private volatile PreparedStatement insertInlinestyle;;
+	private volatile PreparedStatement insertInlinestyle;
+	private volatile PreparedStatement insertCssClassName;
 	
 	//delete queries
 	private String deleteError = "truncate " +ERRORS_TABLE;
@@ -106,6 +110,7 @@ public class DbLogger {
 	private String deleteChangelog = "truncate " + CHANGE_LOG_TABLE;
 	private String deleteConflictPage = "truncate " + CONFLICTING_PAGES;
 	private String deleteInlineStyle = "truncate " + INLINESTYLE_TABLE;
+	private String deleteCssClass = "truncate " + CSSCLASS_TABLE;
 	
 	private void makeStatements(){
 		String queryInsertPage = "INSERT INTO " + PAGE_TABLE + "(" + PATH + ","
@@ -139,6 +144,8 @@ public class DbLogger {
 				+ FILE_NAME + "," + ELEMENT_NAME + "," +ELEMENT_LINE+","+ STYLETEXT +","+IS_POSITIONAL+","+ IS_ADMIN 
 				+ ") VALUES (?,?,?,?,?,?);";
 		
+		String querytInsertCssStyles = "INSERT INTO "+CSSCLASS_TABLE+ "("+ CLASS_NAME + "," + STYLE + "," +IS_ADMIN+")"+" VALUES(?,?,?);";
+		
 		try{
 			insertPage=con.prepareStatement(queryInsertPage,
 					Statement.RETURN_GENERATED_KEYS);
@@ -160,6 +167,8 @@ public class DbLogger {
 			insertConflict = con.prepareStatement(quertInsertConflict);
 			
 			insertInlinestyle = con.prepareStatement(queryInlineStyle);
+			
+			insertCssClassName = con.prepareStatement(querytInsertCssStyles);
 			
 		}catch(SQLException e){
 			e.printStackTrace();
@@ -798,9 +807,21 @@ public class DbLogger {
 		
 	}
 	
+	private synchronized void insertCssClasses(String className,String style,boolean isAdmin) {
+		try {			
+			insertCssClassName.setString(1,className);
+			insertCssClassName.setString(2,style);
+			insertCssClassName.setBoolean(3, isAdmin);
+			insertCssClassName.execute();
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+			e.printStackTrace();
+		}
+	}
+	
 	public Map<String,String> getCssClasses(Boolean isAdmin){
 		
-		String query = "SELECT * FROM "+CSSCLASS_TABLE+" WHERE "+IS_ADMIN+"="+isAdmin+";";
+		String query = "SELECT DISTINCT className, style FROM "+CSSCLASS_TABLE+" WHERE "+IS_ADMIN+"="+isAdmin+";";
 		Map<String,String> classMap = new HashMap<String, String>();
 		
 		Statement statement = null;
@@ -809,8 +830,8 @@ public class DbLogger {
 			ResultSet rs = statement.executeQuery(query);
 			
 			while(rs.next()){
-				
-				classMap.put(rs.getString(3), rs.getString(2));
+				//class name => style
+				classMap.put(rs.getString(1), rs.getString(2));
 			}
 			
 		}catch(SQLException e){
@@ -840,6 +861,7 @@ public class DbLogger {
 				deleteStatement.execute(deletePage);
 				deleteStatement.execute(deleteConflictPage);
 				deleteStatement.execute(deleteInlineStyle);
+				deleteStatement.execute(deleteCssClass);
 				
 			}catch(SQLException e){
 					e.printStackTrace();
@@ -882,6 +904,13 @@ public class DbLogger {
 			logWriter.close();
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+	}
+	
+	public void writeDynamicStyleMapToDB(boolean isAdmin){
+		Set<Entry<String,String>> entrySet = JerichoJspParserUtil.STYLES_MAP.entrySet();
+		for(Entry<String,String> entry:entrySet){
+			insertCssClasses(entry.getValue(),entry.getKey(),isAdmin);
 		}
 	}
 	

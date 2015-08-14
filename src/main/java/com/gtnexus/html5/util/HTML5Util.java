@@ -7,7 +7,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,6 +24,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import sun.font.EAttribute;
 
+import com.gtnexus.html5.exception.HTML5ParserException;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
 
 public class HTML5Util {
@@ -317,14 +320,14 @@ public class HTML5Util {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	public static List<String> getIncludeFilePathsAndReplaceWithH5ExtensionInOutputDoc(String mainFilePath, OutputDocument outputDoc)
+	public static Set<String> getIncludeFilePathsAndReplaceWithH5ExtensionInOutputDoc(String mainFilePath, OutputDocument outputDoc)
 			throws FileNotFoundException, IOException {
 
 		File sourceFile = new File(mainFilePath);
 
 		Source source = new Source(new FileInputStream(sourceFile));
 
-		List<String> includeFilePaths = new ArrayList<String>(0);
+		Set<String> includeFilePaths = new HashSet<String>(0);
 
 		// get all server tags <% %>
 		List<Element> allElements = source
@@ -480,77 +483,76 @@ public class HTML5Util {
 		//check the html5 doctype and verify it's there
 		if(!isHTML5DocTypeAddedToMainJsp(outputDocument)){
 			System.out.println("HTML5 doctype missing => "+output.getAllElements(HTMLElementName.TITLE));
-			return false;
+			throw new HTML5ParserException("Tag Missing Exception","HTML5 doctype missing", "doctype");
 		}
 
 		else if (source.getAllElements(HTMLElementName.BODY).size() != output
 				.getAllElements(HTMLElementName.BODY).size())
-			return false;
+			throw new HTML5ParserException("Tag Missing Exception","Body tag missing", "body");
 		else if (source.getAllElements(HTMLElementName.HEAD).size() != output
 				.getAllElements(HTMLElementName.HEAD).size())
-			return false;
+			throw new HTML5ParserException("Tag Missing Exception","Head tag missing", "head");
 		if (source.getAllElements(HTMLElementName.FORM).size() != output
 				.getAllElements(HTMLElementName.FORM).size())
-			return false;
+			throw new HTML5ParserException("Tag Missing Exception","Form tag missing", "form");
 		else if (source.getAllElements(HTMLElementName.TABLE).size() != output
 				.getAllElements(HTMLElementName.TABLE).size())
-			return false;
+			throw new HTML5ParserException("Tag Missing Exception","Table tag missing", "table");
 		else if (source.getAllElements(HTMLElementName.TD).size() != output
 				.getAllElements(HTMLElementName.TD).size())
-			return false;
+			throw new HTML5ParserException("Tag Missing Exception","TD tag missing", "td");
 		//jsp java code bug e.g id="<%= "fieldListRow_" + substitutionNamer.name() %>" returns incorrect tr count in output
 		else if (source.getAllElements(HTMLElementName.TR).size() != output
 				.getAllElements(HTMLElementName.TR).size())
-			return false;
+			throw new HTML5ParserException("Tag Missing Exception","TR tag missing", "tr");
 		else if (source.getAllElements(HTMLElementName.TH).size() != output
 				.getAllElements(HTMLElementName.TH).size())
-			return false;
+			throw new HTML5ParserException("Tag Missing Exception","TH tag missing", "th");
 		else if (source.getAllElements(HTMLElementName.THEAD).size() != output
 				.getAllElements(HTMLElementName.THEAD).size())
-			return false;
+			throw new HTML5ParserException("Tag Missing Exception","THEAD tag missing", "thead");
 		else if (source.getAllElements(HTMLElementName.TFOOT).size() != output
 				.getAllElements(HTMLElementName.TFOOT).size())
-			return false;
+			throw new HTML5ParserException("Tag Missing Exception","TFOOT tag missing", "tfoot");
 		else if (source.getAllElements(HTMLElementName.TBODY).size() != output
 				.getAllElements(HTMLElementName.TBODY).size())
-			return false;
+			throw new HTML5ParserException("Tag Missing Exception","TBODY tag missing", "tbody");
 		else if (source.getAllElements(HTMLElementName.INPUT).size() != output
 				.getAllElements(HTMLElementName.INPUT).size())
-			return false;
+			throw new HTML5ParserException("Tag Missing Exception","INPUT tag missing", "input");
 		else if (source.getAllElements(HTMLElementName.IFRAME).size() != output
 				.getAllElements(HTMLElementName.IFRAME).size())
-			return false;
+			throw new HTML5ParserException("Tag Missing Exception","IFRAME tag missing", "iframe");
 		else if (source.getAllElements(HTMLElementName.BR).size() != output
 				.getAllElements(HTMLElementName.BR).size())
-			return false;
-
+			throw new HTML5ParserException("Tag Missing Exception","BR tag missing", "br");
 		else if (source.getAllElements(HTMLElementName.CAPTION).size() != output
 				.getAllElements(HTMLElementName.CAPTION).size())
-			return false;
+			throw new HTML5ParserException("Tag Missing Exception","CAPTION tag missing", "caption");
 		else if (source.getAllElements(HTMLElementName.HR).size() != output
 				.getAllElements(HTMLElementName.HR).size())
-			return false;
+			throw new HTML5ParserException("Tag Missing Exception","HR tag missing", "hr");
 		else if (source.getAllElements(HTMLElementName.LEGEND).size() != output
 				.getAllElements(HTMLElementName.LEGEND).size())
-			return false;
+			throw new HTML5ParserException("Tag Missing Exception","LEGEND tag missing", "legend");
 		else if (source.getAllElements(HTMLElementName.LI).size() != output
 				.getAllElements(HTMLElementName.LI).size())
-			return false;
+			throw new HTML5ParserException("Tag Missing Exception","LI tag missing", "li");
 		else if (source.getAllElements(HTMLElementName.OL).size() != output
 				.getAllElements(HTMLElementName.OL).size())
-			return false;
+			throw new HTML5ParserException("Tag Missing Exception","OL tag missing", "ol");
 		else if (source.getAllElements(HTMLElementName.P).size() != output
 				.getAllElements(HTMLElementName.P).size())
-			return false;
+			throw new HTML5ParserException("Tag Missing Exception","P tag missing", "p");
 		else if (source.getAllElements(HTMLElementName.PRE).size() != output
 				.getAllElements(HTMLElementName.PRE).size())
-			return false;
+			throw new HTML5ParserException("Tag Missing Exception","PRE tag missing", "pre");
 		else if (source.getAllElements(HTMLElementName.UL).size() != output
 				.getAllElements(HTMLElementName.UL).size())
-			return false;
+			throw new HTML5ParserException("Tag Missing Exception","UL tag missing", "ul");
 		else if ((source.getAllElements(HTMLElementName.SPAN).size() + source.getAllElements(HTMLElementName.FONT).size() + source.getAllElements(HTML5Util.NO_BR).size())!= output
 				.getAllElements(HTMLElementName.SPAN).size())
-			return false;
+			throw new HTML5ParserException("Tag Missing Exception","SPAN tag missing", "span");
 		
 		return true;
 
@@ -633,13 +635,13 @@ public class HTML5Util {
 	
 	public static String replaceInlineStyleWithClass(String newElement, Element originalElement){
 		
-		String styleRegex = "style\\s*=\\s*\"(.*?)\"";
-		String classRegex = "class\\s*=\\s*\"(.*?)\"";
+		String styleRegex = "(?i)style\\s*=\\s*\"(.*?)\"";
+		String classRegex = "(?i)class\\s*=\\s*\"(.*?)\"";
 		
 		//remove empty in line style attributes before proceed
 		newElement = removeEmptyInlineStyleAttribute(newElement);
 		//to lower case to avoid missing STYLE, CLASS cases
-		newElement = newElement.toLowerCase();
+		//newElement = newElement.toLowerCase();
 		
 		Pattern stylepattern = Pattern.compile(styleRegex);
 		Matcher stylematcher = stylepattern.matcher(newElement);
@@ -649,8 +651,8 @@ public class HTML5Util {
 		if (stylematcher.find()) {			
 			inlineStyleValue = stylematcher.group(1);
 		}
-		
-		if(inlineStyleValue != null && inlineStyleValue.trim().length()>0){
+		//ignore apixel DIVs
+		if(inlineStyleValue != null && inlineStyleValue.trim().length()>0 && !isApixelDiv(newElement)){
 			
 			//replace in line style with relevant class name from the class map in given new element
 			
@@ -669,17 +671,17 @@ public class HTML5Util {
 			 */
 			StyleAnalyzer.breakdownToInlineAndPositionalCssStyles(cleanedInlineStyleValue, inlineStyles, positionalStyles);
 			
-			//log styles to db if style analyzer flag is enable
+			//log styles to db if style analyzer flag is enable. This should be run at least one time to record in line styles
 			if(HTML5Util.MODE.equals(HTML5Util.STYLEANALYZE)){
 				//record in line styles to the db to analyze common styles
 				StyleAnalyzer.recordInlineStyle(originalElement.getName(),originalElement.getDebugInfo(),inlineStyles,positionalStyles);
 			}
 			
 			if(!inlineStyles.toString().isEmpty()){
-				inlineClassName = JerichoJspParserUtil.STYLES_MAP.get(inlineStyles);
+				inlineClassName = JerichoJspParserUtil.STYLES_MAP.get(inlineStyles.toString());
 			}
 			if(!positionalStyles.toString().isEmpty()){
-				positionalClassName = JerichoJspParserUtil.STYLES_MAP.get(positionalStyles);
+				positionalClassName = JerichoJspParserUtil.STYLES_MAP.get(positionalStyles.toString());
 			}
 			
 			//build string with new class names into one string including existing class names
@@ -688,35 +690,43 @@ public class HTML5Util {
 				finalClassPropertyValue.append(inlineClassName).append(" ");
 			}
 			if(positionalClassName != null){
-				finalClassPropertyValue.append(inlineClassName).append(" ");
+				finalClassPropertyValue.append(positionalClassName).append(" ");
 			}
-			//get the existing class value
-			String existingClassAttributeValue = originalElement.getAttributeValue(HTML5Util.CLASS);
-			//check if the element contains a class attribute already and append new class name next to existing class name(Multiple css classes supported in HTML5)
-			//e.g class="no-padding no-margin some-class some-other-class"
-			if(existingClassAttributeValue != null){
-				finalClassPropertyValue.append(existingClassAttributeValue);
-			}
-			if(finalClassPropertyValue != null){
-				//replace existing class attribute with new value
-				if(originalElement.getAttributeValue(HTML5Util.CLASS) != null)
-				{
-					newElement = newElement.replaceAll(classRegex, "class=\""+finalClassPropertyValue+"\"");
+			//if there are new class names available in the map, replace in line styles with class names along with the existing class names
+			if(finalClassPropertyValue.length() != 0){
+				//get the existing class value
+				String existingClassAttributeValue = originalElement.getAttributeValue(HTML5Util.CLASS);
+				//check if the element contains a class attribute already and append new class name next to existing class name(Multiple css classes supported in HTML5)
+				//e.g class="no-padding no-margin some-class some-other-class"
+				if(existingClassAttributeValue != null){
+					finalClassPropertyValue.append(existingClassAttributeValue);
 				}
-				//add new class attribute to at the end of the replacing element tag
-				else{
-					newElement = newElement.substring(0, newElement.length()-1); // remove last closing > from the new tag
-					//add class value at the end of the tag
-					newElement = newElement + " class=\""+finalClassPropertyValue+"\" >";
+				if(finalClassPropertyValue != null){
+					//replace existing class attribute with new value
+					if(originalElement.getAttributeValue(HTML5Util.CLASS) != null)
+					{
+						newElement = newElement.replaceAll(classRegex, "class=\""+finalClassPropertyValue+"\"");
+					}
+					//add new class attribute to at the end of the replacing element tag
+					else{
+						newElement = newElement.substring(0, newElement.length()-1); // remove last closing > from the new tag
+						//add class value at the end of the tag
+						newElement = newElement + " class=\""+finalClassPropertyValue+"\" >";
+					}
 				}
-			}
-			//replace in line style with ignore style set when mapping to css classes(e.g width)
-			if(!ignoreStylesOutputParam.toString().isEmpty()){
-				newElement = newElement.replaceAll(styleRegex, "style=\""+ignoreStylesOutputParam.toString()+"\"");
+				//replace in line style with ignore style set when mapping to css classes(e.g width)
+				
+				if(!ignoreStylesOutputParam.toString().isEmpty()){
+					newElement = newElement.replaceAll(styleRegex, "style=\""+ignoreStylesOutputParam.toString()+"\"");
+				}else{
+					//remove in line style attribute from the new tag
+					newElement = newElement.replaceAll(styleRegex, "");
+				}
 			}else{
-				//remove in line style attribute from the new tag
-				newElement = newElement.replaceAll(styleRegex, "");
+				//do nothing. keep in line styles as it is. TODO YOU HAVE TO POPULATE CSS CLASS MAP!
+				
 			}
+			
 		}
 		return newElement;
 	}
@@ -727,6 +737,8 @@ public class HTML5Util {
 	}
 	
 	public static String removeIgnoreStyleAttributes(String inlinestyle, StringBuilder ignoreStylesOutputParam){
+		
+	
 		List<String> styleList = inlineStyleToList(inlinestyle);
 		StringBuilder cleanedInlineSyle = new StringBuilder();
 		for(String style:styleList){
@@ -745,10 +757,16 @@ public class HTML5Util {
 			}
 			cleanedInlineSyle.append(style).append(";");
 		}
+		//class="<%= containerPlugIn.getHeaderCell(columnIndex).getAttribute("class") %>" style="<%= containerPlugIn.getHeaderCell(columnIndex).getAttribute("style") %>"
+		//handle above scenario
+		if(cleanedInlineSyle.length() == 0 && inlinestyle.contains("<%=")){
+			ignoreStylesOutputParam.append(inlinestyle);
+		}
 		return cleanedInlineSyle.toString();		
 	}
 	
-	public static List<String> inlineStyleToList(String style){		
+	public static List<String> inlineStyleToList(String style){
+		System.out.println("inline style => "+style);
 		List<String> styleList = new ArrayList<String>();
 		//check if the in line style contains more than one property and add them all to list via ; split
 		if(style.contains(";")){
@@ -776,4 +794,7 @@ public class HTML5Util {
 		return JerichoJspParserUtil.COMMON_INCLUDE_FILE_SET.contains(fileName);
 	}
 	
+	public static boolean isApixelDiv(String element){
+		return element.contains("id=\"afpixel");	
+	}
 }
