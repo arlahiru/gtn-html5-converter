@@ -19,6 +19,7 @@ import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Segment;
 import net.htmlparser.jericho.Source;
 import net.htmlparser.jericho.StartTagType;
+import net.htmlparser.jericho.Tag;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -146,6 +147,7 @@ public class HTML5Util {
 	public final static String DEFAULT = "default";
 	public final static String STYLEANALYZE = "styleanalyze";
 	public static String MODE = DEFAULT;
+	public final static String H5_EXTENSION = "_h5.jspf";
 
 	// HTML ELEMENT NAMES
 	
@@ -335,10 +337,10 @@ public class HTML5Util {
 
 		for (Element e : allElements) {
 
-			String tagContent = e.toString().toLowerCase();
+			String tagContent = e.toString();
 
 			// find include tags
-			if (tagContent.contains("<%@") && tagContent.contains("include")) {
+			if (tagContent.contains("<%@") && tagContent.toLowerCase().contains("include")) {
 
 				// extract file attribute value by matching value between
 				// " "
@@ -380,22 +382,17 @@ public class HTML5Util {
 						//add this file to include file list
 						includeFilePaths.add(includeFilePath);
 						
-						//check if the common include file list which link with both admin and trade stacks loaded into the list at startup and its not empty
-						if(outputDoc != null && JerichoJspParserUtil.COMMON_INCLUDE_FILE_SET != null && !JerichoJspParserUtil.COMMON_INCLUDE_FILE_SET.isEmpty()){
-							//if this include file is a common file in admin and trade then change the extension to h5.jsp
-							//replace \\ with \ in C:\\code\\gtnexus like paths before check with set
-							//includeFilePath = includeFilePath.replaceAll("\\\\", "\\");
-							if(JerichoJspParserUtil.COMMON_INCLUDE_FILE_SET.contains(formatToWindowsPath(includeFilePath))){								
+						//check if this include file link with both admin and trade stack
+						if(outputDoc != null && isCommonJspFile(formatToWindowsPath(HTML5Util.filePathToLowercase(includeFilePath)))){
+								//if this include file is a common file in admin and trade then change the extension to h5.jsp								
 								//replace include file name with fileName.h5.jsp extension in the output document - This should only applied when Admin stack conversion.
 								//TODO This should be ROLLBACK after the trade stack conversion
-								String newIncludeFileName = includeFileName.replace(".jsp", ".h5.jsp");
-								String newIncludeTagWithModifiedExtension = "<%@ include file=\""+newIncludeFileName+"\" >";
+								String newIncludeFileName = includeFileName.replace(".jsp", HTML5Util.H5_EXTENSION);
+								String newIncludeTagWithModifiedExtension = "<%@ include file=\""+newIncludeFileName+"\" %>";
 								//replace include tag in the output doc with modified file extension
 								outputDoc.replace(e, newIncludeTagWithModifiedExtension);
 							}
-						}
-						
-					}
+						}						
 
 				} else {
 
@@ -417,7 +414,7 @@ public class HTML5Util {
 
 	}
 
-	// e.g <td <%=containerPlugIn.getCellStyle(rowIndex, columnIndex)%> > </td>
+	// e.g <td <%=containerPlugIn.getCellStyle(rowIndex, columnIndex)%> >... </td>
 	public static String getInnerServerTagContent(Element e) {
 
 		//TODO jsp java code bug e.g id="<%= "fieldListRow_" + substitutionNamer.name() %>"
@@ -591,8 +588,8 @@ public class HTML5Util {
 			if(e.getName().equals(ANCHOR) ){
 				try{
 					if(e.getAttributeValue("class").equals(cssClass)) return true;
-				}catch(NullPointerException e2){
-					
+				}catch(NullPointerException ex){
+					//ex.printStackTrace();
 				}
 			}
 		}
@@ -645,6 +642,9 @@ public class HTML5Util {
 		
 		Pattern stylepattern = Pattern.compile(styleRegex);
 		Matcher stylematcher = stylepattern.matcher(newElement);
+		
+		Pattern classpattern = Pattern.compile(classRegex);
+		Matcher classmatcher = classpattern.matcher(newElement);
 
 		String inlineStyleValue=null;
 		
@@ -694,16 +694,25 @@ public class HTML5Util {
 			}
 			//if there are new class names available in the map, replace in line styles with class names along with the existing class names
 			if(finalClassPropertyValue.length() != 0){
-				//get the existing class value
-				String existingClassAttributeValue = originalElement.getAttributeValue(HTML5Util.CLASS);
-				//check if the element contains a class attribute already and append new class name next to existing class name(Multiple css classes supported in HTML5)
+				//get the existing class value from original element
+				String existingOldClassAttributeValue = originalElement.getAttributeValue(HTML5Util.CLASS);
+				//get the existing class value from new element e.g <td class="toolBugFixWithAclass" ..>
+				String newElementClassAttributeValue = null;
+				if (classmatcher.find()) {			
+					newElementClassAttributeValue = classmatcher.group(1);
+				}
+				//check if the element contains a class attribute already and append new class name next to existing class name(Multiple CSS classes supported in HTML5)
 				//e.g class="no-padding no-margin some-class some-other-class"
-				if(existingClassAttributeValue != null){
-					finalClassPropertyValue.append(existingClassAttributeValue);
+				if(existingOldClassAttributeValue != null){
+					finalClassPropertyValue.append(existingOldClassAttributeValue).append(" ");
+				}
+				//check and make sure we do not add same class name twice from new and old element
+				if(newElementClassAttributeValue != null && !newElementClassAttributeValue.equals(existingOldClassAttributeValue)){
+					finalClassPropertyValue.append(newElementClassAttributeValue);
 				}
 				if(finalClassPropertyValue != null){
 					//replace existing class attribute with new value
-					if(originalElement.getAttributeValue(HTML5Util.CLASS) != null)
+					if(existingOldClassAttributeValue != null || newElementClassAttributeValue != null)
 					{
 						newElement = newElement.replaceAll(classRegex, "class=\""+finalClassPropertyValue+"\"");
 					}
@@ -757,7 +766,7 @@ public class HTML5Util {
 			}
 			cleanedInlineSyle.append(style).append(";");
 		}
-		//class="<%= containerPlugIn.getHeaderCell(columnIndex).getAttribute("class") %>" style="<%= containerPlugIn.getHeaderCell(columnIndex).getAttribute("style") %>"
+		//style="<%= containerPlugIn.getHeaderCell(columnIndex).getAttribute("style") %>"
 		//handle above scenario
 		if(cleanedInlineSyle.length() == 0 && inlinestyle.contains("<%=")){
 			ignoreStylesOutputParam.append(inlinestyle);
@@ -791,10 +800,31 @@ public class HTML5Util {
 	}
 	
 	public static boolean isCommonJspFile(String fileName){
-		return JerichoJspParserUtil.COMMON_INCLUDE_FILE_SET.contains(fileName);
+		if(JerichoJspParserUtil.COMMON_INCLUDE_FILE_SET != null && !JerichoJspParserUtil.COMMON_INCLUDE_FILE_SET.isEmpty()){
+			return JerichoJspParserUtil.COMMON_INCLUDE_FILE_SET.contains(fileName);
+		}else{
+			return false;
+		}
 	}
 	
 	public static boolean isApixelDiv(String element){
 		return element.contains("id=\"afpixel");	
+	}
+	
+	public static boolean isTagContainsScriptlet(Tag element){
+		
+		String tagContent = element.toString();
+		//match if there any scriptlet code <% %>(not expressions:<%= %>) inside the tag
+		String regex = "<%[^=]\\s*(.*?)\\s*%>";
+		Pattern stylepattern = Pattern.compile(regex);
+		Matcher stylematcher = stylepattern.matcher(tagContent);
+		return stylematcher.find();
+	}
+	
+	public static String filePathToLowercase(String filePath){
+		
+		//String fileName = filePath.substring(filePath.lastIndexOf('\\')+1,filePath.length());
+		//String lowerCasedPath = filePath.substring(0,filePath.lastIndexOf('\\')+1)+fileName.toLowerCase();
+		return filePath.toLowerCase().replace("c:", "C:");
 	}
 }

@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.InvalidPathException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -46,13 +47,15 @@ public class UsageScanner {
 								Set<String> includeFilePathList = HTML5Util.getIncludeFilePathsAndReplaceWithH5ExtensionInOutputDoc(tradeFileEntry.getAbsolutePath(),null);
 	
 								for (String includeFilePath : includeFilePathList) {
-									if(!setOfConflictedTradeFiles.contains(tradeFileEntry.getAbsolutePath())){	
+									
+									//if(!setOfConflictedTradeFiles.contains(tradeFileEntry.getAbsolutePath())){	
 										// check include file link to the given file name
 										if (targetFilePath.equals(includeFilePath)) {		
 											setOfConflictedTradeFiles.add(tradeFileEntry.getAbsolutePath());
 											setOfLeakedCommonFiles.add(targetFilePath);
+											
 										}
-									}
+									//}
 									/*
 									if(!setOfLeakedCommonFiles.contains(targetFilePath)){	
 										// check include file link to the given file name
@@ -64,6 +67,7 @@ public class UsageScanner {
 										break;
 									}
 									*/
+									
 	
 								}	
 							}
@@ -304,13 +308,12 @@ public static void writeListToFile(List<String> list,String fileName){
 	}
 	
 	public static void main(String args[]){
-		
-		/*
-		
+						
 		//String inputFile="C://code//gtnexus//development//modules//main//tcard//web//tradecard//en//includes/common/sectionspacer.include.jsp";
-		String tradeFolder = "C://code//gtnexus//development//modules//main//tcard//web//tradecard//en//trade";
-		String directoryPathToAnalyzeConflicts = "C:\\code\\gtnexus\\development\\modules\\main\\tcard\\web\\tradecard\\en\\administration";
-		File directory = new File(directoryPathToAnalyzeConflicts);
+		String tradeFolder = "C://code//gtnexus//devl//modules//main//tcard//web//tradecard//en//trade";
+		String directoryPathToAnalyzeConflicts = "C:\\code\\gtnexus\\devl\\modules\\main\\tcard\\web\\tradecard\\en\\administration";
+		String reportDirToAnlayze = "C:\\code\\gtnexus\\devl\\modules\\main\\tcard\\web\\tradecard\\en\\reports";
+		File directory = new File(reportDirToAnlayze);
 		//go thru full admin site and find common files link with trade site		
 		Set<String> setOfLeakedCommonFiles = new HashSet<String>(0);
 		Set<String> setOfConflictedTradeFiles = new HashSet<String>(0);
@@ -318,10 +321,10 @@ public static void writeListToFile(List<String> list,String fileName){
 		traverseDirAndScan(directory,setOfLeakedCommonFiles,setOfConflictedTradeFiles,tradeFolder);
 		String endTime = new Date().toString();
 		writeResultToFile(setOfLeakedCommonFiles,"leaked.txt");
-		writeResultToFile(setOfConflictedTradeFiles,"trade.txt");
+		writeResultToFile(setOfConflictedTradeFiles,"tradeReports.txt");
 		System.out.println("Start at:"+startTime+" End at:"+endTime);
 		System.out.println("Scan Finished!");
-		*/
+		
 		
 		//analyzeTradeConflictPages();
 	/*	String directoryPathToAnalyzeConflicts = "C:\\code\\gtnexus\\development\\modules\\main\\tcard\\web\\tradecard\\en\\administration";
@@ -341,10 +344,13 @@ public static void writeListToFile(List<String> list,String fileName){
 		printStringCollectionToConsole(finalSet);*/
 		
 		//add two string file name texts
+		/*
 		Set<String> mainSet = populateTextFileLinesToSet("IncludesInsideCommonIncludeList.txt");
 		Set<String> tobeAddSet = populateTextFileLinesToSet("CommonIncludeFileList.txt");
 		mainSet.addAll(tobeAddSet);
 		printStringCollectionToConsole(mainSet);
+		*/
+		
 		
 	}
 	

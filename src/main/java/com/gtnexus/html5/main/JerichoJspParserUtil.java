@@ -1,5 +1,6 @@
 package com.gtnexus.html5.main;
 
+import static com.gtnexus.html5.main.JerichoJspParserUtil.dbLogger;
 import static com.gtnexus.html5.util.HTML5Util.ALIGN;
 import static com.gtnexus.html5.util.HTML5Util.ALINK;
 import static com.gtnexus.html5.util.HTML5Util.BACKGROUND;
@@ -176,6 +177,9 @@ public class JerichoJspParserUtil {
 
 		if (dbLogger.isEnabled()) {
 			dbLogger.initialize();
+			//clear db logs
+			dbLogger.clearAllData();
+			dbLogger.clearAllErrors();
 		}
 		
 	}
@@ -603,9 +607,9 @@ public class JerichoJspParserUtil {
 			String newFileName = sourceFile.getAbsolutePath();
 			//check if the file is in the common include file list then set h5.jsp extension
 			//TODO This should be ROLLBACK after the trade stack conversion
-			if(HTML5Util.isCommonJspFile(newFileName)){
+			if(HTML5Util.isCommonJspFile(HTML5Util.formatToWindowsPath(HTML5Util.filePathToLowercase(newFileName)))){
 				//set the new h5.jsp extension
-				newFileName = newFileName.replace(".jsp",".h5.jsp");
+				newFileName = newFileName.replace(".jsp",HTML5Util.H5_EXTENSION);
 				sourceFile = new File(newFileName);
 				//check if the file exist with the new extension and stop save it again
 				if(sourceFile.exists()){
@@ -634,11 +638,27 @@ public class JerichoJspParserUtil {
 		
 		try {
 			JerichoJspParserUtil.initialize(true);
-			JerichoJspParserUtil.convertToHTML5("C:\\code\\gtnexus\\devl\\modules\\main\\tcard\\web\\tradecard\\en\\includes\\administration\\businessRuleDetail.include.jsp",false, "Style Analyzer");
+			JerichoJspParserUtil.convertToHTML5("C:\\code\\gtnexus\\devl\\modules\\main\\tcard\\web\\tradecard\\en\\includes\\common\\reportSpecList.include.jsp",false, "Style Analyzer");
 		} catch (HTML5ParserException | IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+/*		
+		File sourceFile = new File("C:\\Users\\lruhunage\\Desktop\\test.jsp");
+		Source source;
+		try {
+			source = new Source(new FileInputStream(sourceFile));
+			//new output document generated from the source document
+			OutputDocument outputDocument = new OutputDocument(source);
+			System.out.println(outputDocument.toString());
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}*/
+		
 		
 	}
 

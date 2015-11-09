@@ -20,7 +20,7 @@ public class FormElementFacade {
 		// get all <form> tags
 		List<Element> allFormElements = source.getAllElements(FORM);
 		
-		// add <br> tag to end of the form tag
+		// add padding to end of the form tag
 		Rule formBrRule = new FormBrRule();
 
 		for (Element form : allFormElements) {

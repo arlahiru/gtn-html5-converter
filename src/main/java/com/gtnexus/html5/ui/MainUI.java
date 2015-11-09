@@ -256,10 +256,13 @@ public class MainUI extends JFrame {
 		
 		btnScan.setBounds(277, 423, 89, 23);
 		getContentPane().add(btnScan);
+		//disable this old functionality in phase 1
 		btnScan.setEnabled(false);
 		btnOpenScannedPages.setBounds(1030, 54, 154, 23);
 		getContentPane().add(btnOpenScannedPages);
-
+		//make this button invisible as this function is not in use
+		btnOpenScannedPages.setVisible(false);
+		
 		this.setBounds(0, 0, 1200, 700);
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		this.setLocation(dim.width / 2 - this.getSize().width / 2, dim.height
@@ -345,17 +348,16 @@ public class MainUI extends JFrame {
 				currentThread = new SwingWorker<Integer, Integer>() {
 					@Override
 					protected Integer doInBackground() {
-						//clear db logs
-						dbLogger.clearAllData();
-						dbLogger.clearAllErrors();
 						String[] files = preHTML5List.getItems();						
 						disableButtons();						
 						for (int i = 0; i < files.length; i++) {
 							if(!this.isCancelled()){
-								progressBar.setIndeterminate(true);	
 								convertToHTML5(files[i]);	
-								progressBar.setIndeterminate(false);	
 								setProgressBarValue(files.length, i);
+							}else{
+								progressBar.setIndeterminate(false);
+								setProgressBarValue(1, 1);
+								break;
 							}
 						}
 						enableButtons();						
@@ -380,18 +382,16 @@ public class MainUI extends JFrame {
 				currentThread = new SwingWorker<Integer, Integer>() {
 					@Override
 					protected Integer doInBackground() throws Exception {						
-						//clear db logs
-						dbLogger.clearAllData();
-						dbLogger.clearAllErrors();
 						String[] selectedItems = preHTML5List.getSelectedItems();
 						disableButtons();
 						for (int i = 0; i < selectedItems.length; i++) {
 							if(!isCancelled()){
-								progressBar.setIndeterminate(true);
 								convertToHTML5(selectedItems[i]);
-								progressBar.setIndeterminate(false);
 								setProgressBarValue(selectedItems.length, i);
-						}
+							}else{
+								setProgressBarValue(1, 1);
+								break;
+							}
 						
 					}
 						enableButtons();	
@@ -487,18 +487,18 @@ public class MainUI extends JFrame {
 		btnBrowseSourceLocation.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
-					final JFileChooser chooser = new JFileChooser(ProgramLauncher.adminBasePath);
+					final JFileChooser chooser = new JFileChooser(ProgramLauncher.adminPath);
 
 					chooser.addChoosableFileFilter(new FileNameExtensionFilter(
 							"Text files", "txt", "csv", "ini","jsp","html","htm"));
 					chooser.setAcceptAllFileFilterUsed(false);
 					chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 					int returnVal = chooser.showOpenDialog(new Frame());					
-					if (returnVal == JFileChooser.APPROVE_OPTION && !chooser.getSelectedFile().isDirectory()) {
+					if (returnVal == JFileChooser.APPROVE_OPTION && !chooser.getSelectedFile().isDirectory() && chooser.getSelectedFile().getName().endsWith(".csv")) {
 						sourcePath = chooser.getSelectedFile().getAbsolutePath();
 						loadToListFromFile();
 						textFieldlocationDirectory.setText(sourcePath);
-					}else if(returnVal == JFileChooser.APPROVE_OPTION){
+					}else if(returnVal == JFileChooser.APPROVE_OPTION && chooser.getSelectedFile().isDirectory()){
 						SwingWorker<Integer, Integer> loadFilesFromDir = new SwingWorker<Integer, Integer>() {
 							@Override
 							protected Integer doInBackground() throws Exception {
@@ -521,6 +521,12 @@ public class MainUI extends JFrame {
 							};
 						};
 						loadFilesFromDir.execute();
+					}else if(returnVal == JFileChooser.APPROVE_OPTION && !chooser.getSelectedFile().isDirectory()){
+						showProgressBar();
+						sourcePath = chooser.getSelectedFile().getAbsolutePath();
+						preHTML5List.add(sourcePath);
+						textFieldlocationDirectory.setText(sourcePath);
+						setProgressBarValue(1, 100);
 					}
 				} catch (Exception ex) {
 					ex.printStackTrace();

@@ -53,7 +53,7 @@ public class RevertBackChanges {
 		// recursively revert include files
 		for (String includeFilePath : includeFilePathList) {			
 			//revert h5.jsp to .jsp
-			includeFilePath = includeFilePath.replace(".h5.jsp", ".jsp");
+			//includeFilePath = includeFilePath.replace(HTML5Util.H5_EXTENSION, ".jsp");
 			revertChanges(includeFilePath);
 		} 
 		String backupFilePath = convertedFile.getAbsolutePath().replaceFirst("code", ProgramLauncher.HTML5_BACKUP_DIR+"/code");	

@@ -215,8 +215,8 @@ public class TableElementFacade extends Facade {
 			modifiedTDTag.append(" " + HTML5Util.getInnerServerTagContent(td)
 					+ " ");
 
-			//append class to the td
-			if(HTML5Util.containsLinkInTd(td,"smallbuttontext")&&td.getAttributeValue("class")==null){
+			//append class to the td to fix a bug
+			if(HTML5Util.containsLinkInTd(td,"smallbuttontext") && td.getAttributeValue("class")==null){
 				modifiedTDTag.append(" class=\"listtablecell\" ");
 			}
 			

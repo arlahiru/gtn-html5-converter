@@ -23,6 +23,7 @@ public class ProgramLauncher {
 	private String notepadPath = "";
 	public final String DEFAULT_BACKUP_PATH = "C:/Html5BackupDir";
 	public static String adminBasePath = "C:/code/gtnexus/devl/modules/main/tcard";
+	public static String adminPath = "C:/code/gtnexus/devl/modules/main/tcard/web/tradecard/en";
 	public static String tradeBasePath = "";
 	public final String CONFIG_FILE = "config.ini";
 	public final String LOCALHOST = "http://localhost:8080/";

@@ -857,11 +857,13 @@ public class DbLogger {
 				deleteStatement = con.createStatement();
 				//deleteStatement.execute(deleteError);
 				deleteStatement.execute(deleteChangelog);
-				deleteStatement.execute(deleteIncludePage);
-				deleteStatement.execute(deletePage);
+				//deleteStatement.execute(deleteIncludePage);
+				//deleteStatement.execute(deletePage);
 				deleteStatement.execute(deleteConflictPage);
-				deleteStatement.execute(deleteInlineStyle);
-				deleteStatement.execute(deleteCssClass);
+				if(HTML5Util.MODE.equals(HTML5Util.STYLEANALYZE)){
+					deleteStatement.execute(deleteInlineStyle);
+				}
+				//deleteStatement.execute(deleteCssClass);
 				
 			}catch(SQLException e){
 					e.printStackTrace();
