@@ -154,7 +154,7 @@ C:\code\gtnexus\devl\modules\main\tcard\web\tradecard\en\includes\common\dashboa
 C:\code\gtnexus\devl\modules\main\tcard\web\tradecard\en\includes\common\logicstatementedit.include.jsp
 C:\code\gtnexus\devl\modules\main\tcard\web\tradecard\en\includes\common\report\reportschedulerruntimecriteria.include.jsp
 C:\code\gtnexus\devl\modules\main\tcard\web\tradecard\en\includes\documentstep.include.jsp
-C:\code\gtnexus\devl\modules\main\tcard\web\tradecard\en\includes\common\controls\list\components\addbutton.include.h5.jsp
+C:\code\gtnexus\devl\modules\main\tcard\web\tradecard\en\includes\common\controls\list\components\addbutton.include.jsp
 C:\code\gtnexus\devl\modules\main\tcard\web\tradecard\en\includes\trade\wizardelement\viewerrors.include.jsp
 C:\code\gtnexus\devl\modules\main\tcard\web\tradecard\en\includes\platform\console\customobjects.include.jsp
 C:\code\gtnexus\devl\modules\main\tcard\web\tradecard\en\includes\common\report\reportschedulerbottom.include.jsp
@@ -179,7 +179,7 @@ C:\code\gtnexus\devl\modules\main\tcard\web\tradecard\en\includes\common\control
 C:\code\gtnexus\devl\modules\main\tcard\web\tradecard\en\includes\platform\console\reports.include.jsp
 C:\code\gtnexus\devl\modules\main\tcard\web\tradecard\en\includes\platform\console\platformmoduleidentification.include.jsp
 C:\code\gtnexus\devl\modules\main\tcard\web\tradecard\en\includes\common\administration\usergroup\usergroupusersfilter.include.jsp
-C:\code\gtnexus\devl\modules\main\tcard\web\tradecard\en\includes\common\sectionhelp.include.h5.jsp
+C:\code\gtnexus\devl\modules\main\tcard\web\tradecard\en\includes\common\sectionhelp.include.jsp
 C:\code\gtnexus\devl\modules\main\tcard\web\tradecard\en\includes\common\dashboard\dashboardlist.include.jsp
 C:\code\gtnexus\devl\modules\main\tcard\web\tradecard\en\includes\common\administration\costcontractfilter.include.jsp
 C:\code\gtnexus\devl\modules\main\tcard\web\tradecard\en\includes\common\administration\taskflow\admintaskflowdoctypes.include.jsp
