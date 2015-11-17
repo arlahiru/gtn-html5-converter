@@ -38,6 +38,8 @@ public class HTML5Util {
 
 	// HTML 5 converted meta tag
 	public final static String META_IS_HTML5 = "<meta isHtml5Page=\"true\">";
+	
+	public final static String ADMIN_STYLE_LINK = "<LINK REL=\"stylesheet\" HREF=\"../style/adminStyle.css\" TYPE=\"text/css\">";
 
 	// HTML 5 converted comment tag
 	public final static String HTML5_CONVERTED_COMMENT_PHASE1 = "<!-- HTML5 Converted Page:Phase1 -->";

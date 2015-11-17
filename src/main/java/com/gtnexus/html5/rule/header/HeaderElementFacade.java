@@ -4,9 +4,17 @@ import static com.gtnexus.html5.main.JerichoJspParserUtil.logger;
 import static com.gtnexus.html5.util.HTML5Util.DOCTYPE_HTML5;
 import static com.gtnexus.html5.util.HTML5Util.HTML5_CONVERTED_COMMENT_PHASE2;
 import static com.gtnexus.html5.util.HTML5Util.META_CHARSET_UTF8;
+import static com.gtnexus.html5.util.HTML5Util.ADMIN_STYLE_LINK;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 import java.util.Date;
 import java.util.List;
+
+import com.gtnexus.html5.main.JerichoJspParserUtil;
 
 import net.htmlparser.jericho.Element;
 import net.htmlparser.jericho.HTMLElementName;
@@ -91,6 +99,62 @@ public class HeaderElementFacade {
 		}
 
 		logger.debug("UTF8 charset added successfully!");
+	}
+	
+	private static boolean addAdminCssStyleLink(Source source,OutputDocument outputDocument) {
+		boolean isAdminCssExist = false;
+		List<Element> allHeadTag = source.getAllElements(HTMLElementName.HEAD);
+		if (!source.getAllElements(HTMLElementName.HEAD).isEmpty()) {			
+			List<Element> linkElements = source.getAllElements(HTMLElementName.LINK);
+			for(Element linkElement:linkElements) {
+				if(linkElement.getAttributeValue("HREF") != null && linkElement.getAttributeValue("HREF").contains("adminStyle.css")){
+					isAdminCssExist = true;
+				}
+			} 
+			if(!isAdminCssExist){
+				Element headTag = allHeadTag.get(0);	
+				outputDocument.insert(headTag.getEnd() - 7, "\n"+ADMIN_STYLE_LINK+ "\n");
+				logger.debug("Admin style added successfully.");
+				return true;
+			}
+		}
+		return false;
+
+	}
+	
+	public static void runAddAdminCssStyleLink(File directory){
+
+		for (final File file : directory.listFiles()) {
+			if (file.isDirectory()) {
+				runAddAdminCssStyleLink(file);
+			} else {
+				//analyze new html5 styles of all the jsp and html files in the current directory
+				if ((file.getName().toLowerCase().endsWith(".jsp")|| file.getName().toLowerCase().endsWith(".html"))) {					
+					try {
+						Source source = new Source(new FileInputStream(file));
+						//new output document generated from the source document
+						OutputDocument outputDocument = new OutputDocument(source);						
+						if(HeaderElementFacade.addAdminCssStyleLink(source, outputDocument)){
+							System.out.println("Running addAdminCssStyleLink-> "+file.getPath());
+							//save converted jsp output to the disk
+							BufferedWriter jspWriter = new BufferedWriter(new OutputStreamWriter(
+									new FileOutputStream(file), "UTF-8"));	
+							jspWriter.write(outputDocument.toString());	
+							jspWriter.close();
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+		
+	}
+	
+	public static void main(String args[]){
+		String directoryPathToAnalyzeStyles = "C:\\code\\gtnexus\\devl\\modules\\main\\tcard\\web\\tradecard\\en\\administration";
+		File directory = new File(directoryPathToAnalyzeStyles);
+		runAddAdminCssStyleLink(directory);
 	}
 
 }

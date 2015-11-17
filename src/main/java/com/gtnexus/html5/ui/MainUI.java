@@ -701,8 +701,8 @@ public class MainUI extends JFrame {
 		showProgressBar();
 		int fileCount = 0;
 		for (int i = 0; i < fileList.size(); i++) {
-			if (launcher.checkFile(fileList.get(i),ProgramLauncher.adminBasePath)) {
-				preHTML5List.add(ProgramLauncher.adminBasePath+fileList.get(i));
+			if (launcher.checkFile(fileList.get(i),ProgramLauncher.adminBasePath2)) {
+				preHTML5List.add(ProgramLauncher.adminBasePath2+fileList.get(i));
 				fileCount++;
 			} else
 				printOnConsole(fileList.get(i) + " File Doesn't exist.",
