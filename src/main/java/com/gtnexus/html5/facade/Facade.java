@@ -66,8 +66,8 @@ public abstract class Facade {
 
 		while (attributeIterator.hasNext()) {
 
-			Attribute tableAttribute = attributeIterator.next();
-			String attributeName = tableAttribute.getKey();
+			Attribute attribute = attributeIterator.next();
+			String attributeName = attribute.getKey();
 			String ruleKey = element.getName() + "_"
 					+ attributeName.toLowerCase();
 
@@ -75,8 +75,7 @@ public abstract class Facade {
 
 			if (rule != null) {
 
-				StringBuilder returnValue = rule.execute(outputDocument,
-						tableAttribute, element);
+				StringBuilder returnValue = rule.execute(outputDocument,attribute, element);
 
 				if (returnValue != null) {
 					newStyle.append(returnValue);
@@ -88,7 +87,7 @@ public abstract class Facade {
 			} else {
 
 				logger.debug("Rule key not found for key: " + ruleKey);
-				modifiedTag.append(tableAttribute);
+				modifiedTag.append(attribute);
 				modifiedTag.append(" ");
 				logger.debug(ruleKey + " appended as it is.");
 			}

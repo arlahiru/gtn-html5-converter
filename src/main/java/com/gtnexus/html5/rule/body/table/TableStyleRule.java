@@ -43,6 +43,10 @@ public class TableStyleRule implements Rule {
 					//append style as it is
 					modifiedStyle.append(styleValues[i]+";");
 				}
+		    //if a style looks like e.g "display: <%=selected ? "block" : "none"%>; "  append as it is
+			}else{
+				//append style as it is
+				modifiedStyle.append(styleValues[i]+";");
 			}
 		}
 		//outputDoc.remove(originalAttribute);

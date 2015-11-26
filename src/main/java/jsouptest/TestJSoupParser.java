@@ -22,7 +22,6 @@ public class TestJSoupParser {
 	public static void main(String args[]) {
 
 		File input = new File("tmp/login.jsp");
-
 		try {
 
 			Document doc = Jsoup.parse(input, "UTF-8", "http://example.com/");
@@ -36,7 +35,7 @@ public class TestJSoupParser {
 					.println("----------------------------------------------end original html--------------------------------------------------");
 
 			// replace doctype
-			//replaceDoctypeWithHtml5(doc);
+			// replaceDoctypeWithHtml5(doc);
 
 			// get all effecting root tag types from the html
 			Elements body = doc.select("body");
@@ -48,15 +47,15 @@ public class TestJSoupParser {
 			Elements img_tags = doc.select("img");
 
 			// parse table tags
-			//parseTables(table_tags);
+			// parseTables(table_tags);
 
 			// parse font tags
-			//parseFontTags(font_tags);
+			// parseFontTags(font_tags);
 
 			System.out
 					.println("----------------------------------------------modified html--------------------------------------------------");
 
-			//System.out.println(doc.html());
+			// System.out.println(doc.html());
 
 			System.out
 					.println("----------------------------------------------end modified html--------------------------------------------------");
@@ -66,13 +65,13 @@ public class TestJSoupParser {
 			BufferedWriter htmlWriter = new BufferedWriter(
 					new OutputStreamWriter(new FileOutputStream(output),
 							"UTF-8"));
-			
+
 			String modifiedHtml = doc.html();
-			
+
 			modifiedHtml = modifiedHtml.replaceAll("&lt;%", "<%");
-			
+
 			modifiedHtml = modifiedHtml.replaceAll("%&gt;", "%>");
-			
+
 			modifiedHtml = modifiedHtml.replaceAll("&quot;", "\"");
 
 			htmlWriter.write(modifiedHtml);

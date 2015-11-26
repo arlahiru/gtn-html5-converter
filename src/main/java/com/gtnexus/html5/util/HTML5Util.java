@@ -8,11 +8,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.htmlparser.jericho.Attribute;
 import net.htmlparser.jericho.Element;
 import net.htmlparser.jericho.HTMLElementName;
 import net.htmlparser.jericho.OutputDocument;
@@ -40,10 +42,13 @@ public class HTML5Util {
 	public final static String META_IS_HTML5 = "<meta isHtml5Page=\"true\">";
 	
 	public final static String ADMIN_STYLE_LINK = "<LINK REL=\"stylesheet\" HREF=\"../style/adminStyle.css\" TYPE=\"text/css\">";
+	
+	public final static String TRADE_STYLE_LINK = "<LINK REL=\"stylesheet\" HREF=\"../style/tradeStyle.css\" TYPE=\"text/css\">";
 
 	// HTML 5 converted comment tag
 	public final static String HTML5_CONVERTED_COMMENT_PHASE1 = "<!-- HTML5 Converted Page:Phase1 -->";
 	public final static String HTML5_CONVERTED_COMMENT_PHASE2 = "<!-- HTML5 Converted Page:Phase 2 -->";
+	public final static String HTML5_CONVERTED_COMMENT_PHASE3 = "<!-- HTML5 Converted Page:Phase 3 -->";
 
 	// HTML AND CSS ATTRIBUTE NAMES
 	public final static String WIDTH = "width";
@@ -82,6 +87,7 @@ public class HTML5Util {
 	public final static String FONT_FAMILY = "font-family";
 	public final static String FACE = "face";
 	public final static String FRAME_BORDER = "frameborder";
+	public final static String DISPLAY = "display";
 
 	public final static String CLEAR = "clear";
 	public final static String LIST_STYLE_TYPE = "list-style-type";
@@ -182,6 +188,25 @@ public class HTML5Util {
 		for (Element commentTag : allCommentTags) {
 
 			if (commentTag.toString().equals(HTML5_CONVERTED_COMMENT_PHASE2)) {
+
+				return true;
+			}
+		}
+
+		return false;
+
+	}
+	
+	// check this page already a html5 page by looking at the meta tag
+	public static boolean isPhase3Html5ConvertedPage(Source source) {
+
+		// get all meta tags
+		List<Element> allCommentTags = source
+				.getAllElements(StartTagType.COMMENT);
+
+		for (Element commentTag : allCommentTags) {
+
+			if (commentTag.toString().equals(HTML5_CONVERTED_COMMENT_PHASE3)) {
 
 				return true;
 			}
@@ -324,7 +349,7 @@ public class HTML5Util {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	public static Set<String> getIncludeFilePathsAndReplaceWithH5ExtensionInOutputDoc(String mainFilePath, OutputDocument outputDoc)
+	public static Set<String> getIncludeFilePaths(String mainFilePath, OutputDocument outputDoc)
 			throws FileNotFoundException, IOException {
 
 		File sourceFile = new File(mainFilePath);
@@ -385,7 +410,7 @@ public class HTML5Util {
 						includeFilePaths.add(includeFilePath);
 						
 						//check if this include file link with both admin and trade stack
-						if(outputDoc != null && isCommonJspFile(formatToWindowsPath(HTML5Util.filePathToLowercase(includeFilePath)))){
+/*						if(outputDoc != null && isCommonJspFile(formatToWindowsPath(HTML5Util.filePathToLowercase(includeFilePath)))){
 								//if this include file is a common file in admin and trade then change the extension to h5.jsp								
 								//replace include file name with fileName.h5.jsp extension in the output document - This should only applied when Admin stack conversion.
 								//TODO This should be ROLLBACK after the trade stack conversion
@@ -393,8 +418,8 @@ public class HTML5Util {
 								String newIncludeTagWithModifiedExtension = "<%@ include file=\""+newIncludeFileName+"\" %>";
 								//replace include tag in the output doc with modified file extension
 								outputDoc.replace(e, newIncludeTagWithModifiedExtension);
-							}
-						}						
+						}*/
+						}					
 
 				} else {
 
@@ -418,15 +443,12 @@ public class HTML5Util {
 
 	// e.g <td <%=containerPlugIn.getCellStyle(rowIndex, columnIndex)%> >... </td>
 	public static String getInnerServerTagContent(Element e) {
-
-		//TODO jsp java code bug e.g id="<%= "fieldListRow_" + substitutionNamer.name() %>"
-		List<String> quotedDynamicJavaCodeList = new ArrayList<String>(0);
-
+		
 		String startTagContent = e.getStartTag().toString();
-
+		//jsp java code bug e.g id="<%= "fieldListRow_" + substitutionNamer.name() %>"
+		/*List<String> quotedDynamicJavaCodeList = new ArrayList<String>(0);
 		Pattern serverCodeQuotePattern = Pattern.compile("['\"]\\s*<%=\\s*(.*?)\\s*%>\\s*['\"]");
 		Matcher quoteMatcher = serverCodeQuotePattern.matcher(startTagContent);
-
 		while (!quoteMatcher.hitEnd()) {
 
 			if (quoteMatcher.find()) {
@@ -434,10 +456,9 @@ public class HTML5Util {
 				quotedDynamicJavaCodeList.add(quoteMatcher.group(1));
 			}
 
-		}
+		}*/
 
 		String serverCode = "";
-
 		Pattern pattern = Pattern.compile("<%=\\s*(.*?)\\s*%>");
 		Matcher matcher = pattern.matcher(startTagContent);
 		while (!matcher.hitEnd()) {
@@ -446,7 +467,7 @@ public class HTML5Util {
 
 				// ignore onclick="<%=actionButtonLink%>" like patterns by
 				// checking is this code inside quotes.
-				if (!isInsideQuotes(quotedDynamicJavaCodeList, matcher.group(1))) {
+				if (!isInsideAttribute(e, matcher.group(1))) {
 					// enclose with matching scriptlet tags
 					serverCode = serverCode + "<%=" + matcher.group(1) + "%>";
 				}
@@ -457,13 +478,19 @@ public class HTML5Util {
 
 	}
 
-	private static boolean isInsideQuotes(List<String> quotedContentList,
-			String serverCode) {
+	private static boolean isInsideAttribute(Element e,String serverCode) {
 
-		for (String quotedText : quotedContentList) {
+		Iterator<Attribute> attributeIterator = e.getAttributes()
+				.iterator();
 
-			if (quotedText.contains(serverCode))
-				return true;
+		while (attributeIterator.hasNext()) {
+			Attribute attribute = attributeIterator.next();
+			String attributeValue = attribute.getValue();
+			if(attributeValue.contains(serverCode)){
+				return true; 
+			}else{
+				continue;
+			}
 		}
 
 		return false;
@@ -634,7 +661,8 @@ public class HTML5Util {
 	
 	public static String replaceInlineStyleWithClass(String newElement, Element originalElement){
 		
-		String styleRegex = "(?i)style\\s*=\\s*\"(.*?)\"";
+		//String styleRegex = "(?i)style\\s*=\\s*\"(.*?)\"";
+		String styleRegex = "(?i)style=\"(.*)\">";
 		String classRegex = "(?i)class\\s*=\\s*\"(.*?)\"";
 		
 		//remove empty in line style attributes before proceed
@@ -728,6 +756,7 @@ public class HTML5Util {
 				//replace in line style with ignore style set when mapping to css classes(e.g width)
 				
 				if(!ignoreStylesOutputParam.toString().isEmpty()){
+					//set black listed style attributes back to inline style
 					newElement = newElement.replaceAll(styleRegex, "style=\""+ignoreStylesOutputParam.toString()+"\"");
 				}else{
 					//remove in line style attribute from the new tag
@@ -747,9 +776,7 @@ public class HTML5Util {
 		return newElement.replaceAll(emptyStyleRegex, "");		
 	}
 	
-	public static String removeIgnoreStyleAttributes(String inlinestyle, StringBuilder ignoreStylesOutputParam){
-		
-	
+	public static String removeIgnoreStyleAttributes(String inlinestyle, StringBuilder ignoreStylesOutputParam){			
 		List<String> styleList = inlineStyleToList(inlinestyle);
 		StringBuilder cleanedInlineSyle = new StringBuilder();
 		for(String style:styleList){
@@ -763,6 +790,10 @@ public class HTML5Util {
 			}
 			//ignore runtime jsp expression values
 			if(value.contains("<%=")){
+				ignoreStylesOutputParam.append(style).append(";");
+				continue;
+			}
+			if(name.trim().equals(DISPLAY)){
 				ignoreStylesOutputParam.append(style).append(";");
 				continue;
 			}

@@ -13,10 +13,10 @@ public class StyleAnalyzer {
 	
 		//log inline and positional css style break downs to db ==> this is for admin site styles. make last flag false when analyze trade site styles
 		if(inlineStyles.length() > 0){
-			dbLogger.insertInlineStyle(currentFile.getAbsolutePath(), elementName, inlineStyles.toString(), elementDebugInfo,false,true);
+			dbLogger.insertInlineStyle(currentFile.getAbsolutePath(), elementName, inlineStyles.toString(), elementDebugInfo,false,false);
 		}
 		if(positionalStyles.length() > 0){
-			dbLogger.insertInlineStyle(currentFile.getAbsolutePath(), elementName, positionalStyles.toString(), elementDebugInfo,true,true);
+			dbLogger.insertInlineStyle(currentFile.getAbsolutePath(), elementName, positionalStyles.toString(), elementDebugInfo,true,false);
 		}
 
 	}
@@ -40,7 +40,7 @@ public class StyleAnalyzer {
 	
 	public static void main(String[] args) {
 
-		String directoryPathToAnalyzeStyles = "C:\\code\\gtnexus\\devl\\modules\\main\\tcard\\web\\tradecard\\en\\administration";
+		String directoryPathToAnalyzeStyles = "C:\\code\\gtnexus\\devl2\\modules\\main\\tcard\\web\\tradecard\\en\\trade";
 
 		File directory = new File(directoryPathToAnalyzeStyles);
 		

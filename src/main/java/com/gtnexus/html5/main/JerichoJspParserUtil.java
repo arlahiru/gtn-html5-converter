@@ -400,8 +400,8 @@ public class JerichoJspParserUtil {
 		
 		//load class names dynamically
 		STYLES_MAP = new HashMap<String,String>(0);
-		String HTML5_POSITIONAL_CLASS = "html5-pos-";
-		String HTML5_INLINE_CLASS = "html5-inline-";
+		String HTML5_POSITIONAL_CLASS = "html5-trade-pos-";
+		String HTML5_INLINE_CLASS = "html5-trade-inline-";
 		int i,j;
 		i=j=0;
 		//load positional class names
@@ -426,7 +426,7 @@ public class JerichoJspParserUtil {
 			String style = entry.getKey().replaceAll("\\\\'", "'");
 			cssEntrySet.add("."+entry.getValue()+" { "+style+" }\n");
 		}
-		UsageScanner.writeResultToFile(cssEntrySet,"html5-style.css");
+		UsageScanner.writeResultToFile(cssEntrySet,"html5-trade-style.css");
 	}
 	
 	private static void initPositionalStyleSet(){
@@ -508,16 +508,15 @@ public class JerichoJspParserUtil {
 		// this should be called in order to call getParentElement() method
 		source.fullSequentialParse();
 
-		if (!HTML5Util.isPhase2Html5ConvertedPage(source)) {
+		if (!HTML5Util.isPhase3Html5ConvertedPage(source)) {
 			//backup the original file before convert
 			RevertBackChanges.backupOriginalFileToLocalDisk(sourceFile);
 			
 			int numOfConvertedIncludeFiles = 0;		
 
 			logger.debug("Conversion started...");
-			
-			// get include file paths and replace extension if they are common - only in admin conversion:phase 2
-			Set<String> includeFilePathSet = HTML5Util.getIncludeFilePathsAndReplaceWithH5ExtensionInOutputDoc(filePath,outputDocument);
+
+			Set<String> includeFilePathSet = HTML5Util.getIncludeFilePaths(filePath,outputDocument);
 			
 			printIncludeFiles(includeFilePathSet);
 			//if not a phase 1 converted jsp page
@@ -592,10 +591,6 @@ public class JerichoJspParserUtil {
 
 			}
 
-		} else if(HTML5Util.isCommonJspFile(sourceFile.getName())){
-			// save this common jsp file again to check if extension replacement needed (.h5.jsp) even if the file is html5 converted in earlier round
-			saveOutputDoc(sourceFile, outputDocument);
-			logger.info("This page is already HTML 5! But need to check extension replacement.");
 		}else{
 			logger.info("This page is already HTML 5!");
 		}
@@ -604,19 +599,7 @@ public class JerichoJspParserUtil {
 	public static void saveOutputDoc(File sourceFile, OutputDocument outputDoc)
 			throws IOException {		    
 
-			String newFileName = sourceFile.getAbsolutePath();
-			//check if the file is in the common include file list then set h5.jsp extension
-			//TODO This should be ROLLBACK after the trade stack conversion
-			if(HTML5Util.isCommonJspFile(HTML5Util.formatToWindowsPath(HTML5Util.filePathToLowercase(newFileName)))){
-				//set the new h5.jsp extension
-				newFileName = newFileName.replace(".jsp",HTML5Util.H5_EXTENSION);
-				sourceFile = new File(newFileName);
-				//check if the file exist with the new extension and stop save it again
-				if(sourceFile.exists()){
-					return;
-				}
-			}
-			
+			String newFileName = sourceFile.getAbsolutePath();			
 			//save converted jsp output to the disk
 			BufferedWriter jspWriter = new BufferedWriter(new OutputStreamWriter(
 					new FileOutputStream(sourceFile), "UTF-8"));	
