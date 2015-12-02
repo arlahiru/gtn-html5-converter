@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Date;
 
 import javax.swing.AbstractButton;
 import javax.swing.ImageIcon;
@@ -89,6 +90,7 @@ public class MainUI extends JFrame {
 	private final JButton btnStop = new JButton("Stop");
 	private final JButton btnOpenScannedPages = new JButton("View Conflicts");
 	private final JCheckBox chkBoxAnalyzeStyle = new JCheckBox("Enable Inline Style Analyzer");
+	private final JCheckBox chkBoxCssReplace = new JCheckBox("Replace with CSS class");
 	
 	private String sourcePath;
 	private SwingWorker<Integer, Integer> currentThread;
@@ -218,10 +220,15 @@ public class MainUI extends JFrame {
 
 		btnBrowseSourceLocation.setBounds(581, 17, 179, 23);
 		getContentPane().add(btnBrowseSourceLocation);
+		
 		chkBoxAnalyzeStyle.setHorizontalAlignment(SwingConstants.LEFT);
-
 		chkBoxAnalyzeStyle.setBounds(581, 54, 179, 23);
 		getContentPane().add(chkBoxAnalyzeStyle);
+
+		chkBoxCssReplace.setHorizontalAlignment(SwingConstants.LEFT);
+		chkBoxCssReplace.setBounds(581, 91, 179, 23);
+		getContentPane().add(chkBoxCssReplace);		
+		chkBoxCssReplace.setSelected(true);
 
 		JLabel backupLocationLabel = new JLabel("Backup Directory ");
 		backupLocationLabel.setBounds(10, 58, 130, 14);
@@ -349,7 +356,8 @@ public class MainUI extends JFrame {
 					@Override
 					protected Integer doInBackground() {
 						String[] files = preHTML5List.getItems();						
-						disableButtons();						
+						disableButtons();
+						Date start = new Date();
 						for (int i = 0; i < files.length; i++) {
 							if(!this.isCancelled()){
 								convertToHTML5(files[i]);	
@@ -360,6 +368,10 @@ public class MainUI extends JFrame {
 								break;
 							}
 						}
+						Date end = new Date();
+						long ms = end.getTime() - start.getTime();
+						int mins = (int) ((ms/1000)/60);
+						printOnConsole("It took "+mins+" mins to finish!", "info");
 						enableButtons();						
 						JerichoJspParserUtil.printIncludeFiles(JerichoJspParserUtil.tag_missing_file_set);
 						return 0;
@@ -487,7 +499,7 @@ public class MainUI extends JFrame {
 		btnBrowseSourceLocation.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
-					final JFileChooser chooser = new JFileChooser(ProgramLauncher.adminPath);
+					final JFileChooser chooser = new JFileChooser(ProgramLauncher.adminPath2);
 
 					chooser.addChoosableFileFilter(new FileNameExtensionFilter(
 							"Text files", "txt", "csv", "ini","jsp","html","htm"));
@@ -545,6 +557,21 @@ public class MainUI extends JFrame {
 		        	HTML5Util.MODE = HTML5Util.STYLEANALYZE;
 		        }else{
 		        	HTML5Util.MODE = HTML5Util.DEFAULT;
+		        }
+				
+			}
+		});
+		
+		chkBoxCssReplace.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				AbstractButton abstractButton = (AbstractButton) e.getSource();
+		        boolean selected = abstractButton.getModel().isSelected();
+		        if(selected){
+		        	HTML5Util.CSS_MODE = HTML5Util.REPLACEWITHCSS;
+		        }else{
+		        	HTML5Util.CSS_MODE = HTML5Util.DEFAULT;
 		        }
 				
 			}

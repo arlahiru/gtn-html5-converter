@@ -18,7 +18,7 @@ public class FormBrRule implements Rule {
 		
 		Element form = (Element) originalAttribute;
 		//ignore tags with scriptlet and empty forms
-		if(!HTML5Util.isTagContainsScriptlet(form.getStartTag()) && form.getAllElements() != null && !form.getAllElements().isEmpty()){
+		if(!HTML5Util.isTagContainsScriptlet(form.getStartTag()) && !isEmptyForm(form)){
 
 			StringBuilder replaceString = new StringBuilder();			
 	
@@ -29,7 +29,7 @@ public class FormBrRule implements Rule {
 			}
 	
 			String newFormStyle = HTML5Util
-					.formatAttribute(PADDING_BOTTOM, "0.8em");
+					.formatAttribute(PADDING_BOTTOM, "0.5em");
 	
 			if (existingStyle != null)
 				newFormStyle = existingStyle +";" +newFormStyle;
@@ -43,6 +43,13 @@ public class FormBrRule implements Rule {
 		}else{
 			return null;
 		}
+	}
+	
+	private boolean isEmptyForm(Element form){
+		if(form.getAllElements() != null && !form.getAllElements().isEmpty())
+			 return false;
+		else
+			return true;
 	}
 
 }

@@ -14,6 +14,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import net.htmlparser.jericho.Source;
+
 import com.gtnexus.html5.ui.MainUI;
 
 /**
@@ -44,7 +46,7 @@ public class UsageScanner {
 								System.out.println("Scanning -> "+tradeFileEntry.getAbsolutePath());
 	
 								// get include file paths
-								Set<String> includeFilePathList = HTML5Util.getIncludeFilePaths(tradeFileEntry.getAbsolutePath(),null);
+								Set<String> includeFilePathList = HTML5Util.getIncludeFilePaths(tradeFileEntry.getAbsolutePath(),new Source(tradeFileEntry),null);
 	
 								for (String includeFilePath : includeFilePathList) {
 									
@@ -106,7 +108,7 @@ public class UsageScanner {
 					
 					try {						
 							// get include file paths
-							Set<String> adminIncludeFilePathList = HTML5Util.getIncludeFilePaths(file.getAbsolutePath(),null);	
+							Set<String> adminIncludeFilePathList = HTML5Util.getIncludeFilePaths(file.getAbsolutePath(),new Source(file),null);	
 							
 							for (String includeFilePath : adminIncludeFilePathList) {
 								if(scannedPagesSet.add(includeFilePath)){
@@ -140,7 +142,7 @@ public static void getAdminPagesWithCommonFileList(File directory,List<String> e
 							
 							System.out.println("Scanning ->"+file.getName());							
 							// get include file paths
-							Set<String> adminIncludeFilePathList = HTML5Util.getIncludeFilePaths(file.getAbsolutePath(),null);	
+							Set<String> adminIncludeFilePathList = HTML5Util.getIncludeFilePaths(file.getAbsolutePath(),new Source(file),null);	
 							Set<String> commonIncludesFileSet = new HashSet<String>();
 							for (String includeFilePath : adminIncludeFilePathList) {
 								if(commonFileSet.contains(includeFilePath)){
@@ -222,7 +224,7 @@ public static void writeListToFile(List<String> list,String fileName){
 		    	System.out.println();
 		    	System.out.println(line);
 		    	System.out.println("=====================================================================");
-		    	Set<String> includeList =  HTML5Util.getIncludeFilePaths(line,null);
+		    	Set<String> includeList =  HTML5Util.getIncludeFilePaths(line,new Source(line),null);
 		       Set<String> filteredList =  new HashSet<String>();
 		       for(String path:includeList){
 		    	   if(path.contains("\\en\\includes/") || path.contains("\\en\\style") || path.contains("\\en\\common")){
@@ -281,7 +283,7 @@ public static void writeListToFile(List<String> list,String fileName){
 		
 		for(String file: commonFileList){
 			try {
-				Set<String> includeFileList = HTML5Util.getIncludeFilePaths(file, null);
+				Set<String> includeFileList = HTML5Util.getIncludeFilePaths(file,new Source(file),null);
 				printStringCollectionToConsole(includeFileList);
 				printIncludesInsideCommonIncludes(includeFileList);
 				

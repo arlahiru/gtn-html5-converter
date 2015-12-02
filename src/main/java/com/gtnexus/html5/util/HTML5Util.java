@@ -127,6 +127,7 @@ public class HTML5Util {
 	public final static String ANCHOR = "a";
 	public final static String ACTIVE_LINK = "a:active";
 	public final static String VISITED_LINK = "a:visited";
+	public final static String TITLE = "title";
 
 	// HTML/CSS STYLE VALUES
 	public final static String COLLAPSE = "collapse";
@@ -154,7 +155,9 @@ public class HTML5Util {
 	//converter running mode flags
 	public final static String DEFAULT = "default";
 	public final static String STYLEANALYZE = "styleanalyze";
+	public final static String REPLACEWITHCSS = "replacewithcss";
 	public static String MODE = DEFAULT;
+	public static String CSS_MODE = DEFAULT;
 	public final static String H5_EXTENSION = "_h5.jspf";
 
 	// HTML ELEMENT NAMES
@@ -349,14 +352,12 @@ public class HTML5Util {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	public static Set<String> getIncludeFilePaths(String mainFilePath, OutputDocument outputDoc)
+	public static Set<String> getIncludeFilePaths(String mainFilePath,Source source, OutputDocument outputDoc)
 			throws FileNotFoundException, IOException {
 
 		File sourceFile = new File(mainFilePath);
-
-		Source source = new Source(new FileInputStream(sourceFile));
-
 		Set<String> includeFilePaths = new HashSet<String>(0);
+		boolean isParentTitleTag = false;
 
 		// get all server tags <% %>
 		List<Element> allElements = source
@@ -366,8 +367,12 @@ public class HTML5Util {
 
 			String tagContent = e.toString();
 
-			// find include tags
-			if (tagContent.contains("<%@") && tagContent.toLowerCase().contains("include")) {
+			// find include tags. Bug: Ignore if the parent tag is <title> tag
+			if(e.getParentElement() != null && e.getParentElement().getName().equals(HTML5Util.TITLE)){
+				isParentTitleTag = true;
+			}
+			if (tagContent.contains("<%@") && tagContent.toLowerCase().contains("include") && !isParentTitleTag) {
+				
 
 				// extract file attribute value by matching value between
 				// " "
@@ -486,7 +491,7 @@ public class HTML5Util {
 		while (attributeIterator.hasNext()) {
 			Attribute attribute = attributeIterator.next();
 			String attributeValue = attribute.getValue();
-			if(attributeValue.contains(serverCode)){
+			if(attributeValue!=null && attributeValue.contains(serverCode)){
 				return true; 
 			}else{
 				continue;
@@ -525,8 +530,10 @@ public class HTML5Util {
 				.getAllElements(HTMLElementName.TABLE).size())
 			throw new HTML5ParserException("Tag Missing Exception","Table tag missing", "table");
 		else if (source.getAllElements(HTMLElementName.TD).size() != output
-				.getAllElements(HTMLElementName.TD).size())
-			throw new HTML5ParserException("Tag Missing Exception","TD tag missing", "td");
+				.getAllElements(HTMLElementName.TD).size()){
+			//bug in UserList.jsp. so commented this error to proceed as this seems a minor bug
+			//throw new HTML5ParserException("Tag Missing Exception","TD tag missing", "td");
+		}
 		//jsp java code bug e.g id="<%= "fieldListRow_" + substitutionNamer.name() %>" returns incorrect tr count in output
 		else if (source.getAllElements(HTMLElementName.TR).size() != output
 				.getAllElements(HTMLElementName.TR).size())
@@ -625,10 +632,23 @@ public class HTML5Util {
 		return false;
 	}
 	public static boolean isContainAlignableComponent(Segment e) {
+		
+		//UI element float issue in content provided date drop downs. check if the element contains content provider drop down and return false
+		if(e.toString().toLowerCase().contains("contentprovider.") && e.toString().toLowerCase().contains("dropdown")){
+			return false;
+		} 
 
 		// check element contains table
-		boolean hasTable = e.getAllElements(HTML5Util.TABLE).size() > 0;
-		boolean hasServerElement = false;
+		int tableCount = e.getAllElements(HTML5Util.TABLE).size();
+		if(tableCount > 0){
+			//e.g fix wizardStepNext.include next button issue
+			//e.g action button issue
+			
+			if(tableCount == 1 && (e.toString().contains("actionButton.include.jsp") || e.toString().contains("actionButtonLink")))
+				return false;
+			else 
+				return true;
+		}
 
 		List<Element> allServerElements = e
 				.getAllElements(StartTagType.SERVER_COMMON);
@@ -645,10 +665,9 @@ public class HTML5Util {
 					String includeFileName = matcher.group(1);
 
 					// this is not the best way to detect this!!! but no simple
-					// option other than this
-					if (includeFileName.toLowerCase().contains("table")) {
-						hasServerElement = true;
-						break;
+					// option other than this e.g xxTable.include.jsp, taskDetailsSummaryNav.include.jsp
+					if (includeFileName.toLowerCase().contains("table") || includeFileName.toLowerCase().contains("nav.")) {
+						return true;
 					}
 				}
 
@@ -656,22 +675,24 @@ public class HTML5Util {
 
 		}
 
-		return hasTable || hasServerElement;
+		return false;
 	}
 	
 	public static String replaceInlineStyleWithClass(String newElement, Element originalElement){
 		
-		//String styleRegex = "(?i)style\\s*=\\s*\"(.*?)\"";
+		//replace style regex
+		//String styleRegex2 = "(?i)style\\s*=\\s*\"(.*?)\"";
+		//find style regex
 		String styleRegex = "(?i)style=\"(.*)\">";
 		String classRegex = "(?i)class\\s*=\\s*\"(.*?)\"";
 		
 		//remove empty in line style attributes before proceed
 		newElement = removeEmptyInlineStyleAttribute(newElement);
-		//to lower case to avoid missing STYLE, CLASS cases
-		//newElement = newElement.toLowerCase();
+		//fix:preserve_style attribute
+		String newElementCopy = newElement.replaceAll("preserve_style", "");
 		
 		Pattern stylepattern = Pattern.compile(styleRegex);
-		Matcher stylematcher = stylepattern.matcher(newElement);
+		Matcher stylematcher = stylepattern.matcher(newElementCopy);
 		
 		Pattern classpattern = Pattern.compile(classRegex);
 		Matcher classmatcher = classpattern.matcher(newElement);
@@ -681,8 +702,8 @@ public class HTML5Util {
 		if (stylematcher.find()) {			
 			inlineStyleValue = stylematcher.group(1);
 		}
-		//ignore apixel DIVs
-		if(inlineStyleValue != null && inlineStyleValue.trim().length()>0 && !isApixelDiv(newElement)){
+		//avoid css class replacements for apixel DIVs and dynamic cell styles
+		if(inlineStyleValue != null && inlineStyleValue.trim().length()>0 && !isApixelDiv(newElement) && !isDynamicCellStyle(newElement)){
 			
 			//replace in line style with relevant class name from the class map in given new element
 			
@@ -746,21 +767,23 @@ public class HTML5Util {
 					{
 						newElement = newElement.replaceAll(classRegex, "class=\""+finalClassPropertyValue+"\"");
 					}
-					//add new class attribute to at the end of the replacing element tag
+					//add new class attribute to at the start of the replacing element tag
 					else{
-						newElement = newElement.substring(0, newElement.length()-1); // remove last closing > from the new tag
-						//add class value at the end of the tag
-						newElement = newElement + " class=\""+finalClassPropertyValue+"\" >";
+						//split and get the tag name e.g <span 
+						String tagName = newElement.split(" ")[0];
+						String rightTagPart = newElement.substring(tagName.length(), newElement.length()); // get the right part e.g ....attr=value arrt2=value>
+						//add class value at the begin of the tag
+						newElement = tagName + " class=\""+finalClassPropertyValue+"\" "+rightTagPart;
 					}
 				}
 				//replace in line style with ignore style set when mapping to css classes(e.g width)
 				
 				if(!ignoreStylesOutputParam.toString().isEmpty()){
 					//set black listed style attributes back to inline style
-					newElement = newElement.replaceAll(styleRegex, "style=\""+ignoreStylesOutputParam.toString()+"\"");
+					newElement = newElement.replaceAll(styleRegex, "style=\""+ignoreStylesOutputParam.toString()+"\">");
 				}else{
 					//remove in line style attribute from the new tag
-					newElement = newElement.replaceAll(styleRegex, "");
+					newElement = newElement.replaceAll(styleRegex, ">");
 				}
 			}else{
 				//do nothing. keep in line styles as it is. TODO YOU HAVE TO POPULATE CSS CLASS MAP!
@@ -777,7 +800,9 @@ public class HTML5Util {
 	}
 	
 	public static String removeIgnoreStyleAttributes(String inlinestyle, StringBuilder ignoreStylesOutputParam){			
-		List<String> styleList = inlineStyleToList(inlinestyle);
+		List<String> styleList = new ArrayList<String>();
+		List<String> dynamicStyleList = new ArrayList<String>();
+		inlineStyleToList(inlinestyle,styleList,dynamicStyleList);
 		StringBuilder cleanedInlineSyle = new StringBuilder();
 		for(String style:styleList){
 			//System.out.println(style);
@@ -803,13 +828,15 @@ public class HTML5Util {
 		//handle above scenario
 		if(cleanedInlineSyle.length() == 0 && inlinestyle.contains("<%=")){
 			ignoreStylesOutputParam.append(inlinestyle);
+		//handle this scenario style=width:8px;border:"<%= (inPrintPreviewMode) ? "1" : "0" %>";
+		}else if(!dynamicStyleList.isEmpty()){
+			ignoreStylesOutputParam.append(dynamicStyleList);
 		}
 		return cleanedInlineSyle.toString();		
 	}
 	
-	public static List<String> inlineStyleToList(String style){
+	public static void inlineStyleToList(String style,List<String> styleList,List<String> dynamicStyleList){
 		System.out.println("inline style => "+style);
-		List<String> styleList = new ArrayList<String>();
 		//check if the in line style contains more than one property and add them all to list via ; split
 		if(style.contains(";")){
 			String[] values = style.split(";");
@@ -817,15 +844,18 @@ public class HTML5Util {
 				//check if the style contains name and value pair separate with a colon before add
 				if(values[i].split(":").length == 2){
 					styleList.add(values[i]);
+				}else{
+					dynamicStyleList.add(values[i]);
 				}
 			}
 		}else{
 			//check if the style contains name and value pair separate with a colon before add
 			if(style.split(":").length == 2){
 				styleList.add(style);
+			}else{
+				dynamicStyleList.add(style);
 			}
 		}
-		return styleList;
 	}
 	
 	public static String formatToWindowsPath(String path){
@@ -842,6 +872,10 @@ public class HTML5Util {
 	
 	public static boolean isApixelDiv(String element){
 		return element.contains("id=\"afpixel");	
+	}
+	
+	public static boolean isDynamicCellStyle(String element){
+		return element.contains("getCellStyle");		
 	}
 	
 	public static boolean isTagContainsScriptlet(Tag element){

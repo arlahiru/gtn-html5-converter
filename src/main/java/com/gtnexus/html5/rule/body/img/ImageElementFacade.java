@@ -6,6 +6,7 @@ import static com.gtnexus.html5.util.HTML5Util.STYLE;
 
 import java.util.List;
 
+import net.htmlparser.jericho.Attribute;
 import net.htmlparser.jericho.Element;
 import net.htmlparser.jericho.OutputDocument;
 import net.htmlparser.jericho.Source;
@@ -28,13 +29,24 @@ public class ImageElementFacade extends Facade {
 		List<Element> allImageElements = source.getAllElements(IMG);
 
 		for (Element img : allImageElements) {
+			
+			Attribute src = img.getAttributes().get("src");
 
-			String srcContent = img.getAttributes().get("src").getValue();
+			String srcContent = src != null?src.getValue():"";
+			
+			Element parent = img.getParentElement();
+			
+			boolean isInsideATDwithMoreThanOneElement = false;
+			
+			//ignore <td> test <img apixel></img> <span>adas</span> </td> cases
+			if(parent.getName().equals(HTML5Util.TD) && parent.getAllElements().size() > 1){
+				isInsideATDwithMoreThanOneElement = true;
+			}
 
 			// fix apixel and fourpixel image tags by replacing them with a div
 			// tag with background image
-			if (srcContent.contains("apixel.gif")
-					|| srcContent.contains("fourpixel.gif")) {
+			if (!isInsideATDwithMoreThanOneElement && (srcContent.contains("apixel.gif")
+					|| srcContent.contains("fourpixel.gif"))) {
 
 				Rule apixelImgRule = new ImageApixelRule();
 

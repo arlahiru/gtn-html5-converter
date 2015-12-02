@@ -29,9 +29,12 @@ public abstract class Facade {
 			if(!HTML5Util.isTagContainsScriptlet(original_Element)){			
 
 				//in line style replacement
-				//output.replace(originalElement, replacement.toString());
-				//apply css class by replacing in line style  before replace output doc element
-				output.replace(originalElement, HTML5Util.replaceInlineStyleWithClass(replacement.toString(),original_Element.getElement()));
+				if(HTML5Util.CSS_MODE.equals(HTML5Util.DEFAULT)){
+					output.replace(originalElement, replacement.toString());
+				}else{
+					//apply css class by replacing in line style  before replace output doc element
+					output.replace(originalElement, HTML5Util.replaceInlineStyleWithClass(replacement.toString(),original_Element.getElement()));
+				}
 	
 				//log this replacement
 				dbLogger.log(original_Element.getName(),

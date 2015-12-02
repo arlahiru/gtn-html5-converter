@@ -47,8 +47,10 @@ public class RevertBackChanges {
 
 		File convertedFile = new File(convertedFilePath);
 
-		// get include file paths. 
-		Set<String> includeFilePathList = HTML5Util.getIncludeFilePaths(convertedFilePath,null);
+		// get include file paths.
+		Source source = new Source(convertedFile);
+		source.fullSequentialParse();
+		Set<String> includeFilePathList = HTML5Util.getIncludeFilePaths(convertedFilePath,source,null);
 
 		// recursively revert include files
 		for (String includeFilePath : includeFilePathList) {			

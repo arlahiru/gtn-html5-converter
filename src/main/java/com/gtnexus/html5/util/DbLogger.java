@@ -851,7 +851,7 @@ public class DbLogger {
 	
 	//clear all data except conversion errors
 	public void clearAllData(){
-		if (isEnabled()) {
+		//if (isEnabled()) {
 			Statement deleteStatement = null;
 			try{
 				deleteStatement = con.createStatement();
@@ -876,7 +876,7 @@ public class DbLogger {
 					}
 				}
 			}
-		}
+		//}
 	}
 	//clear all data
 	public void clearAllErrors(){	

@@ -125,7 +125,7 @@ public class JerichoJspParserUtil {
 	public static Set<String> POSITIONAL_STYLES_SET = new HashSet<String>();
 	//public static Set<String> INLINE_STYLES = new HashSet<String>();
 	
-	public static Set<String> COMMON_INCLUDE_FILE_SET = null;
+	public static Set<String> COMMON_INCLUDE_FILE_SET = new HashSet<String>(0);
 
 	public static final Logger logger = Logger
 			.getLogger(JerichoJspParserUtil.class);
@@ -158,8 +158,10 @@ public class JerichoJspParserUtil {
 		initRulesMap();
 		initCssClassMap(isAdminCss);
 		initPositionalStyleSet();
+		//enable css replace mode
+		HTML5Util.CSS_MODE = HTML5Util.REPLACEWITHCSS;
 		//load common include file set to a String list
-		COMMON_INCLUDE_FILE_SET = UsageScanner.populateTextFileLinesToSet("CommonIncludeFileList.txt");
+		//COMMON_INCLUDE_FILE_SET = UsageScanner.populateTextFileLinesToSet("CommonIncludeFileList.txt");
 	}
 	
 	private static void initLogger(){		
@@ -173,7 +175,7 @@ public class JerichoJspParserUtil {
 		Logger.getRootLogger().addAppender(appender);			
 
 		// disable dblogger
-		//dbLogger.enable(false);
+		dbLogger.enable(false);
 
 		if (dbLogger.isEnabled()) {
 			dbLogger.initialize();
@@ -181,6 +183,7 @@ public class JerichoJspParserUtil {
 			dbLogger.clearAllData();
 			dbLogger.clearAllErrors();
 		}
+		dbLogger.clearAllData();
 		
 	}
 	
@@ -236,6 +239,10 @@ public class JerichoJspParserUtil {
 				new TableDataValignRule());
 		RULES_MAP.put(formatKey(HTMLElementName.TD, NO_WRAP),
 				new TableDataNoWrapRule());
+		
+		//th
+		RULES_MAP.put(formatKey(HTMLElementName.TH, STYLE),
+				new TableStyleRule());
 
 		// <tbody><thead><tfoot> tag rules
 		RULES_MAP.put(formatKey(HTMLElementName.TBODY, ALIGN),
@@ -318,6 +325,8 @@ public class JerichoJspParserUtil {
 		// <p> tag rules
 		RULES_MAP.put(formatKey(HTMLElementName.P, ALIGN),
 				new TableDataAlignRule());
+		RULES_MAP.put(formatKey(HTMLElementName.P, STYLE),
+				new TableStyleRule());
 
 		// <pre> tag rules
 		RULES_MAP.put(formatKey(HTMLElementName.PRE, WIDTH),
@@ -488,111 +497,110 @@ public class JerichoJspParserUtil {
 	public static void convertToHTML5(String filePath, boolean isIncludeFile, String textfileName)
 	throws FileNotFoundException, IOException, HTML5ParserException {
 
-		// Parse JSP file and remove obsolete html5 tags and apply relevant
-		// workaround.
-
-		dbLogger.insertPage(filePath, isIncludeFile, textfileName,true);
-		if (!isIncludeFile) {
-			logger.info("Input File: " + filePath);
-		} else {
-			logger.info("Include File: " + filePath);
-		}
-
 		File sourceFile = new File(filePath);
-		Source source = new Source(new FileInputStream(sourceFile));
-		//new output document generated from the source document
-		OutputDocument outputDocument = new OutputDocument(source);
-		//set current parsing file to style analyzer
-		StyleAnalyzer.currentFile = sourceFile;
-		
-		// this should be called in order to call getParentElement() method
-		source.fullSequentialParse();
-
-		if (!HTML5Util.isPhase3Html5ConvertedPage(source)) {
-			//backup the original file before convert
-			RevertBackChanges.backupOriginalFileToLocalDisk(sourceFile);
-			
-			int numOfConvertedIncludeFiles = 0;		
-
-			logger.debug("Conversion started...");
-
-			Set<String> includeFilePathSet = HTML5Util.getIncludeFilePaths(filePath,outputDocument);
-			
-			printIncludeFiles(includeFilePathSet);
-			//if not a phase 1 converted jsp page
-			if(!HTML5Util.isPhase1Html5ConvertedPage(source)){
-				//do full html5 conversion
-				HeaderElementFacade.fixHeaderElementObsoleteFeatures(source,outputDocument);
+		//first check if the input file exist and then proceed. 
+		//Bug: include file not exist
+		//Ignore custom PDF jsps
+		if(sourceFile.exists() && !sourceFile.getName().contains("PDF")){
+			// Parse JSP file and remove obsolete html5 tags and apply relevant
+			// workaround.
 	
-				BodyElementFacade.fixAllBodyElementObsoleteFeatures(source,	outputDocument);
-			}else{
-				//convert inline styles to CSS classes only
-				BodyElementFacade.fixPhase1ConvertedPagesWithCssClass(source, outputDocument);
-			}
-
-			// recursively convert include files
-			for (String includeFilePath : includeFilePathSet) {
-
-				// Catch if any exception occurred and proceed with the other
-				// include files.
-				// It will allows to save other include files without breaking
-				// the program.
-				try {
-					convertToHTML5(includeFilePath, true, textfileName);
-					numOfConvertedIncludeFiles = numOfConvertedIncludeFiles + 1;
-				} catch (HTML5ParserException e) {
-					e.printStackTrace();
-					logger.error(e.getMessage());
-					dbLogger.logError(includeFilePath, e.getType(), e.getMessage(),
-							e.getTagInfo());
-
-				}
-
-			}
-
-			// check if all the include files have converted successfully
-			// before save
-			if (includeFilePathSet.size() == numOfConvertedIncludeFiles) {
-				//check with source file to make sure that output document is not missing any original html/jsp tags after the conversion
-				try{
-					if (HTML5Util.isCommonTagsCountMatch(source, outputDocument)) {
-						// overwrite source file with new output doc
-						saveOutputDoc(sourceFile, outputDocument);
-						logger.info(filePath + " converted successfully!");
-	
-					} else {
-					
-					}
-				//catch exception if tag missing
-				}catch(HTML5ParserException e){
-					logger.error("Tag Error:"+e.getMessage()+" - "+filePath);
-					tag_missing_file_set.add(e.getTagInfo()+":"+filePath);
-					//System.out.println("Tag missing error: "+filePath);
-					//remove exception throw code and allow to save the page even with tag missing error.
-					throw e;
-					
-					/*Following pages throws the exception. Please check them in browser after conversion  
-					 *  labeldefinitionedit.include.jsp
-						ProofOfDeliveryEditStep.include.jsp
-						factorlist.include.jsp
-						securityprofilepermissionlist.include.jsp
-						TestDocumentMatching.jsp
-					 */				 
-					
-					//saveOutputDoc(sourceFile, outputDocument);
-					//logger.info(filePath + " converted successfully with tag count mismatch errors!");
-				}
-
+			dbLogger.insertPage(filePath, isIncludeFile, textfileName,true);
+			if (!isIncludeFile) {
+				logger.info("Input File: " + filePath);
 			} else {
-				logger.error(filePath
-						+ " has not been saved. Errors in include file(s).");
-				throw new HTML5ParserException("Content Exception",
-						"Include file conversion failed.", null);
-
+				logger.info("Include File: " + filePath);
 			}
-
-		}else{
-			logger.info("This page is already HTML 5!");
+	
+			
+			Source source = new Source(new FileInputStream(sourceFile));
+			//new output document generated from the source document
+			OutputDocument outputDocument = new OutputDocument(source);
+			//set current parsing file to style analyzer
+			StyleAnalyzer.currentFile = sourceFile;
+			
+			// this should be called in order to call getParentElement() method
+			source.fullSequentialParse();
+	
+			if (!HTML5Util.isPhase3Html5ConvertedPage(source)) {
+				//backup the original file before convert
+				RevertBackChanges.backupOriginalFileToLocalDisk(sourceFile);
+				
+				int numOfConvertedIncludeFiles = 0;		
+	
+				logger.debug("Conversion started...");
+	
+				Set<String> includeFilePathSet = HTML5Util.getIncludeFilePaths(filePath,source,outputDocument);
+				
+				printIncludeFiles(includeFilePathSet);
+				
+				HeaderElementFacade.fixHeaderElementObsoleteFeatures(source,outputDocument);	
+				BodyElementFacade.fixAllBodyElementObsoleteFeatures(source,	outputDocument);
+	
+				// recursively convert include files
+				for (String includeFilePath : includeFilePathSet) {
+	
+					// Catch if any exception occurred and proceed with the other
+					// include files.
+					// It will allows to save other include files without breaking
+					// the program.
+					try {
+						convertToHTML5(includeFilePath, true, textfileName);
+						numOfConvertedIncludeFiles = numOfConvertedIncludeFiles + 1;
+					} catch (HTML5ParserException e) {
+						e.printStackTrace();
+						logger.error(e.getMessage());
+						dbLogger.logError(includeFilePath, e.getType(), e.getMessage(),
+								e.getTagInfo());
+	
+					}
+	
+				}
+	
+				// check if all the include files have converted successfully
+				// before save
+				if (includeFilePathSet.size() == numOfConvertedIncludeFiles) {
+					//check with source file to make sure that output document is not missing any original html/jsp tags after the conversion
+					try{
+						if (HTML5Util.isCommonTagsCountMatch(source, outputDocument)) {
+							// overwrite source file with new output doc
+							saveOutputDoc(sourceFile, outputDocument);
+							logger.info(filePath + " converted successfully!");
+		
+						} else {
+						
+						}
+					//catch exception if tag missing
+					}catch(HTML5ParserException e){
+						logger.error("Tag Error:"+e.getMessage()+" - "+filePath);
+						tag_missing_file_set.add(e.getTagInfo()+":"+filePath);
+						//System.out.println("Tag missing error: "+filePath);
+						//remove exception throw code and allow to save the page even with tag missing error.
+						throw e;
+						
+						/*Following pages throws the exception. Please check them in browser after conversion  
+						 *  labeldefinitionedit.include.jsp
+							ProofOfDeliveryEditStep.include.jsp
+							factorlist.include.jsp
+							securityprofilepermissionlist.include.jsp
+							TestDocumentMatching.jsp
+						 */				 
+						
+						//saveOutputDoc(sourceFile, outputDocument);
+						//logger.info(filePath + " converted successfully with tag count mismatch errors!");
+					}
+	
+				} else {
+					logger.error(filePath
+							+ " has not been saved. Errors in include file(s).");
+					throw new HTML5ParserException("Content Exception",
+							"Include file conversion failed.", null);
+	
+				}
+	
+			}else{
+				logger.info("This page is already HTML 5!");
+			}
 		}
 	}
 

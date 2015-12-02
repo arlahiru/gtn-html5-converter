@@ -33,8 +33,8 @@ public class HeaderElementFacade {
 
 		addCharSetUTF8MetaTag(source, outputDocument);
 		
-		//add admin css links inside the <head> element if its not in the main jsp
-		addAdminCssStyleLink(source, outputDocument);
+		//add trade css links inside the <head> element if its not in the main jsp
+		addTradeCssStyleLink(source, outputDocument);
 	}
 
 	private static void changeDoctypeToHtml5(Source source,OutputDocument outputDocument) {
@@ -68,11 +68,10 @@ public class HeaderElementFacade {
 			outputDocument.insert(htmlTag.getBegin() + 6,"\n"+ HTML5_CONVERTED_COMMENT_PHASE3+ "\n<!-- Converted Date:"+new Date()+" -->\n");
 
 		} 
-		//remove this part to avoid adding this tag inside invalid locations like <title></title>
-		/*else {
+		else {
 
 			outputDocument.insert(source.getBegin(),"\n"+ HTML5_CONVERTED_COMMENT_PHASE3 + "\n<!-- Converted Date:"+new Date()+" -->\n");
-		}*/
+		}
 
 		logger.debug("HTML5 comment tag added successfully!");
 

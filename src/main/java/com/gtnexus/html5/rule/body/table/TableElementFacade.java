@@ -162,14 +162,14 @@ public class TableElementFacade extends Facade {
 
 	}
 
-	private static void fixTableData(Element tr, OutputDocument outputDocument) {
+	private static void fixTableData(Element td, OutputDocument outputDocument) {
 		
 		// get all the td elements of this tr
-		List<Element> tdElementList = getTdElementList(tr);
+		List<Element> tdElementList = getTdElementList(td);
 
-		for (Element td : tdElementList) {
+		for (Element tabledata : tdElementList) {
 
-			fixTdTag(td, outputDocument);
+			fixTdTag(tabledata, outputDocument);
 		}
 	}
 
