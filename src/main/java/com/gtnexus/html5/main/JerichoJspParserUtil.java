@@ -403,9 +403,6 @@ public class JerichoJspParserUtil {
 	}
 	
 	private static void initCssClassMap(boolean isAdminCss){
-
-		//load from db
-		//STYLES_MAP = dbLogger.getCssClasses(isAdminCss);
 		
 		//load class names dynamically
 		STYLES_MAP = new HashMap<String,String>(0);
@@ -414,18 +411,16 @@ public class JerichoJspParserUtil {
 		int i,j;
 		i=j=0;
 		//load positional class names
-		Set<String> positional_style_set = UsageScanner.populateTextFileLinesToSet("positional.txt");
+		Set<String> positional_style_set = UsageScanner.populateStyleTextFileToSet("positional.txt");
 		for(String style:positional_style_set){
 			STYLES_MAP.put(style, HTML5_POSITIONAL_CLASS+(i++));
 		}
 		
 		//load in line class names
-		Set<String> inline_style_set = UsageScanner.populateTextFileLinesToSet("inline.txt");
+		Set<String> inline_style_set = UsageScanner.populateStyleTextFileToSet("inline.txt");
 		for(String style:inline_style_set){
 			STYLES_MAP.put(style, HTML5_INLINE_CLASS+(j++));
 		}
-		
-		//dbLogger.writeDynamicStyleMapToDB(true);
 		
 		//generate css file from the map
 		Set<String> cssEntrySet = new HashSet<String>();
@@ -498,8 +493,7 @@ public class JerichoJspParserUtil {
 	throws FileNotFoundException, IOException, HTML5ParserException {
 
 		File sourceFile = new File(filePath);
-		//first check if the input file exist and then proceed. 
-		//Bug: include file not exist
+		//first check if the input file exist and then proceed
 		//Ignore custom PDF jsps
 		if(sourceFile.exists() && !sourceFile.getName().contains("PDF")){
 			// Parse JSP file and remove obsolete html5 tags and apply relevant

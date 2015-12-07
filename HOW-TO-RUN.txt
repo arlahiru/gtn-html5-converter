@@ -1,0 +1,12 @@
+Please follow the following steps to convert JSP/html directory/pages
+
+1. Run the converter for the first time by enabling the style analyze mode to record inline styles to db. 
+
+2. Collect analyzed positional and inline styles from the mysql database. Then paste them in inline.txt and positional.txt files respectively.
+
+3. Rollback all the changes in previous run
+
+4. Run the converter again with replace CSS class mode
+
+5. Add generated css class names to relevant css file(e.g adminStyles.css or tradeStyles.css)
+

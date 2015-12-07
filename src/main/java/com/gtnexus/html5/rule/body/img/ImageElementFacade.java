@@ -36,16 +36,11 @@ public class ImageElementFacade extends Facade {
 			
 			Element parent = img.getParentElement();
 			
-			boolean isInsideATDwithMoreThanOneElement = false;
-			
-			//ignore <td> test <img apixel></img> <span>adas</span> </td> cases
-			if(parent.getName().equals(HTML5Util.TD) && parent.getAllElements().size() > 1){
-				isInsideATDwithMoreThanOneElement = true;
-			}
+			boolean isATDwithMoreThanOneElementExceptImgTag = isTdContainMorethanOneElementExceptImgTags(parent);
 
 			// fix apixel and fourpixel image tags by replacing them with a div
 			// tag with background image
-			if (!isInsideATDwithMoreThanOneElement && (srcContent.contains("apixel.gif")
+			if (!isATDwithMoreThanOneElementExceptImgTag && (srcContent.contains("apixel.gif")
 					|| srcContent.contains("fourpixel.gif"))) {
 
 				Rule apixelImgRule = new ImageApixelRule();
@@ -102,6 +97,23 @@ public class ImageElementFacade extends Facade {
 		 * -tricks.com/snippets/html/base64-encode-of-1x1px-transparent-gif/)
 		 */
 
+	}
+	
+	private static boolean isTdContainMorethanOneElementExceptImgTags(Element parent){
+		//e.g <td> test <img apixel></img> <span>adas</span> </td> cases
+		if(parent != null && parent.getName().equals(HTML5Util.TD) && parent.getChildElements().size() > 1){
+			List<Element> chileElements = parent.getChildElements();
+			for(Element e:chileElements){
+				if(e.getName().equals(HTML5Util.IMG)){
+					continue;
+				}
+				else{
+					return true;
+				}
+			}
+		}
+
+		return false;
 	}
 
 }

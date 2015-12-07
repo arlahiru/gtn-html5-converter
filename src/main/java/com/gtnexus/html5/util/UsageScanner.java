@@ -278,6 +278,32 @@ public static void writeListToFile(List<String> list,String fileName){
 		return fileSet;
 		
 	}
+public static Set<String> populateStyleTextFileToSet(String fileName){
+		
+		Set<String> fileSet = new HashSet<String>();
+		File txtFile = new File(fileName);
+		FileReader fileReader = null;
+		BufferedReader br = null;
+		try {
+			fileReader = new FileReader(txtFile);			
+			br = new BufferedReader(fileReader);
+		    String line;
+		    while ((line = br.readLine()) != null) {
+		    	fileSet.add(line);		       
+		    }
+		} catch (IOException e) {
+			e.printStackTrace();
+		}finally{
+			try {
+				fileReader.close();
+				br.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return fileSet;
+		
+	}
 	
 	public static void printIncludesInsideCommonIncludes(Set<String> commonFileList){
 		
