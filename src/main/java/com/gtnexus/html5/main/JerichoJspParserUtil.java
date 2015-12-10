@@ -430,6 +430,9 @@ public class JerichoJspParserUtil {
 			String style = entry.getKey().replaceAll("\\\\'", "'");
 			cssEntrySet.add("."+entry.getValue()+" { "+style+" }\n");
 		}
+		//add html5 form padding css class
+		cssEntrySet.add(".html5-form-padding { "+HTML5Util.formatAttribute(PADDING_BOTTOM, "0.5em")+" }\n");
+		
 		UsageScanner.writeResultToFile(cssEntrySet,"html5-trade-style.css");
 	}
 	
