@@ -1,9 +1,12 @@
 package com.gtnexus.html5.util;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -27,6 +30,7 @@ import sun.font.EAttribute;
 
 import com.gtnexus.html5.exception.HTML5ParserException;
 import com.gtnexus.html5.main.JerichoJspParserUtil;
+import com.gtnexus.html5.rule.header.HeaderElementFacade;
 
 public class HTML5Util {
 
@@ -828,5 +832,34 @@ public class HTML5Util {
 		//String fileName = filePath.substring(filePath.lastIndexOf('\\')+1,filePath.length());
 		//String lowerCasedPath = filePath.substring(0,filePath.lastIndexOf('\\')+1)+fileName.toLowerCase();
 		return filePath.toLowerCase().replace("c:", "C:");
+	}
+	
+	
+	public static void removeH5Extension(File directory){
+
+		for (final File file : directory.listFiles()) {
+			if (file.isDirectory()) {
+				removeH5Extension(file);
+			} else {
+				//analyze new html5 styles of all the jsp and html files in the current directory
+				if ((file.getName().toLowerCase().endsWith("_h5.jspf"))) {					
+					try {
+						String newName = file.getAbsolutePath().replace("_h5.jspf", ".jspf");
+						File file2 = new File(newName);
+						file.renameTo(file2);
+						System.out.println("Renaming -"+newName);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+		
+	}
+	
+	public static void main(String args[]){
+		String directoryPathToAnalyzeStyles = "C:\\code\\gtnexus\\devl\\modules\\main\\tcard\\web\\tradecard\\en";
+		File directory = new File(directoryPathToAnalyzeStyles);
+		removeH5Extension(directory);
 	}
 }
