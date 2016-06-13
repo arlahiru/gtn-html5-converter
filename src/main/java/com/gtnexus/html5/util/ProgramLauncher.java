@@ -23,7 +23,8 @@ public class ProgramLauncher {
 	private String notepadPath = "";
 	public final String DEFAULT_BACKUP_PATH = "C:/Html5BackupDir";
 	public static String adminBasePath = "C:/code/gtnexus/devl/modules/main/tcard";
-	public static String adminBasePath2 = "C:/code/gtnexus/devl2/";
+	//public static String adminBasePath2 = "C:/code/gtnexus/devl2/";
+	public static String adminBasePath2 = "C:/code/gtnexus/devl/";
 	public static String adminPath = "C:/code/gtnexus/devl/modules/main/tcard/web/tradecard/en";
 	public static String adminPath2 = "C:/code/gtnexus/devl2/modules/main/tcard/web/tradecard/en";
 	public static String tradeBasePath = "";
