@@ -10,8 +10,10 @@ import java.nio.file.InvalidPathException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import net.htmlparser.jericho.Source;
@@ -304,6 +306,33 @@ public static Set<String> populateStyleTextFileToSet(String fileName){
 		return fileSet;
 		
 	}
+
+public static void populateStyleTextFileToMap(String fileName, Map<String,String> cssClassMap){
+
+	File txtFile = new File(fileName);
+	FileReader fileReader = null;
+	BufferedReader br = null;
+	try {
+		fileReader = new FileReader(txtFile);			
+		br = new BufferedReader(fileReader);
+	    String line;
+	    while ((line = br.readLine()) != null) {
+	    	String[] keyValues = line.split(",");
+	    	String className = keyValues[0].trim();
+	    	String styles = keyValues[1].trim();
+	    	cssClassMap.put(styles, className);
+	    }
+	} catch (IOException e) {
+		e.printStackTrace();
+	}finally{
+		try {
+			fileReader.close();
+			br.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+}
 	
 	public static void printIncludesInsideCommonIncludes(Set<String> commonFileList){
 		

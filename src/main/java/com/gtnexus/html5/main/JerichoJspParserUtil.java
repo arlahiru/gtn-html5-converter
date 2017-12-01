@@ -183,7 +183,7 @@ public class JerichoJspParserUtil {
 			dbLogger.clearAllData();
 			dbLogger.clearAllErrors();
 		}
-		dbLogger.clearAllData();
+		//dbLogger.clearAllData();
 		
 	}
 	
@@ -406,7 +406,12 @@ public class JerichoJspParserUtil {
 		
 		//load class names dynamically
 		STYLES_MAP = new HashMap<String,String>(0);
-		String HTML5_POSITIONAL_CLASS = "html5-trade-pos-";
+		//we load the old css class file that we generate in initial conversion.
+		//I guess we have inital old style set file in here -> tradeStyle_old.txt 
+		
+		UsageScanner.populateStyleTextFileToMap("tradeStyle_old.txt", STYLES_MAP);
+		
+/*		String HTML5_POSITIONAL_CLASS = "html5-trade-pos-";
 		String HTML5_INLINE_CLASS = "html5-trade-inline-";
 		int i,j;
 		i=j=0;
@@ -420,7 +425,7 @@ public class JerichoJspParserUtil {
 		Set<String> inline_style_set = UsageScanner.populateStyleTextFileToSet("inline.txt");
 		for(String style:inline_style_set){
 			STYLES_MAP.put(style, HTML5_INLINE_CLASS+(j++));
-		}
+		}*/
 		
 		//generate css file from the map
 		Set<String> cssEntrySet = new HashSet<String>();

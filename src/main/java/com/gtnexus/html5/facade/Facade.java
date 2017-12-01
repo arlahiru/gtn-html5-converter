@@ -45,7 +45,7 @@ public abstract class Facade {
 		} catch (NullPointerException e) {
 			HTML5ParserException ex = new HTML5ParserException(
 					"Runtime Exception", "Tag Missing",
-					dbLogger.getLastConvertedLine());
+					"");
 			ex.setStackTrace(e.getStackTrace());
 			e.printStackTrace();
 			throw ex;

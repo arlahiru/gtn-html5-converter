@@ -29,7 +29,7 @@ public class HeaderElementFacade {
 
 		changeDoctypeToHtml5(source, outputDocument);
 
-		addHtml5ConvertedCommentTag(source, outputDocument);
+		//addHtml5ConvertedCommentTag(source, outputDocument);
 
 		addCharSetUTF8MetaTag(source, outputDocument);
 		
